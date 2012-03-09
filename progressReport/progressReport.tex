@@ -67,6 +67,8 @@ Our approach will use supervised learning techniques to generate a description o
 
 For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm. 
 
+
+
 \xxx{What on EARTH do we say here, otherwise? One paragraph seems pretty
     thin. AM - I added a bit to this section, but we still might want to go into more detail}
 
@@ -183,7 +185,7 @@ used.  The result is determined by which class is selected by most classifiers.
 	& Add shape features and classification to the system \B\\ 
     \hline
     \multirow{2}{*}{8~Apr -- 14~Apr} 
-	& \meh{Board says test object disambiguation. Not quite sure what that means} \T\\
+	& Verify that we can distinguish two objects with different features \T\\
 	& Evaluation and tuning of our shape classification \B \\ 
     \hline
     \multirow{3}{*}{15~Apr -- 21~Apr} 
@@ -202,6 +204,9 @@ used.  The result is determined by which class is selected by most classifiers.
 \section{Conclusion}
 \xxx{Summary of your progress and your final expected goal (what do you expect
     to achieve or demonstrate for the final project?)}
+Our primary focus in the project has been setting up all the parts we need to move forward with the core of the project. This includes getting the camera and installing it in a rig, connecting to the camera to get the data, and acquiring the necessary training data. We are in the process of getting labeled feature representations out of that data in order to train an SVM on it. Our preliminary tests using color data indicate that our color classification method will be sufficient to distinguish between colors with high accuracy.
+
+In the end, we want our system to provide a discription for each object that is accurate and robust. This will ensure that our agent is able to correctly identifiy the objects described within the context of our I Spy game. We expect that shape will be more prone to noise and error than color, but we would still like our agent to correctly identify the shape at least 90% of the time. Misclassification errors made by the visual system can have very detrimental effects on the high-level system using those classifications, so our top priority is to provide object descriptions that are as noiseless and error-free as possible.
 
 \bibliographystyle{plain}
 \bibliography{literature}
