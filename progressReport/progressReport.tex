@@ -27,7 +27,7 @@
 
 \begin{abstract}
 \xxx{Abstract goes here, 1 par. max}
-Dijkstra was a cool guy and it's fun to cite his papers~\cite{dijkstra1959}.
+Dijkstra was a cool guy and it's fun to cite his papers~\cite{dijkstra1959}. (It's true)
 \end{abstract}
 
 \section{Introduction}
@@ -35,43 +35,37 @@ Dijkstra was a cool guy and it's fun to cite his papers~\cite{dijkstra1959}.
     problem? What's the impact if you can solve this problem?}
 Language is a powerful tool that is just coming into its own as the human
 interface for various systems. Apple's Siri is an excellent example of this,
-making interaction with your phone and web-search effectively seamless
-compared to the tedious data entry required before.
+making interaction with your phone intuitive, easy, and efficient. 
 
-Learning systems in AI can also benefit from greater understanding of
-language. Take, for example, a robotic arm system with knowledge of only
-several nouns and actions: dish, sink, grab/move object, and turning on/off
-the sink, and the spatial concept of in. The robot can now be taught that
-``washing the dishes'' means to put the dishes in the sink and turn on the
-sink. Even though the robot has never seen anyone wash the dishes before, now
-it should be able to wash dishes, itself, and even could learn the word
-``wash'' and apply it to another object such as an apple. This is a powerful
+Robotic systems in AI can also benefit from greater understanding of
+language. Such knowledge could allow a human to command or teach a robot agent in a more natural way. Take, for example, a robotic arm system with knowledge of only
+several nouns and actions: cup, sink, grab/move object, and turning on/off
+the sink, and the spatial concept of in. Through language, the robot could then be taught the new action of ``filling a cup'', which means to put the cup in the sink and turn on the
+sink. Even though the robot has never seen anyone fill a cup before, now
+it should be able to do so itself. Furthermore, the agent could generalize the concept to new items, like a bowl. This is a powerful
 and intuitive way for humans to interact with a system, one which does not
 take a computer scientist to understand.
 
-Our goal is to train a system to know a small vocabulary of nouns, adjectives,
+Our goal is to leverage machine learning techniques in order to train a system to know a small vocabulary of nouns, adjectives,
 and actions. As a proof of concept, we want to be able to play the children's
 game ``I spy'' with a robotic arm. The arm's ``eyes'' will be a Microsoft
 Kinect (or, with some small probability, a stereo camera rig) capable of
-returning RGB-D data for classification. Given this groundwork, such a system
-should be straightforward to extend and train to recognize a more extensive
-vocabulary, and thus can be taught more complex actions. It could be deployed
-on robots in service tasks or in non-robotics systems where a verbal interface
+returning RGB-D data for classification. A collection of objects will be placed in the view of the camera, and a person will give a description of one of the objects. The agent will then select the object that matches that description using the robot arm. \meh{Pointing? Grabbing?}.
+
+This work is planned to be incorporated into a larger project which includes teaching the agent new concepts and actions as described above. Such a project relies on having symbolic information provided by our work through object segmentation and classification. The low level features provided by our system can be analyzed and combined in order to build new concepts like object categories (like blocks and balls) or object properties (all bananas are yellow). Such a system could be used on service tasks or with non-robotic systems where a verbal interface
 offers improvements in efficiency, safety, etc. \xxx{Examples?}
 
 \section{Proposed Method}
 \xxx{How are you going to solve this problem? Why should the proposed method
     work? Provide technical details of your approach if you are proposing a
     novel method.}
-To initially address this problem, we propose to learn our base vocabulary
-under supervised learning with data hand-labeled to denote words applying to
-the supplied objects. Classification will be performed on a feature vector
-derived from the RGB-D data sticking to features dealing with shape, color, and
-size using SVMs for each word. High level knowledge and memory will employ the
-SOAR architecture. \xxx{SOAR details/stuff here.}
+
+Our approach will use supervised learning techniques to generate a description of each object. First, we will gather our training data by collecting a number of RGB-D images from the camera featuring various types and positions of objects. Each image will be run through a segmentation process to isolate every object in the scene. Each object will be manually given a label describing its color, shape, and size. From these segmentations we will extract a useful feature vector for each attribute. We will have one SVM for each possible label, and train it using all of the objects with that label verses all of the objects without that label. \meh{Are we using a bunch of binary SVMs or a multiclass?}
+
+For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm. 
 
 \xxx{What on EARTH do we say here, otherwise? One paragraph seems pretty
-    thin.}
+    thin. AM - I added a bit to this section, but we still might want to go into more detail}
 
 \section{Related Work}
 \xxx{What are existing methods? What are the state-of-the-art methods for this
@@ -146,29 +140,49 @@ to label these objects with relevant descriptors.
     Rapid progress is expected post-deadline when this additional workload
     disappears.}
 
-\paragraph{11~Mar -- 17~Mar}
+\paragraph{11~Mar -- 17~Mar} 
+\begin{itemize}
+\item Full labeling of the training data
+\item SVM trained using the color features
+\end{itemize}
 
 \paragraph{18~Mar -- 24~Mar}
+\begin{itemize}
+\item Evaluation and tuning of color classification
+\item Object Localization (determining an object's position in 3D space)
+\end{itemize}
 
 \paragraph{25~Mar -- 31~Mar}
+\begin{itemize}
+\item Focus our time on the Machine Learning midterm
+\item Have all the components of our system connected together ('water through the pipes')
+\end{itemize}
 
 \paragraph{1~Apr -- 7~Apr}
+\begin{itemize}
+\item Test and debug the first assembled version of the system
+\item Add shape features and classification to the system
+\end{itemize}
 
 \paragraph{8~Apr -- 14~Apr}
+\begin{itemize}
+\item \meh{Board says test object disambiguation. Not quite sure what that means}
+\item Evaluation and tuning of our shape classification
+\end{itemize}
 
 \paragraph{15~Apr -- 21~Apr}
-\meh{
 \begin{itemize}
-    \item Begin written report
-    \item Begin laying out poster
-\end{itemize}
+\item Implement the user interface, including the 'I Spy' game format
+\item Full evaluation of the system 
+\item Start writing up the report and the poster
+\end {itemize}
 
 \paragraph{21~Apr -- 24~Apr}
 \begin{itemize}
     \item Finish editing final report
     \item Finish editing poster and print final copy
+\item Prepare and practice the presentation
 \end{itemize}
-}
 
 \section{Conclusion}
 \xxx{Summary of your progress and your final expected goal (what do you expect
