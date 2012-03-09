@@ -30,6 +30,7 @@
 
 \begin{abstract}
 \xxx{Abstract goes here, 1 par. max}
+Interaction between robots and humans is a rapidly growing area of reasearch.  Inorder for a robot to effectively interact with a human, it needs to be able to understand human descriptions of objects within its environment.  In a simple ``I Spy'' game the basic concepts of learning features of objects can be demonstrated in an interactive way between two parties. \xxx{moar}
 Dijkstra was a cool guy and it's fun to cite his papers~\cite{dijkstra1959}. (It's true)
 \end{abstract}
 
@@ -128,9 +129,10 @@ segments out objects from the scene and allows a human to label these objects
 with relevant descriptors.  We are still working on further developing this
 tool to ease the process of labeling this large amount of data.
 
+
 We have initially focused on getting some of the data labeled with colors so as
 to do an SVM classification to validate our method.  With a small amount of
-data labeled we have successful used the liblinear \xxx{cite} software to do
+data labeled we have successful used the liblinear software~\cite{LIBLINEAR} to do
 binary classification of colors.  The dimensions used for training were the
 Red, Green, Blue, Saturation, Hue, and Value means for each object.  Binary
 classifications between any two colors, even close colors like blue and purple,
