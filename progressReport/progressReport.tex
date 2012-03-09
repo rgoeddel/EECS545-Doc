@@ -78,18 +78,18 @@ For object identification we will do a similar process to segment each object in
 \xxx{Milestones achieved so far (add all relevant experimental results). How
     do these results support your claim?}
 \subsection{Infrastructure}
-We have build/begun building several of the pieces necessary for our I-spy
+We have begun building several of the pieces necessary for our I-spy
 game in parallel.  Prof. Edwin Olson has supplied the group with a robotic
-arm (pictured in Figure~\ref{fig:arm}) and a Kinect, which we built an
-overhead mount (pictured in Figure~\ref{fig:kinect-mount}) to allow it to view
-a small (~2\,ft $\times$ 4\,ft) play area.
+arm (pictured in Figure~\ref{fig:arm}) and a Kinect.  We built an
+overhead mount (pictured in Figure~\ref{fig:kinect-mount}) to allow the Kinect 
+to view a small (~2\,ft $\times$ 4\,ft) play area.
 
 We calibrated the Kinect using an external package~\xxx{cite}, but may still
 choose to calibrate it ourselves using several independent tools to see if we
 can improve the calibration error. We are using the OpenKinect
-package libfreenect~\cite{OpenKinect} to acquire data from the Kinect and have
+package libfreenect~\cite{OpenKinect} to acquire data from the Kinect.  We have
 written a small driver in C to output frames via LCM~\cite{huang2010} to simplify
-communication with the driver for our Java code and because LCM offers useful
+communication with the driver for our Java code.  LCM also offers useful
 built-in logging capabilities.
 
 \begin{figure}
@@ -107,10 +107,10 @@ built-in logging capabilities.
 \end{figure}
 
 \subsection{Data Collection and Training}
-We have acquired a large variety of children's foam blocks in many shapes and
-colors to act as our objects for classification. A small subset of the blocks
-can be seen in Figure~\ref{fig:blocks}. The foam the blocks is an ideal
-material to work with as it
+We have acquired a large variety of children's foam blocks in many shapes, sizes, 
+and colors to act as our objects for classification. A small subset of the 
+blocks can be seen in Figure~\ref{fig:blocks}. The foam of the blocks is an 
+ideal material to work with as it
 \begin{inparaenum}[(1)]
 \item has a smooth, matte finish,
 \item comes in a variety of distinct colors, and
@@ -118,12 +118,32 @@ material to work with as it
 shape.
 \end{inparaenum}
 
-We have collected a training dataset of footage of the foam blocks at numerous
-positions and angles throughout the play area and are creating \xxx{have
-created?} a tool that segments out objects from the scene and allows a human
-to label these objects with relevant descriptors.
+We have collected a training dataset of footage of the foam blocks at numerous 
+positions and angles throughout the play area. We have created a tool that 
+segments out objects from the scene and allows a human to label these objects 
+with relevant descriptors.  We are still working on further developing this 
+tool to ease the process of labeling this large amount of data.
 
-\xxx{More to come?}
+We have initially focused on getting some of the data labeled with colors so as 
+to do an SVM classification to validate our method.  With a small amount of 
+data labeled we have successful used the liblinear \xxx{cite} software to do 
+binary classification of colors.  The dimensions used for training were the 
+Red, Green, Blue, Saturation, Hue, and Value means for each object.  Binary 
+classifications between any two colors, even close colors like blue and purple, 
+were able to achieve near 100 percent accuracy.  Although this was just will a 
+small subset of data, this is still encouraging and helps somewhat ameliorate 
+the concerns that the Kinect system will produce clean enough data, at least in 
+the case of color.  More investigation and evaluation will occur once other 
+features, such as shape, are explored.
+
+This is a multi-class classification problem so we intend to use a one-vs-all 
+(OVA) approach.  However with the only small amount of data that has been 
+labeled so far, the OVA classification did not perform very well.  This should 
+be addressed once we have a more efficient system for labeling the data 
+collected.  If the OVA approach still proves problematic, we are also 
+considering using a strategy where a set of binary, one-vs-one, classifiers are 
+used.  The result is determined by which class is selected by most classifiers.
+
 
 \begin{figure}
 \centering
