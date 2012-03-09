@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage[small]{caption}
 \usepackage{subfig}
+\usepackage{multirow}
 
 % =========
 \usepackage{color}
@@ -15,6 +16,8 @@
 % we're not sure should make primetime
 \newcommand{\xxx}[1]{{\bf \color{red} #1}}
 \newcommand{\meh}[1]{{\bf \color{blue} #1}}
+\newcommand\T{\rule{0pt}{3ex}}
+\newcommand\B{\rule[-1.2ex]{0pt}{0pt}}
 
 % =========
 
@@ -140,49 +143,41 @@ to label these objects with relevant descriptors.
     Rapid progress is expected post-deadline when this additional workload
     disappears.}
 
-\paragraph{11~Mar -- 17~Mar} 
-\begin{itemize}
-\item Full labeling of the training data
-\item SVM trained using the color features
-\end{itemize}
-
-\paragraph{18~Mar -- 24~Mar}
-\begin{itemize}
-\item Evaluation and tuning of color classification
-\item Object Localization (determining an object's position in 3D space)
-\end{itemize}
-
-\paragraph{25~Mar -- 31~Mar}
-\begin{itemize}
-\item Focus our time on the Machine Learning midterm
-\item Have all the components of our system connected together ('water through the pipes')
-\end{itemize}
-
-\paragraph{1~Apr -- 7~Apr}
-\begin{itemize}
-\item Test and debug the first assembled version of the system
-\item Add shape features and classification to the system
-\end{itemize}
-
-\paragraph{8~Apr -- 14~Apr}
-\begin{itemize}
-\item \meh{Board says test object disambiguation. Not quite sure what that means}
-\item Evaluation and tuning of our shape classification
-\end{itemize}
-
-\paragraph{15~Apr -- 21~Apr}
-\begin{itemize}
-\item Implement the user interface, including the 'I Spy' game format
-\item Full evaluation of the system 
-\item Start writing up the report and the poster
-\end {itemize}
-
-\paragraph{21~Apr -- 24~Apr}
-\begin{itemize}
-    \item Finish editing final report
-    \item Finish editing poster and print final copy
-\item Prepare and practice the presentation
-\end{itemize}
+\begin{center}
+    \begin{tabular}{ | l | l |}
+    \hline
+    \multirow{2}{*}{11~Mar -- 17~Mar} 
+	& Full labeling of the training data \T \\
+	& SVM trained using the color features \B \\ 
+    \hline
+    \multirow{2}{*}{18~Mar -- 24~Mar} 
+	& Evaluation and tuning of color classification \T \\ 
+	& Object Localization (determining an object's position in 3D space) \B \\ 
+    \hline
+    \multirow{2}{*}{25~Mar -- 31~Mar} 
+	& Focus our time on the Machine Learning midterm \T\\
+	& Have all the components of our system connected together ('water through the pipes') \B \\ 
+    \hline
+    \multirow{2}{*}{1~Apr -- 7~Apr} 
+	& Test and debug the first assembled version of the system \T \\
+	& Add shape features and classification to the system \B\\ 
+    \hline
+    \multirow{2}{*}{8~Apr -- 14~Apr} 
+	& \meh{Board says test object disambiguation. Not quite sure what that means} \T\\
+	& Evaluation and tuning of our shape classification \B \\ 
+    \hline
+    \multirow{3}{*}{15~Apr -- 21~Apr} 
+	& Implement the user interface, including the 'I Spy' game format \T\\
+	& Full evaluation of the system \\ 
+	& Start writing up the report and the poster \B \\
+    \hline
+    \multirow{3}{*}{21~Apr -- 24~Apr} 
+	& Finish editing final report \T \\
+	& Finish editing poster and print final copy \\ 
+	& Prepare and practice the presentation \B \\
+    \hline
+    \end{tabular}
+\end{center}
 
 \section{Conclusion}
 \xxx{Summary of your progress and your final expected goal (what do you expect
