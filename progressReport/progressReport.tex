@@ -39,7 +39,7 @@ Dijkstra was a cool guy and it's fun to cite his papers~\cite{dijkstra1959}. (It
     problem? What's the impact if you can solve this problem?}
 Language is a powerful tool that is just coming into its own as the human
 interface for various systems. Apple's Siri is an excellent example of this,
-making interaction with your phone intuitive, easy, and efficient. 
+making interaction with your phone intuitive, easy, and efficient.
 
 Robotic systems in AI can also benefit from greater understanding of
 language. Such knowledge could allow a human to command or teach a robot agent in a more natural way. Take, for example, a robotic arm system with knowledge of only
@@ -66,7 +66,17 @@ offers improvements in efficiency, safety, etc. \xxx{Examples?}
 
 Our approach will use supervised learning techniques to generate a description of each object. First, we will gather our training data by collecting a number of RGB-D images from the camera featuring various types and positions of objects. Each image will be run through a segmentation process to isolate every object in the scene. Each object will be manually given a label describing its color, shape, and size. From these segmentations we will extract a useful feature vector for each attribute. We will have one SVM for each possible label, and train it using all of the objects with that label verses all of the objects without that label. \meh{Are we using a bunch of binary SVMs or a multiclass?}
 
-For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm. 
+One of the main challenges for good object classification will be designing a
+diverse and robust feature space to recognize the object characteristics we
+are interested in. Color presents easy features such as RGB and HSV
+descriptions. Volume computations and bounding box dimensions based on
+relations to the other objects in the scene can give us scale information
+necessary for estimating relative size. Shape is a more complex matter,
+especially given the noise seen in the Kinect data. We plan on exploring
+spherical harmonics, edge/corner features, and features based on projected
+models of missing data (for example, symmetry) to correctly identify shapes.
+
+For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm.
 
 
 
@@ -84,7 +94,7 @@ For object identification we will do a similar process to segment each object in
 We have begun building several of the pieces necessary for our I-spy
 game in parallel.  Prof. Edwin Olson has supplied the group with a robotic
 arm (pictured in Figure~\ref{fig:arm}) and a Kinect.  We built an
-overhead mount (pictured in Figure~\ref{fig:kinect-mount}) to allow the Kinect 
+overhead mount (pictured in Figure~\ref{fig:kinect-mount}) to allow the Kinect
 to view a small (~2\,ft $\times$ 4\,ft) play area.
 
 We calibrated the Kinect using an external package~\xxx{cite}, but may still
@@ -110,9 +120,9 @@ built-in logging capabilities.
 \end{figure}
 
 \subsection{Data Collection and Training}
-We have acquired a large variety of children's foam blocks in many shapes, sizes, 
-and colors to act as our objects for classification. A small subset of the 
-blocks can be seen in Figure~\ref{fig:blocks}. The foam of the blocks is an 
+We have acquired a large variety of children's foam blocks in many shapes, sizes,
+and colors to act as our objects for classification. A small subset of the
+blocks can be seen in Figure~\ref{fig:blocks}. The foam of the blocks is an
 ideal material to work with as it
 \begin{inparaenum}[(1)]
 \item has a smooth, matte finish,
@@ -121,30 +131,31 @@ ideal material to work with as it
 shape.
 \end{inparaenum}
 
-We have collected a training dataset of footage of the foam blocks at numerous 
-positions and angles throughout the play area. We have created a tool that 
-segments out objects from the scene and allows a human to label these objects 
-with relevant descriptors.  We are still working on further developing this 
+We have collected a training dataset of footage of the foam blocks at numerous
+positions and angles throughout the play area. We have created a tool that
+segments out objects from the scene and allows a human to label these objects
+with relevant descriptors.  We are still working on further developing this
 tool to ease the process of labeling this large amount of data.
 
-We have initially focused on getting some of the data labeled with colors so as 
-to do an SVM classification to validate our method.  With a small amount of 
-data labeled we have successful used the liblinear software~\cite{LIBLINEAR} to 
-do binary classification of colors.  The dimensions used for training were the 
-Red, Green, Blue, Saturation, Hue, and Value means for each object.  Binary 
-classifications between any two colors, even close colors like blue and purple, 
-were able to achieve near 100 percent accuracy.  Although this was just will a 
-small subset of data, this is still encouraging and helps somewhat ameliorate 
-the concerns that the Kinect system will produce clean enough data, at least in 
-the case of color.  More investigation and evaluation will occur once other 
+
+We have initially focused on getting some of the data labeled with colors so as
+to do an SVM classification to validate our method.  With a small amount of
+data labeled we have successful used the liblinear software~\cite{LIBLINEAR} to do
+binary classification of colors.  The dimensions used for training were the
+Red, Green, Blue, Saturation, Hue, and Value means for each object.  Binary
+classifications between any two colors, even close colors like blue and purple,
+were able to achieve near 100 percent accuracy.  Although this was just will a
+small subset of data, this is still encouraging and helps somewhat ameliorate
+the concerns that the Kinect system will produce clean enough data, at least in
+the case of color.  More investigation and evaluation will occur once other
 features, such as shape, are explored.
 
-This is a multi-class classification problem so we intend to use a one-vs-all 
-(OVA) approach.  However with the only small amount of data that has been 
-labeled so far, the OVA classification did not perform very well.  This should 
-be addressed once we have a more efficient system for labeling the data 
-collected.  If the OVA approach still proves problematic, we are also 
-considering using a strategy where a set of binary, one-vs-one, classifiers are 
+This is a multi-class classification problem so we intend to use a one-vs-all
+(OVA) approach.  However with the only small amount of data that has been
+labeled so far, the OVA classification did not perform very well.  This should
+be addressed once we have a more efficient system for labeling the data
+collected.  If the OVA approach still proves problematic, we are also
+considering using a strategy where a set of binary, one-vs-one, classifiers are
 used.  The result is determined by which class is selected by most classifiers.
 
 
@@ -169,34 +180,34 @@ used.  The result is determined by which class is selected by most classifiers.
 \begin{center}
     \begin{tabular}{ | l | l |}
     \hline
-    \multirow{2}{*}{11~Mar -- 17~Mar} 
+    \multirow{2}{*}{11~Mar -- 17~Mar}
 	& Full labeling of the training data \T \\
-	& SVM trained using the color features \B \\ 
+	& SVM trained using the color features \B \\
     \hline
-    \multirow{2}{*}{18~Mar -- 24~Mar} 
-	& Evaluation and tuning of color classification \T \\ 
-	& Object Localization (determining an object's position in 3D space) \B \\ 
+    \multirow{2}{*}{18~Mar -- 24~Mar}
+	& Evaluation and tuning of color classification \T \\
+	& Object Localization (determining an object's position in 3D space) \B \\
     \hline
-    \multirow{2}{*}{25~Mar -- 31~Mar} 
+    \multirow{2}{*}{25~Mar -- 31~Mar}
 	& Focus our time on the Machine Learning midterm \T\\
-	& Have all the components of our system connected together ('water through the pipes') \B \\ 
+	& Have all the components of our system connected together ('water through the pipes') \B \\
     \hline
-    \multirow{2}{*}{1~Apr -- 7~Apr} 
+    \multirow{2}{*}{1~Apr -- 7~Apr}
 	& Test and debug the first assembled version of the system \T \\
-	& Add shape features and classification to the system \B\\ 
+	& Add shape features and classification to the system \B\\
     \hline
-    \multirow{2}{*}{8~Apr -- 14~Apr} 
+    \multirow{2}{*}{8~Apr -- 14~Apr}
 	& Verify that we can distinguish two objects with different features \T\\
-	& Evaluation and tuning of our shape classification \B \\ 
+	& Evaluation and tuning of our shape classification \B \\
     \hline
-    \multirow{3}{*}{15~Apr -- 21~Apr} 
+    \multirow{3}{*}{15~Apr -- 21~Apr}
 	& Implement the user interface, including the 'I Spy' game format \T\\
-	& Full evaluation of the system \\ 
+	& Full evaluation of the system \\
 	& Start writing up the report and the poster \B \\
     \hline
-    \multirow{3}{*}{21~Apr -- 24~Apr} 
+    \multirow{3}{*}{21~Apr -- 24~Apr}
 	& Finish editing final report \T \\
-	& Finish editing poster and print final copy \\ 
+	& Finish editing poster and print final copy \\
 	& Prepare and practice the presentation \B \\
     \hline
     \end{tabular}
