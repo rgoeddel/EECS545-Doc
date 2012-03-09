@@ -39,23 +39,21 @@ Dijkstra was a cool guy and it's fun to cite his papers~\cite{dijkstra1959}. (It
 Language is a powerful tool that is just coming into its own as the human
 interface for various systems. Apple's Siri is an excellent example of this,
 making interaction with your phone intuitive, easy, and efficient. 
-
 Robotic systems in AI can also benefit from greater understanding of
 language. Such knowledge could allow a human to command or teach a robot agent in a more natural way. Take, for example, a robotic arm system with knowledge of only
 several nouns and actions: cup, sink, grab/move object, and turning on/off
 the sink, and the spatial concept of in. Through language, the robot could then be taught the new action of ``filling a cup'', which means to put the cup in the sink and turn on the
 sink. Even though the robot has never seen anyone fill a cup before, now
 it should be able to do so itself. Furthermore, the agent could generalize the concept to new items, like a bowl. This is a powerful
-and intuitive way for humans to interact with a system, one which does not
-take a computer scientist to understand.
+way for an agent to learn from a human, without requiring expert instructors. 
 
 Our goal is to leverage machine learning techniques in order to train a system to know a small vocabulary of nouns, adjectives,
 and actions. As a proof of concept, we want to be able to play the children's
 game ``I spy'' with a robotic arm. The arm's ``eyes'' will be a Microsoft
 Kinect (or, with some small probability, a stereo camera rig) capable of
-returning RGB-D data for classification. A collection of objects will be placed in the view of the camera, and a person will give a description of one of the objects. The agent will then select the object that matches that description using the robot arm. \meh{Pointing? Grabbing?}.
+returning RGB-D data for classification. A collection of objects will be placed in the view of the camera, and a person will give a description of one of the objects. The agent will then select the object that matches that description using the robot arm.
 
-This work is planned to be incorporated into a larger project which includes teaching the agent new concepts and actions as described above. Such a project relies on having symbolic information provided by our work through object segmentation and classification. The low level features provided by our system can be analyzed and combined in order to build new concepts like object categories (like blocks and balls) or object properties (all bananas are yellow). Such a system could be used on service tasks or with non-robotic systems where a verbal interface
+This work is planned to be incorporated into a larger project which includes teaching the agent new concepts and actions as described above. Such a project relies on having symbolic information provided by our work through object segmentation and classification. The low level features provided by our system can be analyzed and combined in order to build new concepts like object categories (like blocks and balls) or object properties (all bananas are yellow). Such reasoning and concept generalization is essential for agents that interact in novel situations. These capabilities could be used on service tasks or with non-robotic systems where a verbal interface
 offers improvements in efficiency, safety, etc. \xxx{Examples?}
 
 \section{Proposed Method}
@@ -63,14 +61,10 @@ offers improvements in efficiency, safety, etc. \xxx{Examples?}
     work? Provide technical details of your approach if you are proposing a
     novel method.}
 
-Our approach will use supervised learning techniques to generate a description of each object. First, we will gather our training data by collecting a number of RGB-D images from the camera featuring various types and positions of objects. Each image will be run through a segmentation process to isolate every object in the scene. Each object will be manually given a label describing its color, shape, and size. From these segmentations we will extract a useful feature vector for each attribute. We will have one SVM for each possible label, and train it using all of the objects with that label verses all of the objects without that label. \meh{Are we using a bunch of binary SVMs or a multiclass?}
+Our approach will use supervised learning techniques to generate a description of each object. First, we will gather our training data by collecting a number of RGB-D images from the camera featuring various types and positions of objects. Each image will be run through a segmentation process to isolate every object in the scene. Each object will be manually given a label describing its color, shape, and size. From these segmentations we will extract a useful feature vector for each attribute. Once the features are extracted, we need to use a machine learning algorithm to perform the classification. We decided to use the liblinear SVM because it is widely used, powerful, reliable, and performs well for classification tasks. We are specifically using multiclass approach because we have attributes like color which can take on several discrete values. We will have one SVM for each possible label, and train it using all of the objects with that label verses all of the objects without that label. \meh{Are we using a bunch of binary SVMs or a multiclass?}
 
 For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm. 
 
-
-
-\xxx{What on EARTH do we say here, otherwise? One paragraph seems pretty
-    thin. AM - I added a bit to this section, but we still might want to go into more detail}
 
 \section{Related Work}
 \xxx{What are existing methods? What are the state-of-the-art methods for this
@@ -97,11 +91,11 @@ built-in logging capabilities.
 \begin{figure}
 \centering
 \subfloat[Robotic arm \xxx{placeholder}] {
-    \includegraphics[height=3in]{figures/arm2.png}
+    \includegraphics[height=2.5in]{figures/arm2.png}
     \label{fig:arm}
 }
 \subfloat[Kinect mount \xxx{placeholder}] {
-    \includegraphics[height=3in]{figures/kinect.png}
+    \includegraphics[height=2.5in]{figures/kinect.png}
     \label{fig:kinect-mount}
 }
 \caption{Our robotic arm and Kinect mount. \xxx{better caption}}
@@ -146,14 +140,18 @@ collected.  If the OVA approach still proves problematic, we are also
 considering using a strategy where a set of binary, one-vs-one, classifiers are 
 used.  The result is determined by which class is selected by most classifiers.
 
-
 \begin{figure}
 \centering
-\includegraphics[width=0.48\textwidth]{figures/blocks.png}
-\caption{A sample of the foam blocks we are using for classification. To
-    simplify the language space we are working in, we limited our objects to
-    those that can be described with simple shapes and colors.}
-\label{fig:blocks}
+\subfloat[Foam Blocks] {
+    \includegraphics[height=2.5in]{figures/blocks.png}
+    \label{fig:blocks}
+}
+\subfloat[Segmented Images] {
+    \includegraphics[height=2.5in]{figures/blue_objs.png}
+    \label{fig:images}
+}
+\caption{On the left are the foam blocks used in our system. The objects are limited to simple shapes and colors. On the right is the segmented data from the camera which will be used for feature extraction}
+\label{fig:objects}
 \end{figure}
 
 \section{Future Milestones}
@@ -206,7 +204,7 @@ used.  The result is determined by which class is selected by most classifiers.
     to achieve or demonstrate for the final project?)}
 Our primary focus in the project has been setting up all the parts we need to move forward with the core of the project. This includes getting the camera and installing it in a rig, connecting to the camera to get the data, and acquiring the necessary training data. We are in the process of getting labeled feature representations out of that data in order to train an SVM on it. Our preliminary tests using color data indicate that our color classification method will be sufficient to distinguish between colors with high accuracy.
 
-In the end, we want our system to provide a discription for each object that is accurate and robust. This will ensure that our agent is able to correctly identifiy the objects described within the context of our I Spy game. We expect that shape will be more prone to noise and error than color, but we would still like our agent to correctly identify the shape at least 90% of the time. Misclassification errors made by the visual system can have very detrimental effects on the high-level system using those classifications, so our top priority is to provide object descriptions that are as noiseless and error-free as possible.
+In the end, we want our system to provide a discription for each object that is accurate and robust. This will ensure that our agent is able to correctly identifiy the objects described within the context of our I Spy game. We expect that shape will be more prone to noise and error than color, but we would still like our agent to correctly identify the shape at least 90\% of the time. Misclassification errors made by the visual system can have very detrimental effects on the high-level system using those classifications, so our top priority is to provide object descriptions that are as noiseless and error-free as possible.
 
 \bibliographystyle{plain}
 \bibliography{literature}
