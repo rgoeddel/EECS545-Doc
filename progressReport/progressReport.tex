@@ -8,7 +8,6 @@
 \usepackage{subfig}
 \usepackage{multirow}
 
-% =========
 \usepackage{color}
 
 % The xxx tag is intended to denote urgent text that needs addressing.
@@ -19,8 +18,6 @@
 \newcommand\T{\rule{0pt}{3ex}}
 \newcommand\B{\rule[-1.2ex]{0pt}{0pt}}
 
-% =========
-
 \title{\xxx{Linguistic Classification of Objects}}
 \author{Rob Goeddel \and Lauren Hinkle \and James Kirk \and Aaron Mininger}
 \date{}
@@ -29,7 +26,7 @@
 \maketitle
 
 \begin{abstract}
-Interaction between robots and humans is a rapidly growing area of reasearch. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language. 
+Interaction between robots and humans is a rapidly growing area of reasearch. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language.
 \end{abstract}
 
 \section{Introduction}
@@ -42,7 +39,7 @@ several nouns and actions: cup, sink, grab/move object, and turning on/off
 the sink, and the spatial concept of in. Through language, the robot could then be taught the new action of ``filling a cup'', which means to put the cup in the sink and turn on the
 sink. Even though the robot has never seen anyone fill a cup before, now
 it should be able to do so itself. Furthermore, the agent could generalize the concept to new items, like a bowl. This is a powerful
-way for an agent to learn from a human, without requiring expert instructors. 
+way for an agent to learn from a human, without requiring expert instructors.
 
 Our goal is to leverage machine learning techniques in order to train a system to know a small vocabulary of nouns, adjectives,
 and actions. As a proof of concept, we want to be able to play the children's
@@ -67,7 +64,7 @@ necessary for estimating relative size. Shape is a more complex matter,
 especially given the noise seen in the Kinect data. We plan on exploring
 spherical harmonics, edge/corner features, and features based on projected
 models of missing data (for example, symmetry) to correctly identify shapes.
-Once the features are extracted, we need to use a machine learning algorithm to perform the classification. We decided to use the liblinear SVM ~\cite{LIBLINEAR} because it is widely used, powerful, reliable, and performs well for classification tasks. We are specifically using multiclass approach because we have attributes like color which can take on several discrete values. 
+Once the features are extracted, we need to use a machine learning algorithm to perform the classification. We decided to use the liblinear SVM ~\cite{LIBLINEAR} because it is widely used, powerful, reliable, and performs well for classification tasks. We are specifically using multiclass approach because we have attributes like color which can take on several discrete values.
 
 For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm.
 
@@ -75,11 +72,42 @@ For object identification we will do a similar process to segment each object in
 \section{Related Work}
 \xxx{What are existing methods? What are the state-of-the-art methods for this
     problem? How is your approach different from the related work?}
-Object classification is a problem that appears throughout a variety of applications, ranging from law enforcement to manufacturing. While historic efforts have focused more on the recognition problem, that is, finding a known object in a scene, more recent work has emphasized the more general problem of classifying objects into generic groups by type [Huber]. For example, we might be interested in identifying vehicles as bikes, motorcycles, trucks, cars, etc. Work by [Nilsback] and [Gehler], among others, has shown that powerful classifiers may be constructed through boosting or similar across simple feature-specific classifiers such as color, shape, etc.
 
-Recent popularization of sensors that combine both image and depth information like the Microsoft Kinect inexpensively provide richer sensory information. The addition of depth can help disambiguate situations that would be very difficult with a normal camera image alone. Depth can make the determination of an object’s underlying geometry much easier, leading to better identification [Marton]. Previous work has successfully incorporated such cameras (often called RGBD cameras) with object recognition in indoors domains featuring common household objects [Marton, Lai].
+Object classification is a problem that appears throughout a variety of
+applications, ranging from law enforcement to manufacturing. While historic
+efforts have focused on the recognition problem, that is, finding a known object
+in a scene, more recent work has emphasized the more general problem of
+classifying objects into generic groups by type~\cite{huber2004parts}. For example,
+we might be interested in identifying vehicles as bikes, motorcycles, trucks,
+cars, etc. Work by~\cite{nilsback2006visual} and~\cite{gehler2009feature}, among
+others, has shown that powerful classifiers may be constructed through boosting
+or similar across simple feature-specific classifiers such as color, shape, etc.
 
-Our work will approach this problem from a different direction. Instead of learning how to combine different feature spaces to describe different classes of objects, we will learn words that describe regions of our feature spaces that may then be combined to describe classes of objects. For example, trash cans in CSE may be described as blue or gray rectangular prisms. This allows us to quickly come up with classifiers for new object classes since we may construct them from our learned vocabulary instead of learning models of them directly in feature space.
+Recent popularization of sensors that combine both image and depth information
+like the Microsoft Kinect inexpensively provide richer sensory information. The
+addition of depth can help disambiguate situations that would be very difficult
+with a normal camera image alone. Depth can make the determination of an object’s
+underlying geometry much easier, leading to better identification~\cite{marton2010hierarchical}.
+Previous work has successfully incorporated such cameras (often called RGBD c
+ameras) with object recognition in indoors domains featuring common household
+objects~\cite{marton2010hierarchical}~\cite{lai2011sparse}.
+
+A different approach to this problem is learning words that describe different
+areas of the feature space, which can then be combined to describe classes of
+objects. Research in this area focuses on learning simple, physically observable,
+words with the intent of using these simple descriptors to learn more complex
+nouns and relationships. Of particular popularity is an approach focused on
+learning colors and shapes of small objects using sensory data~\cite{zambuto2010visually}
+~\cite{roy2002learning}.
+
+Our work will approach this problem from a different direction. Instead of
+learning how to combine different feature spaces to describe different classes
+of objects, we will learn words that describe regions of our feature spaces that
+may then be combined to describe classes of objects. For example, trash cans in
+BBB may be described as blue or gray rectangular prisms. This allows us to quickly
+come up with classifiers for new object classes since we may construct them from
+our learned vocabulary instead of learning models of them directly in feature
+space.
 
 
 \section{Experimental Results}
