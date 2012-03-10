@@ -30,6 +30,19 @@
 Interaction between robots and humans is a rapidly growing area of research. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language.
 \end{abstract}
 
+\begin{figure}
+\centering
+\subfloat[Robotic arm] {
+    \includegraphics[height=2.5in]{figures/arm2.png}
+    \label{fig:arm}
+}
+\subfloat[Kinect camera mount] {
+    \includegraphics[height=2.5in]{figures/kinect.png}
+    \label{fig:kinect-mount}
+}
+\caption{The hardware components used by our project that sense and interact with the environment.}
+\label{fig:hardware}
+\end{figure}
 \section{Introduction}
 %\xxx{Problem description and motivation. Why do you want to solve this
 %    problem? What's the impact if you can solve this problem?}
@@ -122,27 +135,13 @@ arm (pictured in Figure~\ref{fig:arm}) and a Kinect.  We built an
 overhead mount (pictured in Figure~\ref{fig:kinect-mount}) to allow the Kinect
 to view a small (~2\,ft $\times$ 4\,ft) play area.
 
-We calibrated the Kinect using an external package~\xxx{cite}, but may still
+We calibrated the Kinect using an external package~\cite{rgbdemo}, but may still
 choose to calibrate it ourselves using several independent tools to see if we
 can improve the calibration error. We are using the OpenKinect
 package libfreenect~\cite{OpenKinect} to acquire data from the Kinect.  We have
 written a small driver in C to output frames via LCM~\cite{huang2010} to simplify
 communication with the driver for our Java code.  LCM also offers useful
 built-in logging capabilities.
-
-\begin{figure}
-\centering
-\subfloat[Robotic arm] {
-    \includegraphics[height=2.5in]{figures/arm2.png}
-    \label{fig:arm}
-}
-\subfloat[Kinect camera mount] {
-    \includegraphics[height=2.5in]{figures/kinect.png}
-    \label{fig:kinect-mount}
-}
-\caption{The hardware components used by our project that sense and interact with the environment.}
-\label{fig:hardware}
-\end{figure}
 
 \subsection{Data Collection and Training}
 We have acquired a large variety of children's foam blocks in many shapes, sizes,
@@ -161,6 +160,41 @@ positions and angles throughout the play area. We have created a tool that
 segments out objects from the scene and allows a human to label these objects
 with relevant descriptors.  We are still working on further developing this
 tool to ease the process of labeling this large amount of data.
+
+\begin{figure}
+\centering
+\caption{Our distribution of real-world color data in hue and saturation
+    dimensions. Point colors correspond with the ground truth color labeling,
+    so true red examples are shown as red +s.}
+\label{fig:colordata}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\subfloat[Foam Blocks] {
+    \includegraphics[height=1.6in]{figures/blocks.png}
+    \label{fig:blocks}
+}
+\subfloat[Segmented Images] {
+    \includegraphics[height=1.6in]{figures/blue_objs.png}
+    \label{fig:images}
+}
+\subfloat[Real-world test data] {
+    \includegraphics[height=1.6in]{figures/colorplot_noorange.eps}
+    \label{fig:colordata}
+}
+\caption{Real world data is extracted from toy foam blocks. The blocks
+    themselves can be seen in \subref{fig:blocks}. Using a segmentation
+    algorithm, we extract the blocks from the Kinect data \subref{fig:images}
+    and generate feature vectors for each object.
+    Finally, we hand label the data for features such as color for
+    classification training. In \subref{fig:colordata}, we see the actual
+    distribution of our training samples in the hue and saturation
+    dimensions.}
+\label{fig:objects}
+\end{figure}
+
+
 
 
 We have initially focused on getting some of the data labeled with colors so as
@@ -184,30 +218,6 @@ collected.  If the OVA approach still proves problematic, we are also
 considering using a strategy where a set of binary, one-vs-one, classifiers are
 used.  The result is determined by which class is selected by most classifiers.
 
-\pagebreak
-\begin{figure}
-\centering
-\includegraphics[height=1.75in]{figures/colorplot_noorange.eps}
-\caption{Our distribution of real-world color data in hue and saturation
-    dimensions. Point colors correspond with the ground truth color labeling,
-    so true red examples are shown as red +s.}
-\label{fig:colordata}
-\end{figure}
-
-\begin{figure}
-\centering
-\subfloat[Foam Blocks] {
-    \includegraphics[height=1.75in]{figures/blocks.png}
-    \label{fig:blocks}
-}
-\subfloat[Segmented Images] {
-    \includegraphics[height=1.75in]{figures/blue_objs.png}
-    \label{fig:images}
-}
-\caption{On the left are the foam blocks used in our system. The objects are limited to simple shapes and colors. On the right is the segmented data from the camera which will be used for feature extraction}
-\label{fig:objects}
-\end{figure}
-
 % orange 87.10
 \begin{table}
 \centering
@@ -221,7 +231,6 @@ used.  The result is determined by which class is selected by most classifiers.
            with 20\% left out for testing.}
 \label{tbl:testresults}
 \end{table}
-\pagebreak
 
 \section{Future Milestones}
 Our estimated schedule for the future can be seen in the table below. By early
@@ -242,7 +251,7 @@ will focus on extending our feature space.
     \hline
     \multirow{2}{*}{25~Mar -- 31~Mar}
 	& Focus our time on the Machine Learning midterm \T\\
-	& Have all the components of our system connected together ('water through the pipes') \B \\
+	& Have all the components of our system connected together (`water through the pipes') \B \\
     \hline
     \multirow{2}{*}{1~Apr -- 7~Apr}
 	& Test and debug the first assembled version of the system \T \\
@@ -253,7 +262,7 @@ will focus on extending our feature space.
 	& Evaluation and tuning of our shape/size classification \B \\
     \hline
     \multirow{3}{*}{15~Apr -- 21~Apr}
-	& Implement the user interface, including the 'I Spy' game format \T\\
+	& Implement the user interface, including the `I Spy' game format \T\\
 	& Full evaluation of the system \\
 	& Start writing up the report and the poster \B \\
     \hline
