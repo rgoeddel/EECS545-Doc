@@ -75,6 +75,12 @@ For object identification we will do a similar process to segment each object in
 \section{Related Work}
 \xxx{What are existing methods? What are the state-of-the-art methods for this
     problem? How is your approach different from the related work?}
+Object classification is a problem that appears throughout a variety of applications, ranging from law enforcement to manufacturing. While historic efforts have focused more on the recognition problem, that is, finding a known object in a scene, more recent work has emphasized the more general problem of classifying objects into generic groups by type [Huber]. For example, we might be interested in identifying vehicles as bikes, motorcycles, trucks, cars, etc. Work by [Nilsback] and [Gehler], among others, has shown that powerful classifiers may be constructed through boosting or similar across simple feature-specific classifiers such as color, shape, etc.
+
+Recent popularization of sensors that combine both image and depth information like the Microsoft Kinect inexpensively provide richer sensory information. The addition of depth can help disambiguate situations that would be very difficult with a normal camera image alone. Depth can make the determination of an object’s underlying geometry much easier, leading to better identification [Marton]. Previous work has successfully incorporated such cameras (often called RGBD cameras) with object recognition in indoors domains featuring common household objects [Marton, Lai].
+
+Our work will approach this problem from a different direction. Instead of learning how to combine different feature spaces to describe different classes of objects, we will learn words that describe regions of our feature spaces that may then be combined to describe classes of objects. For example, trash cans in CSE may be described as blue or gray rectangular prisms. This allows us to quickly come up with classifiers for new object classes since we may construct them from our learned vocabulary instead of learning models of them directly in feature space.
+
 
 \section{Experimental Results}
 \subsection{Infrastructure}
