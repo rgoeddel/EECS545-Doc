@@ -145,11 +145,22 @@ features, such as shape, are explored.
 
 This is a multi-class classification problem so we intend to use a one-vs-all
 (OVA) approach.  However with the only small amount of data that has been
-labeled so far, the OVA classification did not perform very well.  This should
+labeled so far, the OVA classification did not perform very well. The results in figure~\ref{fig:testresults} show plenty of room for improvement. This should
 be addressed once we have a more efficient system for labeling the data
 collected.  If the OVA approach still proves problematic, we are also
 considering using a strategy where a set of binary, one-vs-one, classifiers are
 used.  The result is determined by which class is selected by most classifiers.
+
+\begin{figure}
+\centering
+    \begin{tabular}{ | l | l | l | l | l | l |}
+    \hline
+    red & orange & yellow & green & blue & purple \T \B \\ \hline
+    96.43\% & 87.10\% & 92.00\% & 97.37 \% & 100.00\% & 88.57\% \B \T \\ \hline
+\end{tabular}
+\caption{This shows the result of OVA classification for the six color types across 160 objects. Each test involved training on 80\% of the points, with 20\% left out for testing}
+\label{fig:testresults}
+\end{figure}
 
 \begin{figure}
 \centering
