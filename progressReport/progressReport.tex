@@ -26,7 +26,7 @@
 \maketitle
 
 \begin{abstract}
-Interaction between robots and humans is a rapidly growing area of reasearch. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language.
+Interaction between robots and humans is a rapidly growing area of research. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language.
 \end{abstract}
 
 \section{Introduction}
@@ -88,27 +88,30 @@ like the Microsoft Kinect inexpensively provide richer sensory information. The
 addition of depth can help disambiguate situations that would be very difficult
 with a normal camera image alone. Depth can make the determination of an object’s
 underlying geometry much easier, leading to better identification~\cite{marton2010hierarchical}.
-Previous work has successfully incorporated such cameras (often called RGBD c
-ameras) with object recognition in indoors domains featuring common household
-objects~\cite{marton2010hierarchical}~\cite{lai2011sparse}.
+Previous work has successfully incorporated such cameras (often called RGBD
+cameras) with object recognition in indoors domains featuring common household
+objects~\cite{marton2010hierarchical, lai2011sparse}.
 
 A different approach to this problem is learning words that describe different
 areas of the feature space, which can then be combined to describe classes of
 objects. Research in this area focuses on learning simple, physically observable,
 words with the intent of using these simple descriptors to learn more complex
 nouns and relationships. Of particular popularity is an approach focused on
-learning colors and shapes of small objects using sensory data~\cite{zambuto2010visually}
-~\cite{roy2002learning}.
+learning colors and shapes of small objects using sensory data
+~\cite{zambuto2010visually, roy2002learning}. Additional approaches focus on learning entities in the
+environment through interaction with them~\cite{gold2009robotic}. These approaches
+all focus on interaction with physical objects to discover qualities about them.
 
-Our work will approach this problem from a different direction. Instead of
-learning how to combine different feature spaces to describe different classes
-of objects, we will learn words that describe regions of our feature spaces that
-may then be combined to describe classes of objects. For example, trash cans in
-BBB may be described as blue or gray rectangular prisms. This allows us to quickly
-come up with classifiers for new object classes since we may construct them from
-our learned vocabulary instead of learning models of them directly in feature
-space.
+Although the types of words learned in these works is similar, the approaches and
+end-goals vary. Semantic clustering~\cite{zambuto2010visually}, decision trees
+~\cite{gold2009robotic}, bag of word models~\cite{roy2002learning} are all used
+in the learning algorithms. This prior work focuses mostly on visual classification
+and the corresponding vocabulary.
 
+Though our work will not extend dramatically on this concept, our long term
+trajectory will focus more on the complex action space, previously less explored.
+This project lays the groundwork for developing an action-space, both for
+learning said actions as well as learning objects upon which to act.
 
 \section{Experimental Results}
 \subsection{Infrastructure}
@@ -246,9 +249,11 @@ used.  The result is determined by which class is selected by most classifiers.
     to achieve or demonstrate for the final project?)}
 Our primary focus in the project has been setting up all the parts we need to move forward with the core of the project. This includes getting the camera and installing it in a rig, connecting to the camera to get the data, and acquiring the necessary training data. We are in the process of getting labeled feature representations out of that data in order to train an SVM on it. Our preliminary tests using color data indicate that our color classification method will be sufficient to distinguish between colors with high accuracy.
 
-In the end, we want our system to provide a discription for each object that is accurate and robust. This will ensure that our agent is able to correctly identifiy the objects described within the context of our I Spy game. We expect that shape will be more prone to noise and error than color, but we would still like our agent to correctly identify the shape at least 90\% of the time. Misclassification errors made by the visual system can have very detrimental effects on the high-level system using those classifications, so our top priority is to provide object descriptions that are as noiseless and error-free as possible.
+In the end, we want our system to provide a description for each object that is accurate and robust. This will ensure that our agent is able to correctly identify the objects described within the context of our I Spy game. We expect that shape will be more prone to noise and error than color, but we would still like our agent to correctly identify the shape at least 90\% of the time. Classification errors made by the visual system can have very detrimental effects on the high-level system using those classifications, so our top priority is to provide object descriptions that are as noiseless and error-free as possible.
 
 \bibliographystyle{plain}
 \bibliography{literature}
 
 \end{document}
+
+% LocalWords:  multiclass
