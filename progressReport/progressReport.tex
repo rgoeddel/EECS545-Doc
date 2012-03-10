@@ -3,7 +3,8 @@
 \usepackage{fullpage}
 \usepackage{url}
 \usepackage{paralist}
-\usepackage{graphicx}
+\usepackage[pdftex]{graphicx}
+\usepackage{epstopdf}
 \usepackage[small]{caption}
 \usepackage{subfig}
 \usepackage{multirow}
@@ -21,7 +22,8 @@
 
 % =========
 
-\title{\xxx{Linguistic Classification of Objects}}
+\title{Learning a Visual Vocabulary: Identifying Objects
+    Through Learned Verbal Commands}
 \author{Rob Goeddel \and Lauren Hinkle \and James Kirk \and Aaron Mininger}
 \date{}
 
@@ -29,12 +31,12 @@
 \maketitle
 
 \begin{abstract}
-Interaction between robots and humans is a rapidly growing area of reasearch. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language. 
+Interaction between robots and humans is a rapidly growing area of reasearch. Of particular interest is the desire to interact with robots or agents using natural language. This gives humans a more natural and effective way of teaching, commanding, and interacting with robotic agents or computers. Our work is designed to process images and provide descriptions of objects that can then be used in interactions with humans. We use images from a RGB-D camera in order to classify properties of objects including size, shape, and color. Those descriptions are then fed into a higher-level agent which handles the human interaction. We specifically use a simple I-Spy game to allow users to refer to objects using descriptions in natural language.
 \end{abstract}
 
 \section{Introduction}
-\xxx{Problem description and motivation. Why do you want to solve this
-    problem? What's the impact if you can solve this problem?}
+%\xxx{Problem description and motivation. Why do you want to solve this
+%    problem? What's the impact if you can solve this problem?}
 Language is a powerful tool that is just coming into its own as the human
 interface for various systems. Apple's Siri is an excellent example of this, making interaction with your phone intuitive, easy, and efficient. Robotic systems in AI can also benefit from greater understanding of
 language. Such knowledge could allow a human to command or teach a robot agent in a more natural way. Take, for example, a robotic arm system with knowledge of only
@@ -42,7 +44,7 @@ several nouns and actions: cup, sink, grab/move object, and turning on/off
 the sink, and the spatial concept of in. Through language, the robot could then be taught the new action of ``filling a cup'', which means to put the cup in the sink and turn on the
 sink. Even though the robot has never seen anyone fill a cup before, now
 it should be able to do so itself. Furthermore, the agent could generalize the concept to new items, like a bowl. This is a powerful
-way for an agent to learn from a human, without requiring expert instructors. 
+way for an agent to learn from a human, without requiring expert instructors.
 
 Our goal is to leverage machine learning techniques in order to train a system to know a small vocabulary of nouns, adjectives,
 and actions. As a proof of concept, we want to be able to play the children's
@@ -54,9 +56,9 @@ This work is planned to be incorporated into a larger project which includes tea
 offers improvements in efficiency, safety, etc.
 
 \section{Proposed Method}
-\xxx{How are you going to solve this problem? Why should the proposed method
-    work? Provide technical details of your approach if you are proposing a
-    novel method.}
+%\xxx{How are you going to solve this problem? Why should the proposed method
+%    work? Provide technical details of your approach if you are proposing a
+%    novel method.}
 
 Our approach will use supervised learning techniques to generate a description of each object. First, we will gather our training data by collecting a number of RGB-D images from the camera featuring various types and positions of objects. Each image will be run through a segmentation process to isolate every object in the scene. Each object will be manually given a label describing its color, shape, and size. From these segmentations we will extract a useful feature vector for each attribute. One of the main challenges for good object classification will be designing a
 diverse and robust feature space to recognize the object characteristics we
@@ -67,14 +69,14 @@ necessary for estimating relative size. Shape is a more complex matter,
 especially given the noise seen in the Kinect data. We plan on exploring
 spherical harmonics, edge/corner features, and features based on projected
 models of missing data (for example, symmetry) to correctly identify shapes.
-Once the features are extracted, we need to use a machine learning algorithm to perform the classification. We decided to use the liblinear SVM ~\cite{LIBLINEAR} because it is widely used, powerful, reliable, and performs well for classification tasks. We are specifically using multiclass approach because we have attributes like color which can take on several discrete values. 
+Once the features are extracted, we need to use a machine learning algorithm to perform the classification. We decided to use the liblinear SVM ~\cite{LIBLINEAR} because it is widely used, powerful, reliable, and performs well for classification tasks. We are specifically using multiclass approach because we have attributes like color which can take on several discrete values.
 
 For object identification we will do a similar process to segment each object in the camera's image. That object's position in 3D space will be determined using both the pixel coordinate and the depth value. The features will then be extracted and run through our SVM's using the models created with the training data. This will give us a bag of words description for each object in the scene. This description, along with the position, will be given as input to a Soar agent. Soar is a cognitive architecture that will be responsible for the high-level reasoning and language processing. Our Soar agent will interpret the commands given by the users, determine which object is being described, and give the appropriate commands to the robotic arm.
 
 
 \section{Related Work}
-\xxx{What are existing methods? What are the state-of-the-art methods for this
-    problem? How is your approach different from the related work?}
+%\xxx{What are existing methods? What are the state-of-the-art methods for this
+%    problem? How is your approach different from the related work?}
 Object classification is a problem that appears throughout a variety of applications, ranging from law enforcement to manufacturing. While historic efforts have focused more on the recognition problem, that is, finding a known object in a scene, more recent work has emphasized the more general problem of classifying objects into generic groups by type [Huber]. For example, we might be interested in identifying vehicles as bikes, motorcycles, trucks, cars, etc. Work by [Nilsback] and [Gehler], among others, has shown that powerful classifiers may be constructed through boosting or similar across simple feature-specific classifiers such as color, shape, etc.
 
 Recent popularization of sensors that combine both image and depth information like the Microsoft Kinect inexpensively provide richer sensory information. The addition of depth can help disambiguate situations that would be very difficult with a normal camera image alone. Depth can make the determination of an object’s underlying geometry much easier, leading to better identification [Marton]. Previous work has successfully incorporated such cameras (often called RGBD cameras) with object recognition in indoors domains featuring common household objects [Marton, Lai].
@@ -145,38 +147,58 @@ features, such as shape, are explored.
 
 This is a multi-class classification problem so we intend to use a one-vs-all
 (OVA) approach.  However with the only small amount of data that has been
-labeled so far, the OVA classification did not perform very well. The results in figure~\ref{fig:testresults} show plenty of room for improvement. This should
+labeled so far (pictured in Figure~\ref{fig:colordata}), the OVA
+classification did not perform very well. The results in Table~\ref{tbl:testresults} show plenty of room for improvement. This should
 be addressed once we have a more efficient system for labeling the data
 collected.  If the OVA approach still proves problematic, we are also
 considering using a strategy where a set of binary, one-vs-one, classifiers are
 used.  The result is determined by which class is selected by most classifiers.
 
+\pagebreak
 \begin{figure}
 \centering
-    \begin{tabular}{ | l | l | l | l | l | l |}
-    \hline
-    red & orange & yellow & green & blue & purple \T \B \\ \hline
-    96.43\% & 87.10\% & 92.00\% & 97.37 \% & 100.00\% & 88.57\% \B \T \\ \hline
-\end{tabular}
-\caption{This shows the result of OVA classification for the six color types across 160 objects. Each test involved training on 80\% of the points, with 20\% left out for testing}
-\label{fig:testresults}
+\includegraphics[height=1.75in]{figures/colorplot_noorange.eps}
+\caption{Our distribution of real-world color data in hue and saturation
+    dimensions. Point colors correspond with the ground truth color labeling,
+    so true red examples are shown as red +s.}
+\label{fig:colordata}
 \end{figure}
 
 \begin{figure}
 \centering
 \subfloat[Foam Blocks] {
-    \includegraphics[height=2.5in]{figures/blocks.png}
+    \includegraphics[height=1.75in]{figures/blocks.png}
     \label{fig:blocks}
 }
 \subfloat[Segmented Images] {
-    \includegraphics[height=2.5in]{figures/blue_objs.png}
+    \includegraphics[height=1.75in]{figures/blue_objs.png}
     \label{fig:images}
 }
 \caption{On the left are the foam blocks used in our system. The objects are limited to simple shapes and colors. On the right is the segmented data from the camera which will be used for feature extraction}
 \label{fig:objects}
 \end{figure}
 
+% orange 87.10
+\begin{table}
+\centering
+\begin{tabular}{ | l | l | l | l | l | l |}
+    \hline
+    red &  yellow & green & blue & purple \T \B \\ \hline
+    96.43\%  & 92.00\% & 97.37 \% & 100.00\% & 88.57\% \B \T \\ \hline
+\end{tabular}
+\caption{This shows the result of OVA classification for five color types
+    across 160 objects. Each test involved training on 80\% of the points,
+           with 20\% left out for testing.}
+\label{tbl:testresults}
+\end{table}
+\pagebreak
+
 \section{Future Milestones}
+Our estimated schedule for the future can be seen in the table below. By early
+April, we hope to have the plumbing completely done and at least color working
+fully, giving us bare minimum successful performance. After this point, we
+will focus on extending our feature space.
+
 \begin{center}
     \begin{tabular}{ | l | l |}
     \hline
@@ -214,8 +236,8 @@ used.  The result is determined by which class is selected by most classifiers.
 \end{center}
 
 \section{Conclusion}
-\xxx{Summary of your progress and your final expected goal (what do you expect
-    to achieve or demonstrate for the final project?)}
+%\xxx{Summary of your progress and your final expected goal (what do you expect
+%    to achieve or demonstrate for the final project?)}
 Our primary focus in the project has been setting up all the parts we need to move forward with the core of the project. This includes getting the camera and installing it in a rig, connecting to the camera to get the data, and acquiring the necessary training data. We are in the process of getting labeled feature representations out of that data in order to train an SVM on it. Our preliminary tests using color data indicate that our color classification method will be sufficient to distinguish between colors with high accuracy.
 
 In the end, we want our system to provide a discription for each object that is accurate and robust. This will ensure that our agent is able to correctly identifiy the objects described within the context of our I Spy game. We expect that shape will be more prone to noise and error than color, but we would still like our agent to correctly identify the shape at least 90\% of the time. Misclassification errors made by the visual system can have very detrimental effects on the high-level system using those classifications, so our top priority is to provide object descriptions that are as noiseless and error-free as possible.
