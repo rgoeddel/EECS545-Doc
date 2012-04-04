@@ -24,18 +24,18 @@ struct _robot_command_t
     double     dest[6];
     char*      action;
 };
- 
+
 robot_command_t   *robot_command_t_copy(const robot_command_t *p);
 void robot_command_t_destroy(robot_command_t *p);
 
 typedef struct _robot_command_t_subscription_t robot_command_t_subscription_t;
-typedef void(*robot_command_t_handler_t)(const lcm_recv_buf_t *rbuf, 
+typedef void(*robot_command_t_handler_t)(const lcm_recv_buf_t *rbuf,
              const char *channel, const robot_command_t *msg, void *user);
 
 int robot_command_t_publish(lcm_t *lcm, const char *channel, const robot_command_t *p);
 robot_command_t_subscription_t* robot_command_t_subscribe(lcm_t *lcm, const char *channel, robot_command_t_handler_t f, void *userdata);
 int robot_command_t_unsubscribe(lcm_t *lcm, robot_command_t_subscription_t* hid);
-int robot_command_t_subscription_set_queue_capacity(robot_command_t_subscription_t* subs, 
+int robot_command_t_subscription_set_queue_capacity(robot_command_t_subscription_t* subs,
                               int num_messages);
 
 

@@ -14,17 +14,19 @@ public final class object_data_t implements lcm.lcm.LCMEncodable
 {
     public long utime;
     public int id;
-    public int nj_len;
-    public String nounjectives[];
+    public int num_cat;
+    public kinect.lcmtypes.categorized_data_t cat_dat[];
     public double pos[];
+    public double bbox[][];
  
     public object_data_t()
     {
         pos = new double[6];
+        bbox = new double[2][3];
     }
  
     public static final long LCM_FINGERPRINT;
-    public static final long LCM_FINGERPRINT_BASE = 0xa9c99838e0a26959L;
+    public static final long LCM_FINGERPRINT_BASE = 0x2de0f14e30285d00L;
  
     static {
         LCM_FINGERPRINT = _hashRecursive(new ArrayList<Class>());
@@ -37,6 +39,7 @@ public final class object_data_t implements lcm.lcm.LCMEncodable
  
         classes.add(kinect.lcmtypes.object_data_t.class);
         long hash = LCM_FINGERPRINT_BASE
+             + kinect.lcmtypes.categorized_data_t._hashRecursive(classes)
             ;
         classes.remove(classes.size() - 1);
         return (hash<<1) + ((hash>>63)&1);
@@ -50,19 +53,24 @@ public final class object_data_t implements lcm.lcm.LCMEncodable
  
     public void _encodeRecursive(DataOutput outs) throws IOException
     {
-        char[] __strbuf = null;
         outs.writeLong(this.utime); 
  
         outs.writeInt(this.id); 
  
-        outs.writeInt(this.nj_len); 
+        outs.writeInt(this.num_cat); 
  
-        for (int a = 0; a < this.nj_len; a++) {
-            __strbuf = new char[this.nounjectives[a].length()]; this.nounjectives[a].getChars(0, this.nounjectives[a].length(), __strbuf, 0); outs.writeInt(__strbuf.length+1); for (int _i = 0; _i < __strbuf.length; _i++) outs.write(__strbuf[_i]); outs.writeByte(0); 
+        for (int a = 0; a < this.num_cat; a++) {
+            this.cat_dat[a]._encodeRecursive(outs); 
         }
  
         for (int a = 0; a < 6; a++) {
             outs.writeDouble(this.pos[a]); 
+        }
+ 
+        for (int a = 0; a < 2; a++) {
+            for (int b = 0; b < 3; b++) {
+                outs.writeDouble(this.bbox[a][b]); 
+            }
         }
  
     }
@@ -89,21 +97,27 @@ public final class object_data_t implements lcm.lcm.LCMEncodable
  
     public void _decodeRecursive(DataInput ins) throws IOException
     {
-        char[] __strbuf = null;
         this.utime = ins.readLong();
  
         this.id = ins.readInt();
  
-        this.nj_len = ins.readInt();
+        this.num_cat = ins.readInt();
  
-        this.nounjectives = new String[(int) nj_len];
-        for (int a = 0; a < this.nj_len; a++) {
-            __strbuf = new char[ins.readInt()-1]; for (int _i = 0; _i < __strbuf.length; _i++) __strbuf[_i] = (char) (ins.readByte()&0xff); ins.readByte(); this.nounjectives[a] = new String(__strbuf);
+        this.cat_dat = new kinect.lcmtypes.categorized_data_t[(int) num_cat];
+        for (int a = 0; a < this.num_cat; a++) {
+            this.cat_dat[a] = kinect.lcmtypes.categorized_data_t._decodeRecursiveFactory(ins);
         }
  
         this.pos = new double[(int) 6];
         for (int a = 0; a < 6; a++) {
             this.pos[a] = ins.readDouble();
+        }
+ 
+        this.bbox = new double[(int) 2][(int) 3];
+        for (int a = 0; a < 2; a++) {
+            for (int b = 0; b < 3; b++) {
+                this.bbox[a][b] = ins.readDouble();
+            }
         }
  
     }
@@ -115,13 +129,19 @@ public final class object_data_t implements lcm.lcm.LCMEncodable
  
         outobj.id = this.id;
  
-        outobj.nj_len = this.nj_len;
+        outobj.num_cat = this.num_cat;
  
-        outobj.nounjectives = new String[(int) nj_len];
-        if (this.nj_len > 0)
-            System.arraycopy(this.nounjectives, 0, outobj.nounjectives, 0, this.nj_len); 
+        outobj.cat_dat = new kinect.lcmtypes.categorized_data_t[(int) num_cat];
+        for (int a = 0; a < this.num_cat; a++) {
+            outobj.cat_dat[a] = this.cat_dat[a].copy();
+        }
+ 
         outobj.pos = new double[(int) 6];
         System.arraycopy(this.pos, 0, outobj.pos, 0, 6); 
+        outobj.bbox = new double[(int) 2][(int) 3];
+        for (int a = 0; a < 2; a++) {
+            System.arraycopy(this.bbox[a], 0, outobj.bbox[a], 0, 3);        }
+ 
         return outobj;
     }
  

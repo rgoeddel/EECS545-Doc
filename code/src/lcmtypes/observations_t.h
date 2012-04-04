@@ -27,18 +27,18 @@ struct _observations_t
     int32_t    nsens;
     char*      *sensables;
 };
- 
+
 observations_t   *observations_t_copy(const observations_t *p);
 void observations_t_destroy(observations_t *p);
 
 typedef struct _observations_t_subscription_t observations_t_subscription_t;
-typedef void(*observations_t_handler_t)(const lcm_recv_buf_t *rbuf, 
+typedef void(*observations_t_handler_t)(const lcm_recv_buf_t *rbuf,
              const char *channel, const observations_t *msg, void *user);
 
 int observations_t_publish(lcm_t *lcm, const char *channel, const observations_t *p);
 observations_t_subscription_t* observations_t_subscribe(lcm_t *lcm, const char *channel, observations_t_handler_t f, void *userdata);
 int observations_t_unsubscribe(lcm_t *lcm, observations_t_subscription_t* hid);
-int observations_t_subscription_set_queue_capacity(observations_t_subscription_t* subs, 
+int observations_t_subscription_set_queue_capacity(observations_t_subscription_t* subs,
                               int num_messages);
 
 

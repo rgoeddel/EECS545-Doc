@@ -16,27 +16,29 @@
 extern "C" {
 #endif
 
+#include "categorized_data_t.h"
 typedef struct _object_data_t object_data_t;
 struct _object_data_t
 {
     int64_t    utime;
     int32_t    id;
-    int32_t    nj_len;
-    char*      *nounjectives;
+    int32_t    num_cat;
+    categorized_data_t *cat_dat;
     double     pos[6];
+    double     bbox[2][3];
 };
- 
+
 object_data_t   *object_data_t_copy(const object_data_t *p);
 void object_data_t_destroy(object_data_t *p);
 
 typedef struct _object_data_t_subscription_t object_data_t_subscription_t;
-typedef void(*object_data_t_handler_t)(const lcm_recv_buf_t *rbuf, 
+typedef void(*object_data_t_handler_t)(const lcm_recv_buf_t *rbuf,
              const char *channel, const object_data_t *msg, void *user);
 
 int object_data_t_publish(lcm_t *lcm, const char *channel, const object_data_t *p);
 object_data_t_subscription_t* object_data_t_subscribe(lcm_t *lcm, const char *channel, object_data_t_handler_t f, void *userdata);
 int object_data_t_unsubscribe(lcm_t *lcm, object_data_t_subscription_t* hid);
-int object_data_t_subscription_set_queue_capacity(object_data_t_subscription_t* subs, 
+int object_data_t_subscription_set_queue_capacity(object_data_t_subscription_t* subs,
                               int num_messages);
 
 

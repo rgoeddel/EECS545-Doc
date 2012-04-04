@@ -9,17 +9,17 @@
 
 static int __observations_t_hash_computed;
 static int64_t __observations_t_hash;
- 
+
 int64_t __observations_t_hash_recursive(const __lcm_hash_ptr *p)
 {
     const __lcm_hash_ptr *fp;
     for (fp = p; fp != NULL; fp = fp->parent)
         if (fp->v == __observations_t_get_hash)
             return 0;
- 
+
     const __lcm_hash_ptr cp = { p, (void*)__observations_t_get_hash };
     (void) cp;
- 
+
     int64_t hash = 0x52c00f0dc547f388LL
          + __int64_t_hash_recursive(&cp)
          + __int32_t_hash_recursive(&cp)
@@ -28,198 +28,198 @@ int64_t __observations_t_hash_recursive(const __lcm_hash_ptr *p)
          + __int32_t_hash_recursive(&cp)
          + __string_hash_recursive(&cp)
         ;
- 
+
     return (hash<<1) + ((hash>>63)&1);
 }
- 
+
 int64_t __observations_t_get_hash(void)
 {
     if (!__observations_t_hash_computed) {
         __observations_t_hash = __observations_t_hash_recursive(NULL);
         __observations_t_hash_computed = 1;
     }
- 
+
     return __observations_t_hash;
 }
- 
+
 int __observations_t_encode_array(void *buf, int offset, int maxlen, const observations_t *p, int elements)
 {
     int pos = 0, thislen, element;
- 
+
     for (element = 0; element < elements; element++) {
- 
+
         thislen = __int64_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].utime), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].click_id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].nobs), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __object_data_t_encode_array(buf, offset + pos, maxlen - pos, p[element].observations, p[element].nobs);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __int32_t_encode_array(buf, offset + pos, maxlen - pos, &(p[element].nsens), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __string_encode_array(buf, offset + pos, maxlen - pos, p[element].sensables, p[element].nsens);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
     }
     return pos;
 }
- 
+
 int observations_t_encode(void *buf, int offset, int maxlen, const observations_t *p)
 {
     int pos = 0, thislen;
     int64_t hash = __observations_t_get_hash();
- 
+
     thislen = __int64_t_encode_array(buf, offset + pos, maxlen - pos, &hash, 1);
     if (thislen < 0) return thislen; else pos += thislen;
- 
+
     thislen = __observations_t_encode_array(buf, offset + pos, maxlen - pos, p, 1);
     if (thislen < 0) return thislen; else pos += thislen;
- 
+
     return pos;
 }
- 
+
 int __observations_t_encoded_array_size(const observations_t *p, int elements)
 {
     int size = 0, element;
     for (element = 0; element < elements; element++) {
- 
+
         size += __int64_t_encoded_array_size(&(p[element].utime), 1);
- 
+
         size += __int32_t_encoded_array_size(&(p[element].click_id), 1);
- 
+
         size += __int32_t_encoded_array_size(&(p[element].nobs), 1);
- 
+
         size += __object_data_t_encoded_array_size(p[element].observations, p[element].nobs);
- 
+
         size += __int32_t_encoded_array_size(&(p[element].nsens), 1);
- 
+
         size += __string_encoded_array_size(p[element].sensables, p[element].nsens);
- 
+
     }
     return size;
 }
- 
+
 int observations_t_encoded_size(const observations_t *p)
 {
     return 8 + __observations_t_encoded_array_size(p, 1);
 }
- 
+
 int __observations_t_decode_array(const void *buf, int offset, int maxlen, observations_t *p, int elements)
 {
     int pos = 0, thislen, element;
- 
+
     for (element = 0; element < elements; element++) {
- 
+
         thislen = __int64_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].utime), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].click_id), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].nobs), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         p[element].observations = (object_data_t*) lcm_malloc(sizeof(object_data_t) * p[element].nobs);
         thislen = __object_data_t_decode_array(buf, offset + pos, maxlen - pos, p[element].observations, p[element].nobs);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         thislen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &(p[element].nsens), 1);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
         p[element].sensables = (char**) lcm_malloc(sizeof(char*) * p[element].nsens);
         thislen = __string_decode_array(buf, offset + pos, maxlen - pos, p[element].sensables, p[element].nsens);
         if (thislen < 0) return thislen; else pos += thislen;
- 
+
     }
     return pos;
 }
- 
+
 int __observations_t_decode_array_cleanup(observations_t *p, int elements)
 {
     int element;
     for (element = 0; element < elements; element++) {
- 
+
         __int64_t_decode_array_cleanup(&(p[element].utime), 1);
- 
+
         __int32_t_decode_array_cleanup(&(p[element].click_id), 1);
- 
+
         __int32_t_decode_array_cleanup(&(p[element].nobs), 1);
- 
+
         __object_data_t_decode_array_cleanup(p[element].observations, p[element].nobs);
         if (p[element].observations) free(p[element].observations);
- 
+
         __int32_t_decode_array_cleanup(&(p[element].nsens), 1);
- 
+
         __string_decode_array_cleanup(p[element].sensables, p[element].nsens);
         if (p[element].sensables) free(p[element].sensables);
- 
+
     }
     return 0;
 }
- 
+
 int observations_t_decode(const void *buf, int offset, int maxlen, observations_t *p)
 {
     int pos = 0, thislen;
     int64_t hash = __observations_t_get_hash();
- 
+
     int64_t this_hash;
     thislen = __int64_t_decode_array(buf, offset + pos, maxlen - pos, &this_hash, 1);
     if (thislen < 0) return thislen; else pos += thislen;
     if (this_hash != hash) return -1;
- 
+
     thislen = __observations_t_decode_array(buf, offset + pos, maxlen - pos, p, 1);
     if (thislen < 0) return thislen; else pos += thislen;
- 
+
     return pos;
 }
- 
+
 int observations_t_decode_cleanup(observations_t *p)
 {
     return __observations_t_decode_array_cleanup(p, 1);
 }
- 
+
 int __observations_t_clone_array(const observations_t *p, observations_t *q, int elements)
 {
     int element;
     for (element = 0; element < elements; element++) {
- 
+
         __int64_t_clone_array(&(p[element].utime), &(q[element].utime), 1);
- 
+
         __int32_t_clone_array(&(p[element].click_id), &(q[element].click_id), 1);
- 
+
         __int32_t_clone_array(&(p[element].nobs), &(q[element].nobs), 1);
- 
+
         q[element].observations = (object_data_t*) lcm_malloc(sizeof(object_data_t) * q[element].nobs);
         __object_data_t_clone_array(p[element].observations, q[element].observations, p[element].nobs);
- 
+
         __int32_t_clone_array(&(p[element].nsens), &(q[element].nsens), 1);
- 
+
         q[element].sensables = (char**) lcm_malloc(sizeof(char*) * q[element].nsens);
         __string_clone_array(p[element].sensables, q[element].sensables, p[element].nsens);
- 
+
     }
     return 0;
 }
- 
+
 observations_t *observations_t_copy(const observations_t *p)
 {
     observations_t *q = (observations_t*) malloc(sizeof(observations_t));
     __observations_t_clone_array(p, q, 1);
     return q;
 }
- 
+
 void observations_t_destroy(observations_t *p)
 {
     __observations_t_decode_array_cleanup(p, 1);
     free(p);
 }
- 
+
 int observations_t_publish(lcm_t *lc, const char *channel, const observations_t *p)
 {
       int max_data_size = observations_t_encoded_size (p);
@@ -241,7 +241,7 @@ struct _observations_t_subscription_t {
     lcm_subscription_t *lc_h;
 };
 static
-void observations_t_handler_stub (const lcm_recv_buf_t *rbuf, 
+void observations_t_handler_stub (const lcm_recv_buf_t *rbuf,
                             const char *channel, void *userdata)
 {
     int status;
@@ -259,15 +259,15 @@ void observations_t_handler_stub (const lcm_recv_buf_t *rbuf,
     observations_t_decode_cleanup (&p);
 }
 
-observations_t_subscription_t* observations_t_subscribe (lcm_t *lcm, 
-                    const char *channel, 
+observations_t_subscription_t* observations_t_subscribe (lcm_t *lcm,
+                    const char *channel,
                     observations_t_handler_t f, void *userdata)
 {
     observations_t_subscription_t *n = (observations_t_subscription_t*)
                        malloc(sizeof(observations_t_subscription_t));
     n->user_handler = f;
     n->userdata = userdata;
-    n->lc_h = lcm_subscribe (lcm, channel, 
+    n->lc_h = lcm_subscribe (lcm, channel,
                                  observations_t_handler_stub, n);
     if (n->lc_h == NULL) {
         fprintf (stderr,"couldn't reg observations_t LCM handler!\n");
@@ -277,7 +277,7 @@ observations_t_subscription_t* observations_t_subscribe (lcm_t *lcm,
     return n;
 }
 
-int observations_t_subscription_set_queue_capacity (observations_t_subscription_t* subs, 
+int observations_t_subscription_set_queue_capacity (observations_t_subscription_t* subs,
                               int num_messages)
 {
     return lcm_subscription_set_queue_capacity (subs->lc_h, num_messages);
@@ -287,7 +287,7 @@ int observations_t_unsubscribe(lcm_t *lcm, observations_t_subscription_t* hid)
 {
     int status = lcm_unsubscribe (lcm, hid->lc_h);
     if (0 != status) {
-        fprintf(stderr, 
+        fprintf(stderr,
            "couldn't unsubscribe observations_t_handler %p!\n", hid);
         return -1;
     }
