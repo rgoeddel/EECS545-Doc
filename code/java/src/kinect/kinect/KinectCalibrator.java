@@ -18,7 +18,7 @@ import java.awt.image.*;
 
 class KinectCalibrator // implements LCMSubscriber
 {
-	private enum Mode {HEAD, BASE, TEST};
+	private enum Mode {ORIGIN, X, Y, TEST};
     final int FRAME_WIDTH = 800;
     final int FRAME_HEIGHT = 600;
     final int MIN_POINTS = 250;
@@ -35,9 +35,10 @@ class KinectCalibrator // implements LCMSubscriber
     
     String calibFilename;
     
-    Mode curMode = Mode.HEAD;
-    double[] headLocation = null;
-    double[] baseLocation = null;
+    Mode curMode = Mode.ORIGIN;
+    double[] originLocation = null;
+    double[] xLocation = null;
+    double[] yLocation = null;
     double[] testLocation = null;
 
     // The most recently accessed kinect status
@@ -81,15 +82,17 @@ class KinectCalibrator // implements LCMSubscriber
 
         // Set up labels to choose from and buttons for skipping/commiting
         ParameterGUI paramGUI = new ParameterGUI();
-        paramGUI.addButtons("idBase", "Identify Base", "idHead", "Identify Head", "test", "Test Point", "createCalib", "Create Calibration File");
+        paramGUI.addButtons("ido", "Choose Origin", "idx", "Choose X Direction", "idy", "Choose Y Direction", "test", "Test Point", "createCalib", "Create Calibration File");
         paramGUI.addListener(new ParameterListener() {
             public void parameterChanged(ParameterGUI pg, String name) {
                 if (name.equals("createCalib")) {
                     createCalibFile(calibFilename);
-                } else if(name.equals("idHead")){
-                	curMode = Mode.HEAD;
-                } else if(name.equals("idBase")){
-                	curMode = Mode.BASE;
+                } else if(name.equals("ido")){
+                	curMode = Mode.ORIGIN;
+                } else if(name.equals("idx")){
+                	curMode = Mode.X;
+                } else if(name.equals("idy")){
+                	curMode = Mode.Y;
                 } else if(name.equals("test")){
                 	curMode = Mode.TEST;
                 }
@@ -121,12 +124,15 @@ class KinectCalibrator // implements LCMSubscriber
     		location[1] = intersect[1];
     		location[2] = 1; // In front of the image for the buffer
     		
-    		if(curMode == Mode.BASE){
-    	    	System.out.println("---- Base Point ----");
-    			baseLocation = location;
-    		} else if(curMode == Mode.HEAD){
-    	    	System.out.println("---- Head Point ----");
-    			headLocation = location;
+    		if(curMode == Mode.ORIGIN){
+    	    	System.out.println("---- ORIGIN ----");
+    			originLocation = location;
+    		} else if(curMode == Mode.X){
+    	    	System.out.println("---- X Point ----");
+    			xLocation = location;
+    		} else if(curMode == Mode.Y){
+    			System.out.println("---- Y Point ---");
+    			yLocation = location;
     		} else {
     			testLocation = location;
     		}
@@ -137,28 +143,43 @@ class KinectCalibrator // implements LCMSubscriber
         }
     }
     
+    private String v2s(double[] v){
+    	return String.format("(%f, %f, %f)", v[0], v[1], v[2]);
+    }
+    
     /** Writes the kinect calibration information into the file **/
     public void createCalibFile(String filename){
-    	if(headLocation == null || baseLocation == null){
-    		System.out.println("!!! kinect.calib not saved - needs both a base and a head !!!");
+    	if(xLocation == null || originLocation == null || yLocation == null){
+    		System.out.println("!!! kinect.calib not saved - needs the origin, x, and y specified !!!");
     		return;
     	}
     	// Find the ends of the vector to be treated as x
-    	double[] headPoint = getKinectPoint((int)headLocation[0], (int)headLocation[1]);
-    	double[] basePoint = getKinectPoint((int)baseLocation[0], (int)baseLocation[1]);
+    	double[] originPoint = getKinectPoint((int)originLocation[0], (int)originLocation[1]);
+    	double[] xPoint = getKinectPoint((int)xLocation[0], (int)xLocation[1]);
+    	double[] yPoint = getKinectPoint((int)yLocation[0], (int)yLocation[1]);
+    	
+    	System.out.println("O: " + v2s(originPoint));
+    	System.out.println("X: " + v2s(xPoint));
+    	System.out.println("Y: " + v2s(yPoint));
+    	
     
     	// Find the world Matrix in kinect coordinates
-    	double[] worldX = LinAlg.normalize(LinAlg.subtract(headPoint, basePoint));
-    	double[] worldZ = new double[]{0,1,0};
-    	double[] worldY = LinAlg.crossProduct(worldZ, worldX);
-    	worldZ = LinAlg.crossProduct(worldX, worldY);
+    	double[] worldX = LinAlg.normalize(LinAlg.subtract(xPoint, originPoint));
+    	double[] worldY = LinAlg.normalize(LinAlg.subtract(yPoint,  originPoint));
+    	double[] worldZ = LinAlg.crossProduct(worldY, worldX);
+    	worldY = LinAlg.crossProduct(worldX, worldZ);
+    	
+
+    	System.out.println("O: " + v2s(worldX));
+    	System.out.println("X: " + v2s(worldY));
+    	System.out.println("Y: " + v2s(worldZ));
     	
     	// Translates kinect coordinates to the origin of the world coordinate system
     	double[][] k2wTranslate = new double[][]{
     			{1, 0, 0, 0},
     			{0, 1, 0, 0},
     			{0, 0, 1, 0},
-    			{-basePoint[0], -basePoint[1], -basePoint[2], 1}
+    			{-originPoint[0], -originPoint[1], -originPoint[2], 1}
     	};
     	// Transform from world basis to kinect basis
     	double[][] w2kTransform = new double[][]{
@@ -198,11 +219,11 @@ class KinectCalibrator // implements LCMSubscriber
     	
     	// Tests, should come out to unit vectors
     	/*
-    	double[] a = KUtils.getWorldCoordinates(LinAlg.add(worldX, basePoint));
+    	double[] a = KUtils.getWorldCoordinates(LinAlg.add(worldX, originPoint));
     	System.out.println(String.format("(%f, %f, %f)", a[0], a[1], a[2]));
-    	a = KUtils.getWorldCoordinates(LinAlg.add(worldY, basePoint));
+    	a = KUtils.getWorldCoordinates(LinAlg.add(worldY, originPoint));
     	System.out.println(String.format("(%f, %f, %f)", a[0], a[1], a[2]));
-    	a = KUtils.getWorldCoordinates(LinAlg.add(worldZ, basePoint));
+    	a = KUtils.getWorldCoordinates(LinAlg.add(worldZ, originPoint));
     	System.out.println(String.format("(%f, %f, %f)", a[0], a[1], a[2]));
     	*/
     }
@@ -243,14 +264,19 @@ class KinectCalibrator // implements LCMSubscriber
         visBuffer.addBack(new VzImage(image, VzImage.FLIP));
         
         // Draw a circle at the base and head locations
-        if(baseLocation != null){
+        if(originLocation != null){
             VzCircle circle = new VzCircle(4, new VzLines.Style(Color.red, 2));
-            VisChain vch = new VisChain(LinAlg.translate(baseLocation), circle);
+            VisChain vch = new VisChain(LinAlg.translate(originLocation), circle);
             visBuffer.addBack(vch);
         }
-        if(headLocation != null){
+        if(xLocation != null){
             VzCircle circle = new VzCircle(4, new VzLines.Style(Color.green, 2));
-            VisChain vch = new VisChain(LinAlg.translate(headLocation), circle);
+            VisChain vch = new VisChain(LinAlg.translate(xLocation), circle);
+            visBuffer.addBack(vch);
+        }
+        if(yLocation != null){
+            VzCircle circle = new VzCircle(4, new VzLines.Style(Color.yellow, 2));
+            VisChain vch = new VisChain(LinAlg.translate(yLocation), circle);
             visBuffer.addBack(vch);
         }
         if(testLocation != null){
