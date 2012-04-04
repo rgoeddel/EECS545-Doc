@@ -34,6 +34,19 @@ public class FeatureVec
         return features;
     }
 
+    /** Return a string of the features for the given set of points (used for
+        liblinear in the 545 project.**/
+    public static String featureString(ArrayList<double[]> points)
+    {
+        ArrayList<Double> features = getFeatureVec(points);
+        String s = "[";
+        for(Double d : features){
+            s += d + " ";
+        }
+        s += "]";
+        return s;
+    }
+
     /** Find the average red, green, and blue values for a group of pixels.
      ** pixels are assumed to have four coordinates, (x, y, z, rgb).
      ** @return [r,g,b] averages.

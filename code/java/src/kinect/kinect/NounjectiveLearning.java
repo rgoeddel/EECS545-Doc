@@ -7,7 +7,7 @@ import april.util.*;
 import lcm.lcm.*;
 import kinect.lcmtypes.*;
 
-
+import kinect.classify.*;
 import java.io.*;
 import java.nio.*;
 import javax.swing.*;
@@ -40,7 +40,7 @@ public class NounjectiveLearning implements LCMSubscriber
     static VisWorld.Buffer vb;
     kinect_status_t ks;
     static LCM lcm = LCM.getSingleton();
-
+    Classifier classify = new Classifier();
 
     public NounjectiveLearning(GetOpt opts_)
     {
@@ -59,7 +59,7 @@ public class NounjectiveLearning implements LCMSubscriber
         vb = vw.getBuffer("Point_Buffer");
 
         //Set up initial camera view
-        vl.cameraManager.uiLookAt(new double[] {0.0, 0.0, 2.0},// Camera position
+        vl.cameraManager.uiLookAt(new double[] {0.0, 0.0, 5.0},// Camera position
                                   new double[] {0.0, 0.0, 0.0},// Point looking at
                                   new double[] {0.0, 1.0, 0.0},// Up
                                   false);
@@ -124,8 +124,11 @@ public class NounjectiveLearning implements LCMSubscriber
                 int i = y*ks.WIDTH + x;
                 int d = ((ks.depth[2*i+1]&0xff) << 8) |
                         (ks.depth[2*i+0]&0xff);
-                double[] p = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
-                da.currentPoints.add(p);
+                double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
+                double[] pWorld = KUtils.getWorldCoordinates(new double[]{
+                        pKinect[0], pKinect[1], pKinect[2]});
+                da.currentPoints.add(new double[]{pWorld[0], pWorld[1], pWorld[2], pKinect[3]});
+                //da.currentPoints.add(pKinect);
             }
         }
 
@@ -146,14 +149,29 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
             double[] bb = FeatureVec.boundingBox(obj.points);
+            double[] xyzrpy = new double[]{(bb[0]+bb[3])/2.0,
+                                           (bb[1]+bb[4])/2.0,
+                                           (bb[2]+bb[5])/2.0,
+                                           0,0,0};
 
+            // Get features and corresponding classifications for this object
+            String input = FeatureVec.featureString(obj.points);
+            String adjective = classify.classify(input); // Currenty only one being returned
+            categorized_data_t[] data = new categorized_data_t[1];
+            categorized_data_t d = new categorized_data_t();
+            d.cat = new category_t();
+            d.label = new String[]{adjective};
+            d.len = 1;
+            d.confidence = new double[]{.9};
+            data[0] = d;
+
+            // Create object data for lcm
             object_data_t obj_data = new object_data_t();
             obj_data.utime = TimeUtil.utime();
             obj_data.id = obj.repID;
-
-            //obj_data.cat_dat = obj.getNounjectives();   // This needs to change
-
-            obj_data.num_cat = 0;//obj_data.cat_dat.length;
+            obj_data.cat_dat = data;
+            obj_data.num_cat = obj_data.cat_dat.length;
+            obj_data.pos = xyzrpy;
             obj_data.bbox = new double[][]{{bb[0], bb[1], bb[2]},{bb[3], bb[4], bb[5]}};
             obsList.add(obj_data);
         }
