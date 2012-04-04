@@ -130,9 +130,9 @@ public class ObjectInfo{
             ObjectInfo obj2 = (ObjectInfo)itr.next();
             double centerDist = LinAlg.distance(getCenter(), obj2.getCenter());
             double colorDist = LinAlg.distance(avgColor(), obj2.avgColor());
-            System.out.println("CenDist: "+centerDist+"\tcolDist: "+colorDist);
+            //System.out.println("CenDist: "+centerDist+"\tcolDist: "+colorDist);
             if (centerDist < minDist && colorDist < minColorDist){
-                System.out.println("---- better --- ");
+                //System.out.println("---- better --- ");
                 minDist = centerDist;
                 best = obj2.repID;
             }
@@ -149,6 +149,6 @@ public class ObjectInfo{
             repID = oldObj.repID;
             color = oldObj.color;
         }
-        else System.out.println("DIDN'T MAKE CHANGE!!!!");
+        //else System.out.println("DIDN'T MAKE CHANGE!!!!");
     }
 }

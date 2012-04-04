@@ -22,7 +22,6 @@ import java.awt.image.*;
  */
 
 
-
 public class NounjectiveLearning implements LCMSubscriber
 {
     final static int FRAME_WIDTH = 640;
@@ -33,13 +32,15 @@ public class NounjectiveLearning implements LCMSubscriber
     static double  initialRansacThresh = .02;
     static double  initialRansacPercent = .1;
 
-    static DataAggregator g;
+    static DataAggregator da;
     static Segment segment;
     GetOpt opts;
     VisWorld vw, vw2;
     VisLayer vl, vl2;
     static VisWorld.Buffer vb;
     kinect_status_t ks;
+    static LCM lcm = LCM.getSingleton();
+
 
     public NounjectiveLearning(GetOpt opts_)
     {
@@ -73,16 +74,16 @@ public class NounjectiveLearning implements LCMSubscriber
         pg.addListener(new ParameterListener() {
                 public void parameterChanged(ParameterGUI pg, String name) {
                     if (name.equals("cThresh")) {
-                        g.colorThresh = pg.gi("cThresh");
+                        da.colorThresh = pg.gi("cThresh");
                     }
                     else if (name.equals("uThresh")) {
-                        g.unionThresh = pg.gd("uThresh");
+                        da.unionThresh = pg.gd("uThresh");
                     }
                     else if (name.equals("rThresh")) {
-                        g.ransacThresh = pg.gd("rThresh");
+                        da.ransacThresh = pg.gd("rThresh");
                     }
                     else if (name.equals("rPercent")) {
-                        g.ransacPercent = pg.gd("rPercent");
+                        da.ransacPercent = pg.gd("rPercent");
                     }
                 }
             });
@@ -115,32 +116,67 @@ public class NounjectiveLearning implements LCMSubscriber
             return;
         }
 
-        g.currentPoints = new ArrayList<double[]>();
-        g.coloredPoints = new ArrayList<double[]>();
+        da.currentPoints = new ArrayList<double[]>();
+        da.coloredPoints = new ArrayList<double[]>();
 
         for(int y=0; y<ks.HEIGHT; y++){
             for(int x=0; x<ks.WIDTH; x++){
                 int i = y*ks.WIDTH + x;
                 int d = ((ks.depth[2*i+1]&0xff) << 8) |
                         (ks.depth[2*i+0]&0xff);
-                double[] p = KUtils.getXYZRGB(x, y, g.depthLookUp[d], ks);
-                g.currentPoints.add(p);
+                double[] p = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
+                da.currentPoints.add(p);
             }
         }
 
+        sendMessage();
         draw3DImage();
         draw2DImage();
     }
 
+    public void sendMessage()
+    {
+        observations_t obs = new observations_t();
+        obs.utime = TimeUtil.utime();
+
+        ArrayList<object_data_t> obsList = new ArrayList<object_data_t>();
+        ArrayList<String> sensList = new ArrayList<String>();
+
+        Collection c = da.objects.values();
+        for(Iterator itr = c.iterator(); itr.hasNext(); ){
+            ObjectInfo obj = (ObjectInfo)itr.next();
+            double[] bb = FeatureVec.boundingBox(obj.points);
+
+            object_data_t obj_data = new object_data_t();
+            obj_data.utime = TimeUtil.utime();
+            obj_data.id = obj.repID;
+
+            //obj_data.cat_dat = obj.getNounjectives();   // This needs to change
+
+            obj_data.num_cat = 0;//obj_data.cat_dat.length;
+            obj_data.bbox = new double[][]{{bb[0], bb[1], bb[2]},{bb[3], bb[4], bb[5]}};
+            obsList.add(obj_data);
+        }
+
+        obs.click_id = -1;
+        obs.sensables = sensList.toArray(new String[0]);
+        obs.nsens = obs.sensables.length;
+        obs.observations = obsList.toArray(new object_data_t[0]);
+        obs.nobs = obs.observations.length;
+
+        lcm.publish("OBSERVATIONS",obs);
+    }
+
+
     public void draw3DImage()
     {
-        if(g.currentPoints.size() <= 0){ return; }
+        if(da.currentPoints.size() <= 0){ return; }
 
         segment.unionFind();
 
         VisColorData cd = new VisColorData();
         VisVertexData vd = new VisVertexData();
-        for(double[] p: g.coloredPoints){
+        for(double[] p: da.coloredPoints){
             vd.add(new double[]{p[0], p[1], p[2]});
             cd.add((int) p[3]);
         }
@@ -153,7 +189,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
     public void draw2DImage()
     {
-        if(g.currentPoints.size() <= 0){ return; }
+        if(da.currentPoints.size() <= 0){ return; }
 
         BufferedImage im = new BufferedImage(ks.WIDTH, ks.HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
         byte[] buf = ((DataBufferByte)(im.getRaster().getDataBuffer())).getData();
@@ -174,7 +210,6 @@ public class NounjectiveLearning implements LCMSubscriber
         // Define possible commandline arguments
         GetOpt opts = new GetOpt();
         opts.addBoolean('h', "help", false, "Show this help screen");
-        opts.addBoolean('s', "segment", false, "Color each segmented object");
 
         if (!opts.parse(args)) {
             System.err.println("ERR: Opts error - " + opts.getReason());
@@ -186,13 +221,14 @@ public class NounjectiveLearning implements LCMSubscriber
         }
 
         // Set up data aggregator and segmenter
-        g = new DataAggregator(false);
-        g.colorThresh = initialColorThresh;
-        g.unionThresh = initialUnionThresh;
-        g.ransacThresh = initialRansacThresh;
-        g.ransacPercent = initialRansacPercent;
-        g.depthLookUp = KUtils.createDepthMap();
-        segment = new Segment(g, opts.getBoolean("segment"));
+        da = new DataAggregator(false);
+        da.colorThresh = initialColorThresh;
+        da.unionThresh = initialUnionThresh;
+        da.ransacThresh = initialRansacThresh;
+        da.ransacPercent = initialRansacPercent;
+        da.depthLookUp = KUtils.createDepthMap();
+        boolean colorSegments = true;
+        segment = new Segment(da, colorSegments);
 
         NounjectiveLearning nl = new NounjectiveLearning(opts);
     }

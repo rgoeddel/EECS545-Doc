@@ -162,18 +162,18 @@ public class Segment
             }
         }
 
-        System.out.println("Pre: "+da.prevObjects.size());
-        System.out.println("Now: "+da.objects.size());
+        //System.out.println("Pre: "+da.prevObjects.size());
+        //System.out.println("Now: "+da.objects.size());
 
         // Pair up objects from this frame with last frame
         if(da.prevObjects.size() > 0){
             Collection cNew = da.objects.values();
             for(Iterator itr = cNew.iterator(); itr.hasNext(); ){
                 ObjectInfo obj = (ObjectInfo)itr.next();
-                System.out.println("\t\t"+obj.repID);
+                //System.out.println("\t\t"+obj.repID);
                 int mostSim = obj.mostSimilar(da.prevObjects);
                 if(mostSim >= 0){
-                    System.out.println("**Replacing**"+mostSim);
+                    //System.out.println("**Replacing**"+mostSim);
                     obj.equateObject(da.prevObjects.get(mostSim));
                     da.prevObjects.remove(mostSim);
                 }
