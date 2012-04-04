@@ -338,12 +338,12 @@ class ObjectLabeler // implements LCMSubscriber
     {
         double[] center = oi.getCenter();
         double[] color = oi.avgColor();
-        System.out.println("RepID: "+oi.repID+
+        /*System.out.println("RepID: "+oi.repID+
                            "\tCenter: ("+
                            center[0]+","+center[1]+","+center[2]
                            +")\tColor: ("+
                            color[0]+","+color[1]+","+color[2]
-                           +")");
+                           +")");*/
         if(da.coloredPoints.size() <= 0){ return; }
 
         VisColorData cd = new VisColorData();
