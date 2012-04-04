@@ -1,5 +1,9 @@
 package kinect.kinect;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 import kinect.lcmtypes.*;
 import april.jmat.*;
 
@@ -33,6 +37,29 @@ public class KUtils
      {3.9640245034303703e-03, 9.9999045541141818e-01, 1.8372794563272670e-03,2.1449990961662204e-04},
      {1.1394098205334914e-02, -1.7920078589010067e-03,9.9993347940446564e-01,-3.1850123170360141e-04},
      {0,0,0,1}};
+    
+    public static double[][] kinectToWorldXForm;
+    static{
+    	try{
+    		BufferedReader in = new BufferedReader(new FileReader("kinect.calib"));
+        	kinectToWorldXForm = new double[4][4];
+    		for(int i = 0; i < 4; i++){
+    			for(int j = 0; j < 4; j++){
+    				kinectToWorldXForm[i][j] = Double.parseDouble(in.readLine());
+    			}
+    		}
+    		in.close();
+    	} catch (IOException e){
+    		kinectToWorldXForm = new double[][]{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+    	}
+    }
+    
+    /** Converts a point in the kinect coordinate frame to world coordinates **/
+    public static double[] getWorldCoordinates(double[] kinectCoordinates){
+    	double[] pt = new double[]{kinectCoordinates[0], kinectCoordinates[1], kinectCoordinates[2], 1};
+    	double[] wc = LinAlg.matrixAB(pt, kinectToWorldXForm);
+    	return new double[]{wc[0], wc[1], wc[2]};
+    }
 
 /*
     static double fx_d = 1 / 5.9421434211923247e+02;
