@@ -153,7 +153,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
             //obj_data.cat_dat = obj.getNounjectives();   // This needs to change
 
-            obj_data.num_cat = obj_data.cat_dat.length;
+            obj_data.num_cat = 0;//obj_data.cat_dat.length;
             obj_data.bbox = new double[][]{{bb[0], bb[1], bb[2]},{bb[3], bb[4], bb[5]}};
             obsList.add(obj_data);
         }
