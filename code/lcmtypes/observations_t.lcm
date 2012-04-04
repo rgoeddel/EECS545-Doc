@@ -1,0 +1,13 @@
+struct observations_t
+{
+    int64_t utime;
+
+    // Object ID of the object the user last clicked on
+    int32_t click_id;
+
+    int32_t nobs;
+    object_data_t observations[nobs];
+
+    int32_t nsens;
+    string sensables[nsens]; // Each entry is a set of comma separated values the form "NAME=SWITCH,STATE=ON,POS=[1.2 3.5]"
+}
