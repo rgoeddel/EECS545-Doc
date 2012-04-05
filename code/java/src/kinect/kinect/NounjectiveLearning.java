@@ -59,9 +59,9 @@ public class NounjectiveLearning implements LCMSubscriber
         vb = vw.getBuffer("Point_Buffer");
 
         //Set up initial camera view
-        vl.cameraManager.uiLookAt(new double[] {0.0, 0.0, 5.0},// Camera position
+        vl.cameraManager.uiLookAt(new double[] {0.0, 0.0, -3.0},// Camera position
                                   new double[] {0.0, 0.0, 0.0},// Point looking at
-                                  new double[] {0.0, 1.0, 0.0},// Up
+                                  new double[] {0.0, -1.0, 0.0},// Up
                                   false);
 
         // Set up adjustable parameters, buttons
@@ -118,6 +118,11 @@ public class NounjectiveLearning implements LCMSubscriber
 
         da.currentPoints = new ArrayList<double[]>();
         da.coloredPoints = new ArrayList<double[]>();
+        
+//        System.out.println("mat");
+//        for(int i = 0; i < 4; i++){
+//        	System.out.println(KinectCalibrator.v2s(KUtils.kinectToWorldXForm[i]));
+//        }
 
         for(int y=0; y<ks.HEIGHT; y++){
             for(int x=0; x<ks.WIDTH; x++){
@@ -127,8 +132,8 @@ public class NounjectiveLearning implements LCMSubscriber
                 double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
                 double[] pWorld = KUtils.getWorldCoordinates(new double[]{
                         pKinect[0], pKinect[1], pKinect[2]});
-                da.currentPoints.add(new double[]{pWorld[0], pWorld[1], pWorld[2], pKinect[3]});
-                //da.currentPoints.add(pKinect);
+                //da.currentPoints.add(new double[]{pWorld[0], pWorld[1], pWorld[2], pKinect[3]});
+                da.currentPoints.add(pKinect);
             }
         }
 
@@ -149,10 +154,15 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
             double[] bb = FeatureVec.boundingBox(obj.points);
-            double[] xyzrpy = new double[]{(bb[0]+bb[3])/2.0,
-                                           (bb[1]+bb[4])/2.0,
-                                           (bb[2]+bb[5])/2.0,
-                                           0,0,0};
+            
+            double[] min = KUtils.getWorldCoordinates(new double[]{bb[0], bb[1], bb[2]});
+            double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});    
+            
+            
+            double[] xyzrpy = new double[]{0, 0, 0, 0, 0, 0};
+            for(int i = 0; i < 3; i++){
+            	xyzrpy[i] = (min[i] + max[i])/2;
+            }
 
             // Get features and corresponding classifications for this object
             String input = FeatureVec.featureString(obj.points);
@@ -160,6 +170,7 @@ public class NounjectiveLearning implements LCMSubscriber
             categorized_data_t[] data = new categorized_data_t[1];
             categorized_data_t d = new categorized_data_t();
             d.cat = new category_t();
+            d.cat.cat = category_t.CAT_COLOR;
             d.label = new String[]{adjective};
             d.len = 1;
             d.confidence = new double[]{.9};
@@ -172,7 +183,7 @@ public class NounjectiveLearning implements LCMSubscriber
             obj_data.cat_dat = data;
             obj_data.num_cat = obj_data.cat_dat.length;
             obj_data.pos = xyzrpy;
-            obj_data.bbox = new double[][]{{bb[0], bb[1], bb[2]},{bb[3], bb[4], bb[5]}};
+            obj_data.bbox = new double[][]{min, max};
             obsList.add(obj_data);
         }
 
@@ -202,12 +213,14 @@ public class NounjectiveLearning implements LCMSubscriber
         Collection c = da.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
-            VzText text = new VzText(Integer.toString(obj.repID));
             double[] bb = FeatureVec.boundingBox(obj.points);
             double[] xyz = new double[]{(bb[0]+bb[3])/2.0,
                                            (bb[1]+bb[4])/2.0,
                                            (bb[2]+bb[5])/2.0};
-            VisChain chain = new VisChain(LinAlg.translate(xyz),LinAlg.scale(.005),text);
+            double[] pos = KUtils.getWorldCoordinates(xyz);
+            VzText text = new VzText("");
+            VisChain chain = new VisChain(LinAlg.translate(xyz),LinAlg.translate(0, 0, -.2),
+            		LinAlg.scale(.003),LinAlg.scale(1, -1, 1), text);
             vb.addBack(chain);
         }
 

@@ -5,11 +5,15 @@ import april.jmat.*;
 import april.jmat.geom.GRay3D;
 import april.util.*;
 
+import lcm.lcm.LCM;
+import lcm.lcm.LCMDataInputStream;
+import lcm.lcm.LCMSubscriber;
 import lcm.logging.*;
 import kinect.lcmtypes.*;
 
 
 import java.io.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -17,6 +21,7 @@ import java.awt.image.*;
 
 
 class KinectCalibrator // implements LCMSubscriber
+ implements LCMSubscriber
 {
 	private enum Mode {ORIGIN, X, Y, TEST};
     final int FRAME_WIDTH = 800;
@@ -31,7 +36,6 @@ class KinectCalibrator // implements LCMSubscriber
 
     VisWorld visWorld;
     VisLayer imageLayer;
-    Log log;
     
     String calibFilename;
     
@@ -44,16 +48,10 @@ class KinectCalibrator // implements LCMSubscriber
     // The most recently accessed kinect status
     kinect_status_t ks = null;
 
-    public KinectCalibrator(GetOpt opt)
+    public KinectCalibrator()
     {
     	// Calibration variables
         calibFilename = "kinect.calib";
-
-        try{
-            log = new Log(opt.getString("log"), "r");
-        }catch(Exception e){
-            System.err.println("Error: "+e);
-        }
         
         // Setup Frame
         JFrame frame = new JFrame("Calibrate Kinect");
@@ -74,8 +72,6 @@ class KinectCalibrator // implements LCMSubscriber
         
     	imageLayer.addEventHandler(new ClickEventHandler());
 
-        getKinectData();
-        redrawImage();
 
         frame.add(visCanvas, BorderLayout.CENTER);
     	
@@ -105,6 +101,25 @@ class KinectCalibrator // implements LCMSubscriber
         // Finalize JFrame
         frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         frame.setVisible(true);
+        
+
+        LCM myLCM = LCM.getSingleton();
+        myLCM.subscribe("KINECT_STATUS", this);
+    }
+    
+    public void messageReceived(LCM lcm, String channel, LCMDataInputStream ins)
+    {
+    	if(ks != null){
+    		return;
+    	}
+        try {
+            ks = new kinect_status_t(ins);
+            redrawImage();
+        }catch (IOException e){
+        	ks = null;
+            e.printStackTrace();
+            return;
+        }
     }
     
     protected class ClickEventHandler extends VisEventAdapter{
@@ -137,13 +152,16 @@ class KinectCalibrator // implements LCMSubscriber
     			testLocation = location;
     		}
     		
+    		System.out.println(v2s(getKinectPoint((int)location[0], (int)location[1])));
+    		
+    		
     		redrawImage();
     		
             return false;
         }
     }
     
-    private String v2s(double[] v){
+    public static String v2s(double[] v){
     	return String.format("(%f, %f, %f)", v[0], v[1], v[2]);
     }
     
@@ -230,30 +248,21 @@ class KinectCalibrator // implements LCMSubscriber
     
     /** Takes a point in image coordinates and returns a point in the space of the kinect **/
     public double[] getKinectPoint(int x, int y){
-		int index = (KINECT_HEIGHT - y)*KINECT_WIDTH + x;
+    	y = KINECT_HEIGHT-y;
+		int index = y*KINECT_WIDTH + x;
 		int depth = ((ks.depth[2*index+1]&0xff) << 8) | (ks.depth[2*index+0]&0xff);
 		double[] xyzrgb = KUtils.getXYZRGB(x, y, depthLookUp[depth], ks);
-    	
-    	System.out.println("Depth: " + depthLookUp[depth]);
+    	//System.out.println("Point: " + x + ", " + y);
+    	//System.out.println("Depth: " + depthLookUp[depth]);
     	//System.out.println(String.format("(%f, %f, %f)", xyzrgb[0], xyzrgb[1], xyzrgb[2]));
     	return new double[]{xyzrgb[0], xyzrgb[1], xyzrgb[2]};
-    }
-
-    /** Load in the next frame from the log..**/
-    public void getKinectData()
-    {    	
-        try{
-            ks = new kinect_status_t(log.readNext().data);
-        } catch(Exception e){
-            System.err.println(e.getMessage());
-        }
     }
     
     /** Draws the image on the screen with circles where the user has clicked **/
     public void redrawImage(){
     	BufferedImage image = new BufferedImage(KINECT_WIDTH, KINECT_HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
         byte[] buf = ((DataBufferByte)(image.getRaster().getDataBuffer())).getData();
-        for (int i = 0; i < buf.length; i+=3) {
+        for (int i = 0; i < buf.length; i+=3) { 		
             buf[i] = ks.rgb[i+2];	// B
             buf[i+1] = ks.rgb[i+1];	// G
             buf[i+2] = ks.rgb[i];	// R
@@ -286,6 +295,7 @@ class KinectCalibrator // implements LCMSubscriber
 
         	double[] testPt = getKinectPoint((int)testLocation[0], (int)testLocation[1]);
         	double[] a = KUtils.getWorldCoordinates(testPt);
+        	System.out.println(String.format("(%f, %f, %f)", testPt[0], testPt[1], testPt[2]));
         	System.out.println(String.format("(%f, %f, %f)", a[0], a[1], a[2]));
         }
         visBuffer.swap();
@@ -294,21 +304,8 @@ class KinectCalibrator // implements LCMSubscriber
 
     public static void main(String[] args)
     {
-        // Define possible commandline arguments
-        GetOpt opts = new GetOpt();
-        opts.addBoolean('h', "help", false, "Show this help screen");
-        opts.addString('l', "log", "stdout", "Log file to get the image from");
-
-        if (!opts.parse(args)) {
-            System.err.println("ERR: Opts error - " + opts.getReason());
-            System.exit(1);
-        }
-        if (opts.getBoolean("help")) {
-            opts.doHelp();
-            System.exit(1);
-        }
 
         //segment = new Segment(da, true);
-        KinectCalibrator kc = new KinectCalibrator(opts);
+        KinectCalibrator kc = new KinectCalibrator();
     }
 }
