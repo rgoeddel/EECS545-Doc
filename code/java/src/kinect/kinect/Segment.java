@@ -20,7 +20,7 @@ public class Segment
     DataAggregator da;
     Boolean colorSegments;
     int width, height;
-    double OBJECT_THRESH = 75;
+    double OBJECT_THRESH = 250;
 
     static Random rand = new Random(56436337);
     static double[] t = new double[] { -0.0254, -0.00013, -0.01218 }; // Added .01 to t[2] here rather than below
@@ -143,38 +143,39 @@ public class Segment
 
         // Make new objectInfos
         for(int i = 0; i < da.currentPoints.size(); i++){
-            if(da.ufs.getSetSize(i) > OBJECT_THRESH){
-                int repID = da.ufs.getRepresentative(i);
-                Object repColor = da.map.get(repID);
-                double[] point = da.currentPoints.get(i);
-                if(repColor != null){
-                    info = (ObjectInfo)da.objects.get(repID);
-                    info.update(point);
+            double[] point = da.currentPoints.get(i);
+            //if(!Arrays.equals(point, new double[4])){
+            if(Math.abs(point[0]-0)>.0001 &&Math.abs(point[2]-0)>.0001 && Math.abs(point[2]-0)>.0001){
+
+                if(da.ufs.getSetSize(i) > OBJECT_THRESH){
+                    int repID = da.ufs.getRepresentative(i);
+                    Object repColor = da.map.get(repID);
+                    if(repColor != null){
+                        info = (ObjectInfo)da.objects.get(repID);
+                        info.update(point);
+                    }
+                    else{
+                        int color = colors[i%colors.length];
+                        da.map.put(repID, color);
+                        info = new ObjectInfo(color, repID, point);
+                        da.objects.put(repID, info);
+                    }
+                    Integer color = da.map.get(repID);
+                    da.coloredPoints.add(new double[]{point[0], point[1], point[2], color});
                 }
-                else{
-                    int color = colors[i%colors.length];
-                    da.map.put(repID, color);
-                    info = new ObjectInfo(color, repID, point);
-                    da.objects.put(repID, info);
-                }
-                Integer color = da.map.get(repID);
-                da.coloredPoints.add(new double[]{point[0], point[1], point[2], color});
             }
         }
-
-        //System.out.println("Pre: "+da.prevObjects.size());
-        //System.out.println("Now: "+da.objects.size());
 
         // Pair up objects from this frame with last frame
         if(da.prevObjects.size() > 0){
             Collection cNew = da.objects.values();
             for(Iterator itr = cNew.iterator(); itr.hasNext(); ){
                 ObjectInfo obj = (ObjectInfo)itr.next();
-                //System.out.println("\t\t"+obj.repID);
                 int mostSim = obj.mostSimilar(da.prevObjects);
-                if(mostSim >= 0){
-                    //System.out.println("**Replacing**"+mostSim);
-                    obj.equateObject(da.prevObjects.get(mostSim));
+                if(mostSim != -1){
+                    int newID = da.prevObjects.get(mostSim).repID;
+                    int newColor = da.prevObjects.get(mostSim).color;
+                    obj.equateObject(newID, newColor);
                     da.prevObjects.remove(mostSim);
                 }
                 for(double[] p : obj.points){
@@ -182,15 +183,6 @@ public class Segment
                 }
             }
         }
-
-        // Color objects like they were colored last time
-        //for(int i = 0; i < da.currentPoints.size(); i++){
-        //    if(da.ufs.getSetSize(i) > OBJECT_THRESH){
-        //        double[] p = da.currentPoints.get(i);
-        //        Integer color = da.map.get(repID);
-         //       da.coloredPoints.add(new double[]{p[0], p[1], p[2], color});
-        //    }
-        //}
     }
 
     /** "Remove" points that are too close to the floor by setting them to

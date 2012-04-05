@@ -20,6 +20,7 @@ public class ObjectInfo{
     double numPoints;
     int color;
     int repID;
+    int ufsID;
     double[] sumPoints;
     int[] sumColor;
     double leftmost;
@@ -37,10 +38,12 @@ public class ObjectInfo{
     /** Create a new object with info about it. Objects begin with a single point.**/
     public ObjectInfo(int color, int repID, double[] point)
     {
+        Random r = new Random();
+        this.repID = r.nextInt();
         features = new ArrayList<Double>();
         this.numPoints = 1;
         this.color = color;
-        this.repID = repID;
+        this.ufsID = repID;
         // XXXX - Need to transform everything with respect to the ground
         // plane and the kinect
         this.leftmost = point[0];
@@ -130,11 +133,9 @@ public class ObjectInfo{
             ObjectInfo obj2 = (ObjectInfo)itr.next();
             double centerDist = LinAlg.distance(getCenter(), obj2.getCenter());
             double colorDist = LinAlg.distance(avgColor(), obj2.avgColor());
-            //System.out.println("CenDist: "+centerDist+"\tcolDist: "+colorDist);
             if (centerDist < minDist && colorDist < minColorDist){
-                //System.out.println("---- better --- ");
                 minDist = centerDist;
-                best = obj2.repID;
+                best = obj2.ufsID;
             }
         }
         return best;
@@ -143,12 +144,9 @@ public class ObjectInfo{
     /** Say this object is the same as a past one by giving it the old object's
         ID. Eventually this method might allow us to store the old object in the
         history of this object? **/
-    public void equateObject(ObjectInfo oldObj)
+    public void equateObject(int newID, int newColor)
     {
-        if(oldObj != null){
-            repID = oldObj.repID;
-            color = oldObj.color;
-        }
-        //else System.out.println("DIDN'T MAKE CHANGE!!!!");
+        repID = newID;
+        color = newColor;
     }
 }
