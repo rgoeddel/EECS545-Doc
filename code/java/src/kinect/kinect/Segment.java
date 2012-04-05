@@ -85,6 +85,15 @@ public class Segment
         return Math.abs(p1[2] - p2[2]);
     }
 
+    /** Get the difference in the z-direction of two pixels. **/
+    private double dist(double[] p1, double[] p2)
+    {
+        double dx = p1[0]-p2[0];
+        double dy = p1[1]-p2[1];
+        double dz = p1[2]-p2[2];
+        return Math.sqrt(dx*dx + dy*dy + dz*dz);
+    }
+
     /** Find the Euclidean distance between two colors. **/
     private double colorDiff(double color1, double color2)
     {
@@ -116,7 +125,7 @@ public class Segment
                     if (loc2>=0 && loc2<width*height){
                         double[] p2 = da.currentPoints.get(loc2);
                         if(!Arrays.equals(p2, new double[4])
-                           && (depthDiff(p1, p2) < da.unionThresh
+                           && (dist(p1, p2) < da.unionThresh
                                || colorDiff(p1[3], p2[3]) < da.colorThresh)){
                             da.ufs.connectNodes(loc1, loc2);
                         }

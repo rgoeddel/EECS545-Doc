@@ -16,8 +16,6 @@ import java.util.*;
 import java.awt.image.*;
 
 /* To Do:
- *  - Send out an LCM message at every frame announcing what is being see
- *  - Track objects between frames
  *  - Add features for shape recognition to FeatureVec
  */
 
@@ -59,9 +57,9 @@ public class NounjectiveLearning implements LCMSubscriber
         vb = vw.getBuffer("Point_Buffer");
 
         //Set up initial camera view
-        vl.cameraManager.uiLookAt(new double[] {0.0, 0.0, 5.0},// Camera position
+        vl.cameraManager.uiLookAt(new double[] {0.0, 0.0, -3.0},// Camera position
                                   new double[] {0.0, 0.0, 0.0},// Point looking at
-                                  new double[] {0.0, 1.0, 0.0},// Up
+                                  new double[] {0.0, -1.0, 0.0},// Up
                                   false);
 
         // Set up adjustable parameters, buttons
@@ -132,18 +130,21 @@ public class NounjectiveLearning implements LCMSubscriber
             }
         }
 
-        sendMessage();
-        draw3DImage();
+        HashMap<Integer, String> features = sendMessage();
+        draw3DImage(features);
         draw2DImage();
     }
 
-    public void sendMessage()
+    public HashMap<Integer, String> sendMessage()
     {
         observations_t obs = new observations_t();
         obs.utime = TimeUtil.utime();
 
         ArrayList<object_data_t> obsList = new ArrayList<object_data_t>();
         ArrayList<String> sensList = new ArrayList<String>();
+
+        // XXX -Temporary - allow us to check how each object is being labeled
+        HashMap<Integer, String> features = new HashMap<Integer, String>();
 
         Collection c = da.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
@@ -174,6 +175,9 @@ public class NounjectiveLearning implements LCMSubscriber
             obj_data.pos = xyzrpy;
             obj_data.bbox = new double[][]{{bb[0], bb[1], bb[2]},{bb[3], bb[4], bb[5]}};
             obsList.add(obj_data);
+
+            // XXX -Temporary - allow us to check how each object is being labeled
+            features.put(obj.repID, adjective);
         }
 
         obs.click_id = -1;
@@ -183,10 +187,13 @@ public class NounjectiveLearning implements LCMSubscriber
         obs.nobs = obs.observations.length;
 
         lcm.publish("OBSERVATIONS",obs);
+
+        // XXX -Temporary - allow us to check how each object is being labeled
+        return features;
     }
 
 
-    public void draw3DImage()
+    public void draw3DImage(HashMap<Integer, String> features)
     {
         if(da.currentPoints.size() <= 0){ return; }
 
@@ -202,12 +209,16 @@ public class NounjectiveLearning implements LCMSubscriber
         Collection c = da.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
-            VzText text = new VzText(Integer.toString(obj.repID));
+            VzText text = new VzText(Integer.toString(obj.repID)+"-"+features.get(obj.repID));
             double[] bb = FeatureVec.boundingBox(obj.points);
             double[] xyz = new double[]{(bb[0]+bb[3])/2.0,
                                            (bb[1]+bb[4])/2.0,
                                            (bb[2]+bb[5])/2.0};
-            VisChain chain = new VisChain(LinAlg.translate(xyz),LinAlg.scale(.005),text);
+            VisChain chain = new VisChain(LinAlg.translate(xyz),
+                                          LinAlg.translate(0,0,-0.2),
+                                          LinAlg.scale(.003),
+                                          LinAlg.scale(1,-1,1),
+                                          text);
             vb.addBack(chain);
         }
 
