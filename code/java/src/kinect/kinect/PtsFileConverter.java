@@ -5,59 +5,52 @@ import java.util.*;
 
 import april.util.*;
 
+/** Take in a pts file and output a feature vector file */
 public class PtsFileConverter
 {
     public PtsFileConverter(GetOpt opts)
     {
         FileInputStream fin;
-        FileOutputStream fout;
         DataInputStream ins = null;
-        DataOutputStream outs = null;
+        File fout = null;
         try {
            fin = new FileInputStream(opts.getString("infile"));
-           fout = new FileOutputStream(opts.getString("outfile"));
            ins = new DataInputStream(fin);
-           outs = new DataOutputStream(fout);
+           fout = new File(opts.getString("outfile"));
         } catch (Exception ex) {
             System.err.println("ERR: "+ex);
             ex.printStackTrace();
         }
 
-        if (ins != null && outs != null) {
-            convertFile(ins, outs);
+        if (ins != null && fout != null) {
+            convertFile(ins, fout);
         }
     }
 
-    private void convertFile(DataInputStream ins, DataOutputStream outs)
+    private void convertFile(DataInputStream ins, File fout)
     {
         BinaryStructureReader bsr = new BinaryStructureReader(ins);
-        BinaryStructureWriter bsw = new BinaryStructureWriter(outs);
+        PrintWriter pwout;
+        try {
+            pwout = new PrintWriter(fout);
+        } catch (IOException ioex) {
+            ioex.printStackTrace();
+            return;
+        }
 
         try {
             while (true) {
                 // Read in data
-                int dc = bsr.readInt();
+                int nlabels = bsr.readInt();
                 bsr.blockBegin();
                 ArrayList<String> labels = new ArrayList<String>();
-                try {
-                    while (true) {
-                        String label = bsr.readString();
-                        System.out.println(label);
-                        if (label == null)
-                            break;
-                        labels.add(label);
-                    }
-                } catch (Exception ex) {
-
+                for (int i = 0; i < nlabels; i++) {
+                    String label = bsr.readString();
+                    labels.add(label);
                 }
-                System.out.printf("Found %d labels\n", labels.size());
-                int nlabels = labels.size();
-
-                // read back junk bytes
-                dc = bsr.readInt();
+                bsr.blockEnd();
 
                 int npoints = bsr.readInt();
-                System.out.println(npoints);
                 ArrayList<double[]> points = new ArrayList<double[]>();
                 bsr.blockBegin();
                 for (int i = 0; i < npoints; i++) {
@@ -65,24 +58,20 @@ public class PtsFileConverter
                 }
                 bsr.blockEnd();
 
-                // Write back to file
-                bsw.writeInt(nlabels);
-                bsw.blockBegin();
-                for (int i = 0; i < nlabels; i++) {
-                    bsw.writeString(labels.get(i));
+                // Write back out to FV file
+                pwout.printf("[");
+                ArrayList<Double> features = FeatureVec.getFeatureVec(points);
+                for (int i = 0; i < features.size(); i++) {
+                    pwout.printf("%f ", features.get(i));
                 }
-                bsw.blockEnd();
-
-                bsw.writeInt(npoints);
-                bsw.blockBegin();
-                for (int i = 0; i < npoints; i++) {
-                    bsw.writeDoubles(points.get(i));
+                pwout.printf("] {");
+                for (int i = 0; i <  labels.size(); i++) {
+                    pwout.printf("%s;", labels.get(i));
                 }
-                bsw.blockEnd();
+                pwout.printf("}\n");
+                pwout.flush();
             }
         } catch (Exception ex) {
-            System.err.println("ERR: "+ex);
-            ex.printStackTrace();
         }
     }
 
@@ -92,7 +81,7 @@ public class PtsFileConverter
 
         opts.addBoolean('h', "help", false, "Show this help screen");
         opts.addString('i', "infile", null, "Input .pts file");
-        opts.addString('o', "outfile", null, "Output file for converted file");
+        opts.addString('o', "outfile", null, "Output feature vector file");
 
         if (!opts.parse(args)) {
             System.err.println("ERR: "+opts.getReason());
