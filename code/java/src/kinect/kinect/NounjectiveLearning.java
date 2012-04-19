@@ -204,6 +204,46 @@ public class NounjectiveLearning implements LCMSubscriber
         vb.swap();
     }
 
+    public double[][][] getColorData(BufferedImage image, int width, int height){
+        double[][][] colorData = new double[height][width][];
+        for(int x = 0; x < image.getWidth(); x++){
+        	for(int y = 0; y < image.getHeight(); y++){
+        		Color color = new Color(image.getRGB(x,  y));
+        		double lum = .3*color.getRed() + .59*color.getGreen() + .11 * color.getBlue();
+        		if(x < width && y < height){
+            		colorData[y][x] = new double[]{color.getRed(), color.getGreen(), color.getBlue(), lum};
+        		}
+        		//image.setRGB(x, y, new Color((int)lum, (int)lum, (int)lum).getRGB());
+        	}
+        }
+        return colorData;
+    }
+    
+    public double getDelta(double[][][] data, int x, int y, int scale, int channel){
+    	double min = data[y][x][channel];
+    	double max = data[y][x][channel];
+    	int height = data.length;
+    	int width = data[0].length;
+    	for(int dX = -scale; dX <= scale; dX+=scale){
+    		for(int dY = -scale; dY <= scale; dY+=scale){
+//    			if(dX != 0 && dY != 0){
+//    				dX *= ;
+//    				dY *= 1.414;
+//    			}
+    			int xp = x + dX;
+    			int yp = y + dY;
+    	    	if(xp >= 0 && xp < width && yp >= 0 && yp < height){
+    	    		if(data[yp][xp][channel] < min){
+    	    			min = data[yp][xp][channel];
+    	    		} else if(data[yp][xp][channel] > max){
+    	    			max = data[yp][xp][channel];
+    	    		}
+    	    	}
+    			
+    		}
+    	}
+    	return max - min;
+    }
 
     public void draw2DImage()
     {
@@ -215,6 +255,23 @@ public class NounjectiveLearning implements LCMSubscriber
             buf[i] = ks.rgb[i+2];   // B
             buf[i+1] = ks.rgb[i+1]; // G
             buf[i+2] = ks.rgb[i];   // R
+        }
+        
+        double[][][] colorData = getColorData(im, im.getWidth(), im.getHeight());
+        
+        for(int x = 100; x < im.getWidth() -100; x++){
+    		for(int y = 75; y < im.getHeight() - 75; y++){  
+            	float intensity;    
+        		double maxDelta = 0;
+        		for(int channel = 0; channel < 3; channel++){
+        			double delta = getDelta(colorData, x, y, 1, channel)/255;
+        			maxDelta = (maxDelta < delta ? delta : maxDelta);
+        		}
+        		intensity = (float)maxDelta;
+        		//intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
+
+        		im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
+        	}
         }
 
         VisWorld.Buffer vbim = vw2.getBuffer("pictureInPicture");
