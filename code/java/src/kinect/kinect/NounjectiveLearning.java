@@ -51,7 +51,7 @@ public class NounjectiveLearning implements LCMSubscriber
         vw2 = new VisWorld();
         vl = new VisLayer(vw);
         vl2 = new VisLayer(vw2);
-        double pct = 0.25;
+        double pct = 0.90;
         vl2.layerManager = new DefaultLayerManager(vl2, new double[]{0.0, 1.0-pct, pct, pct});
         vl2.cameraManager.fit2D(new double[2], new double[] {kinect_status_t.WIDTH, kinect_status_t.HEIGHT}, true);
         VisCanvas vc = new VisCanvas(vl);
@@ -267,8 +267,11 @@ public class NounjectiveLearning implements LCMSubscriber
         			double delta = getDelta(colorData, x, y, 1, channel)/255;
         			maxDelta = (maxDelta < delta ? delta : maxDelta);
         		}
-        		intensity = (float)maxDelta;
-        		//intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
+        		if(x < 320){
+            		intensity = (float)maxDelta;
+        		} else{
+            		intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
+        		}
 
         		im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
         	}
