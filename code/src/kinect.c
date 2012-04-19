@@ -178,7 +178,8 @@ int main(int argc, char **argv)
 {
     // Init LCM
     printf("Initializing LCM...\n");
-    k_lcm = lcm_create("udpm://239.255.76.67:7667?ttl=0");
+    //k_lcm = lcm_create("udpm://239.255.76.67:7667?ttl=0");
+    k_lcm = lcm_create(NULL);
 
     if (!k_lcm)
         return 1;
