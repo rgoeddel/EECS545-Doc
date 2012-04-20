@@ -149,4 +149,20 @@ public class ObjectInfo{
         repID = newID;
         color = newColor;
     }
+    
+//    public BufferedImage getImage(){
+//    	int[][] pixels = new int[points.size()][];
+//    	for(int i = 0; i < points.size(); i++){
+//    		double[] pixel = KUtils.getPixel(points.get(i));
+//    		pixels[i] = new int[]{(int)pixel[0], (int)pixel[1]};
+//    	}
+//    	
+//    	
+//    	
+//    	
+//    }
+//    
+    
+    
+    
 }

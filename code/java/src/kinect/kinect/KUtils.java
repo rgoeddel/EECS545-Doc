@@ -96,6 +96,13 @@ public class KUtils
 	    }
         return 0.0f;
     }
+    
+    public static double[] getPixel(double[] kinectPt){
+    	double[] pixel = new double[]{0, 0};
+    	pixel[0] = kinectPt[0] * Firx / kinectPt[2] + Cirx;
+    	pixel[1] = kinectPt[1] * Firy / kinectPt[2] + Ciry;
+    	return pixel;
+    }
 
     public static double[] getXYZRGB(int x, int y, double depth, kinect_status_t ks)
     {

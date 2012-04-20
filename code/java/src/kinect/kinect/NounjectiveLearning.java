@@ -29,6 +29,10 @@ public class NounjectiveLearning implements LCMSubscriber
     static double initialUnionThresh = 0.5;
     static double  initialRansacThresh = .02;
     static double  initialRansacPercent = .1;
+    
+    
+    double intensityThreshold = .12;
+    int divider = 320;
 
     static DataAggregator da;
     static Segment segment;
@@ -39,6 +43,9 @@ public class NounjectiveLearning implements LCMSubscriber
     kinect_status_t ks;
     static LCM lcm = LCM.getSingleton();
     Classifier classify = new Classifier();
+    
+    final static int[] viewBorders = new int[]{75, 150, 575, 400};
+    final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
 
     public NounjectiveLearning(GetOpt opts_)
     {
@@ -49,7 +56,7 @@ public class NounjectiveLearning implements LCMSubscriber
         vw2 = new VisWorld();
         vl = new VisLayer(vw);
         vl2 = new VisLayer(vw2);
-        double pct = 0.90;
+        double pct = 0.2;
         vl2.layerManager = new DefaultLayerManager(vl2, new double[]{0.0, 1.0-pct, pct, pct});
         vl2.cameraManager.fit2D(new double[2], new double[] {kinect_status_t.WIDTH, kinect_status_t.HEIGHT}, true);
         VisCanvas vc = new VisCanvas(vl);
@@ -68,6 +75,8 @@ public class NounjectiveLearning implements LCMSubscriber
         pg.addDoubleSlider("uThresh", "Union Threshold", 0.001, 0.5, initialUnionThresh);
         pg.addDoubleSlider("rThresh", "Ransac Threshold", .001, .1, initialRansacThresh);
         pg.addDoubleSlider("rPercent", "Ransac Percent", .01, .3, initialRansacPercent);
+        pg.addDoubleSlider("iThresh", "Intensity Threshold", 0.001, 0.999, .12);
+        pg.addIntSlider("dSlider", "Divider Threshold", 1, 640, 200);
 
         pg.addListener(new ParameterListener() {
                 public void parameterChanged(ParameterGUI pg, String name) {
@@ -83,6 +92,13 @@ public class NounjectiveLearning implements LCMSubscriber
                     else if (name.equals("rPercent")) {
                         da.ransacPercent = pg.gd("rPercent");
                     }
+                    else if (name.equals("iThresh")) {
+                    	intensityThreshold = pg.gd("iThresh");
+                    }
+                    else if (name.equals("dSlider")) {
+                    	divider =  pg.gi("dSlider");
+                    }
+                    
                 }
             });
 
@@ -122,14 +138,15 @@ public class NounjectiveLearning implements LCMSubscriber
 //        	System.out.println(KinectCalibrator.v2s(KUtils.kinectToWorldXForm[i]));
 //        }
 
-        for(int y=0; y<ks.HEIGHT; y++){
-            for(int x=0; x<ks.WIDTH; x++){
+        for(int y= (int)viewRegion.getMinY(); y<viewRegion.getMaxY(); y++){
+            for(int x=(int)viewRegion.getMinX(); x<viewRegion.getMaxX(); x++){
                 int i = y*ks.WIDTH + x;
                 int d = ((ks.depth[2*i+1]&0xff) << 8) |
                         (ks.depth[2*i+0]&0xff);
                 double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
                 double[] pWorld = KUtils.getWorldCoordinates(new double[]{
                         pKinect[0], pKinect[1], pKinect[2]});
+                
                 //da.currentPoints.add(new double[]{pWorld[0], pWorld[1], pWorld[2], pKinect[3]});
                 da.currentPoints.add(pKinect);
             }
@@ -139,6 +156,8 @@ public class NounjectiveLearning implements LCMSubscriber
         draw3DImage(features);
         draw2DImage();
     }
+    
+    
 
     public HashMap<Integer, String> sendMessage()
     {
@@ -290,26 +309,48 @@ public class NounjectiveLearning implements LCMSubscriber
         
         double[][][] colorData = getColorData(im, im.getWidth(), im.getHeight());
         
-        for(int x = 100; x < im.getWidth() -100; x++){
-    		for(int y = 75; y < im.getHeight() - 75; y++){  
+        for(int x = 0; x < im.getWidth(); x++){
+    		for(int y = 0; y < im.getHeight(); y++){  
             	float intensity;    
         		double maxDelta = 0;
         		for(int channel = 0; channel < 3; channel++){
         			double delta = getDelta(colorData, x, y, 1, channel)/255;
         			maxDelta = (maxDelta < delta ? delta : maxDelta);
         		}
-        		if(x < 320){
+        		if(x < 0){
+        			// Use all 3 color channels
             		intensity = (float)maxDelta;
         		} else{
+        			// Only use intensity (grayscale)
             		intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
         		}
+        		
+        		
+        		if(x < divider){
+        			intensity = (intensity > intensityThreshold ? 1 : 0);
+        		} else {
+        			
+        		}
+        		
+        		if(viewRegion.contains(x, y)){
+            		im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
+        		} else {
+        			im.setRGB(x, y, Color.black.getRGB());
+        		}
+        		
+        		//
 
-        		im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
         	}
         }
 
         VisWorld.Buffer vbim = vw2.getBuffer("pictureInPicture");
         vbim.addBack(new VzImage(im, VzImage.FLIP));
+//        for(ObjectInfo object : da.objects.values()){
+//        	BufferedImage img = object.getImage();
+//        	vbim.addBack(new VzImage(im, VzImage.FLIP));
+//        }
+
+
         vbim.swap();
     }
 
@@ -336,6 +377,8 @@ public class NounjectiveLearning implements LCMSubscriber
         da.ransacThresh = initialRansacThresh;
         da.ransacPercent = initialRansacPercent;
         da.depthLookUp = KUtils.createDepthMap();
+        da.WIDTH = (int) NounjectiveLearning.viewRegion.getWidth();
+        da.HEIGHT = (int) NounjectiveLearning.viewRegion.getHeight();
         boolean colorSegments = true;
         segment = new Segment(da, colorSegments);
 
