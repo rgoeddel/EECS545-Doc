@@ -30,6 +30,7 @@ public class ObjectInfo{
 
     ArrayList<Double> features;
     ArrayList<double[]> points;
+    ArrayList<Color> colors;
 
     public ObjectInfo(){
         features = new ArrayList<Double>();
@@ -57,6 +58,9 @@ public class ObjectInfo{
 
         this.points = new ArrayList<double[]>();
         this.points.add(point);
+        
+        this.colors = new ArrayList<Color>();
+        this.colors.add(color);
     }
 
     /** Set the features of this object. **/
@@ -96,6 +100,7 @@ public class ObjectInfo{
         sumColor[2] += c.getGreen();
 
         this.points.add(point);
+        this.colors.add(c);
     }
 
     /** Get the center of the object (mean x, y,z). **/

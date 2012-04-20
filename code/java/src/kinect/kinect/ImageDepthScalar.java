@@ -101,26 +101,6 @@ class ImageDepthScalar // implements LCMSubscriber
     		}
     		
     		
-    		BufferedImage image = getBufferedImage();
-    		y = image.getHeight() - y;
-            
-            int testWidth = 300;
-            int testHeight = 400;
-            
-            double[][][] colorData = getColorData(image, testWidth, testHeight);
-            
-            int count = 0;
-    		double deltaSum = 0;
-    		for(int i = 0; i < xDirs.length; i++){ 
-    			double gradDelta = getGradDelta(colorData, (int)x, (int)y, xDirs[i], yDirs[i], 1, 1);
-    			if(gradDelta != -1 && !Double.isNaN(gradDelta)){
-    				count++;
-    				deltaSum += (gradDelta < 0 ? 0 : gradDelta);
-    			}
-    		}
-    		
-    		System.out.println(deltaSum/count);
-    		
             return false;
         }
     }
@@ -174,10 +154,6 @@ class ImageDepthScalar // implements LCMSubscriber
     	int width = data[0].length;
     	for(int dX = -scale; dX <= scale; dX+=scale){
     		for(int dY = -scale; dY <= scale; dY+=scale){
-//    			if(dX != 0 && dY != 0){
-//    				dX *= ;
-//    				dY *= 1.414;
-//    			}
     			int xp = x + dX;
     			int yp = y + dY;
     	    	if(xp >= 0 && xp < width && yp >= 0 && yp < height){
@@ -192,42 +168,7 @@ class ImageDepthScalar // implements LCMSubscriber
     	}
     	return max - min;
     }
-    
-    public double getGradDelta(double[][][] data, int x, int y, int dX, int dY, int scale1, int scale2){
-    	double[] n1 = getNormal(data, x, y, dX, dY, scale1, scale2);
-    	double[] n2 = getNormal(data, x, y, -dX, -dY, scale1, scale2);
-    	if(n1 == null || n2 == null){
-    		return -1;
-    	}
-    	LinAlg.normalizeEquals(n1);
-    	LinAlg.normalizeEquals(n2);
-    	return (1 - LinAlg.dotProduct(n1, LinAlg.scale(n2, -1)))/2;
-    }
-    
-    public double[] getNormal(double[][][] data, int x, int y, int dX, int dY, int scale1, int scale2){
-    	double[] normal = new double[]{0, 0, 0};
-    	int height = data.length;
-    	int width = data[0].length;
-    	
-    	dX *= scale1;
-    	dY *= scale2;
-    	if(x + dX >= 0 && x + dX < width && y + dY >= 0 && y + dY < height){
-    		LinAlg.subtract(data[y+dY][x+dX], data[y][x], normal);
-    	} else {
-    		return null;
-    	}
-        
-    	/*
-    	dX = (dX / scale1) * scale2;
-    	dY = (dY / scale1) * scale2;
-    	LinAlg.scale(normal, ((double)scale2)/scale1, normal);
-    	if(x + dX >= 0 && x + dX < width && y + dY >= 0 && y + dY < height){
-    		LinAlg.add(normal, LinAlg.subtract(data[y+dY][x+dX], data[y][x]), normal);
-    	}else {
-    		return null;
-    	}*/
-    	return normal;    	
-    }
+
     
     public int min(int a, int b){
     	return (a < b ? a : b);
@@ -282,35 +223,21 @@ class ImageDepthScalar // implements LCMSubscriber
         int testWidth = 600;
         int testHeight = 400;
         
-        double[][][] colorData = getColorData(image, testWidth, testHeight);
-        double[][][] imgData = getImageData(image, testWidth, testHeight);
+        double[][][] colorData = getColorData(image, image.getWidth(), image.getHeight());
         
-        
-        double[][] intensityData = new double[testHeight][testWidth];
-        for(int x = 0; x < testWidth; x++){
-    		for(int y = 0; y < testHeight; y++){  
-            	float intensity;   
-            	if((x/50)%2 >= 0){   
-            		double maxDelta = 0;
-            		for(int channel = 0; channel < 3; channel++){
-            			double delta = getDelta(colorData, x, y, 1, channel)/255;
-            			maxDelta = (maxDelta < delta ? delta : maxDelta);
-            		}
-            		intensity = (float)maxDelta;
-            		//intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
-            	} else {
-            		int count = 0;
-            		double deltaSum = 0;
-            		for(int i = 0; i < xDirs.length; i++){ 
-            			double gradDelta = getGradDelta(imgData, x, y, xDirs[i], yDirs[i], 4, 4);
-    					if(gradDelta != -1 && !Double.isNaN(gradDelta)){
-    						count++;
-    						deltaSum += (gradDelta < 0 ? 0 : gradDelta);
-    					}
-            		}
-            		intensity = (float)(count == 0 ? 0 : deltaSum/count);
-            	} 	
-    			intensityData[y][x] = intensity;
+        for(int x = 100; x < image.getWidth() -100; x++){
+    		for(int y = 75; y < image.getHeight() - 75; y++){  
+            	float intensity;    
+        		double maxDelta = 0;
+        		for(int channel = 0; channel < 3; channel++){
+        			double delta = getDelta(colorData, x, y, 1, channel)/255;
+        			maxDelta = (maxDelta < delta ? delta : maxDelta);
+        		}
+        		//intensity = (float)maxDelta;
+        		intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
+        		double threshold = .12;
+        		double scale = 100;
+        		//intensity = (float)(1/(1 + Math.exp(-(intensity-threshold)*scale)));
 
         		image.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
         	}

@@ -1,5 +1,6 @@
 package kinect.kinect;
 
+
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -10,7 +11,6 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 
 import april.jmat.LinAlg;
-import april.util.GetOpt;
 
 public class PCA {
 	public static boolean isValidPixel(Color c){
@@ -108,15 +108,25 @@ public class PCA {
 		
 		Rectangle bounds = new Rectangle(0, 0, img.getWidth(), img.getHeight());
 		
-		while(bounds.contains((int)x, (int)y)){
-			Color color = new Color(img.getRGB((int)x, (int)y));
-			if(isValidPixel(color)){
-				return dist;
-			} else {
-				x += dir[0] * increment;
-				y += dir[1] * increment;
-				dist += increment;
+		int xi = (int)x;
+		int yi = (int)y;
+		while(bounds.contains(xi, yi)){
+			for(int i = 0; i < 2; i++){
+				for(int j = 0; j < 2; j++){
+					if(bounds.contains(xi+i, yi+j)){
+						Color color = new Color(img.getRGB(xi + i, yi + j));
+						if(isValidPixel(color)){
+							return dist;
+						}
+					}
+				}
 			}
+			
+			x += dir[0] * increment;
+			y += dir[1] * increment;
+			dist += increment;
+			xi = (int)x;
+			yi = (int)y;
 		}
 
 		return 0;
@@ -126,6 +136,9 @@ public class PCA {
 		// Directions are with right being +v1 and up being +v2
 		
 	    ArrayList<int[]> pixels = getPixels(img);
+	    if(pixels.size() == 0){
+	    	return null;
+	    }
 		double[] mean = getMean(pixels);
     	double[][] cov = getCov(pixels, mean);
     	
@@ -158,11 +171,10 @@ public class PCA {
 	    		pt[0] = start[0] + perc*(proj1[1] - proj1[0])*v1[0];
 	    		pt[1] = start[1] + perc*(proj1[1] - proj1[0])*v1[1];
 	    		features[f++] = getFeature(img, pt, dir)/(proj2[1] - proj2[0]);
-	    		System.out.println(features[f-1]);
 	    	}
 	    }
 
-    	return new double[]{};
+    	return features;
 	}
 	
 	public static void main(String args[])
