@@ -78,7 +78,7 @@ class KinectCalibrator // implements LCMSubscriber
 
         // Set up labels to choose from and buttons for skipping/commiting
         ParameterGUI paramGUI = new ParameterGUI();
-        paramGUI.addButtons("ido", "Choose Origin", "idx", "Choose X Direction", "idy", "Choose Y Direction", "test", "Test Point", "createCalib", "Create Calibration File");
+        paramGUI.addButtons("ido", "Choose Origin", "idx", "Choose X Direction", "idy", "Choose Y Direction", "test", "Test Point", "createCalib", "Create Calibration File", "new", "New Frame");
         paramGUI.addListener(new ParameterListener() {
             public void parameterChanged(ParameterGUI pg, String name) {
                 if (name.equals("createCalib")) {
@@ -91,6 +91,8 @@ class KinectCalibrator // implements LCMSubscriber
                 	curMode = Mode.Y;
                 } else if(name.equals("test")){
                 	curMode = Mode.TEST;
+                } else if(name.equals("new")){
+                	ks = null;
                 }
             }
         });
@@ -152,7 +154,7 @@ class KinectCalibrator // implements LCMSubscriber
     			testLocation = location;
     		}
     		
-    		System.out.println(v2s(getKinectPoint((int)location[0], (int)location[1])));
+    		//System.out.println(v2s(getKinectPoint((int)location[0], (int)location[1])));
     		
     		
     		redrawImage();
@@ -295,7 +297,7 @@ class KinectCalibrator // implements LCMSubscriber
 
         	double[] testPt = getKinectPoint((int)testLocation[0], (int)testLocation[1]);
         	double[] a = KUtils.getWorldCoordinates(testPt);
-        	System.out.println(String.format("(%f, %f, %f)", testPt[0], testPt[1], testPt[2]));
+        	//System.out.println(String.format("(%f, %f, %f)", testPt[0], testPt[1], testPt[2]));
         	System.out.println(String.format("(%f, %f, %f)", a[0], a[1], a[2]));
         }
         visBuffer.swap();
