@@ -29,6 +29,8 @@ public class ObjectInfo{
     public double lowermost;
     public  BufferedImage image = null;
     public double[] shapeFeatures = null;
+    
+    public Rectangle projBBox = null;
 
     public ArrayList<Double> features;
     public ArrayList<double[]> points;
@@ -155,7 +157,7 @@ public class ObjectInfo{
         color = newColor;
     }
     
-    public static BufferedImage getImage(ArrayList<double[]> points){
+    public static BufferedImage getImage(ArrayList<double[]> points, Rectangle projBBox){
     	BufferedImage image;
 		int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
 		int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
@@ -167,11 +169,16 @@ public class ObjectInfo{
 			maxY = (pixel[1] > maxY ? (int)Math.round(pixel[1]) : maxY);
 		}
 		int margin = 5;
+		if(projBBox != null){
+			projBBox.setBounds(minX - margin, minY - margin, maxX - minX + 1 + margin*2, maxY - minY + 1 + margin*2);
+		}
 		image = new BufferedImage((maxX - minX + 1) + 2*margin, (maxY - minY + 1) + 2*margin, BufferedImage.TYPE_3BYTE_BGR);
 		for(int i = 0; i < points.size(); i++){
 			double[] pixel = KUtils.getPixel(points.get(i));
 			try{
-    			image.setRGB((int)Math.round(pixel[0])+margin-minX, (int)Math.round(pixel[1])+margin-minY, (int)points.get(i)[3]);
+				Color c =  new Color((int)points.get(i)[3]);
+				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
+    			image.setRGB((int)Math.round(pixel[0])+margin-minX, (int)Math.round(pixel[1])+margin-minY, rc.getRGB());
 			} catch (Exception e){
 				System.out.println("Out of Bounds pixel in ObjectInfo: " + pixel[0] + ", " + pixel[1]);
 				System.out.println(points.get(i)[0] + ", " + points.get(i)[1] + ", " + points.get(i)[2]);
@@ -180,9 +187,17 @@ public class ObjectInfo{
     	return image;
     }
     
+    public Rectangle getProjectedBBox(){
+    	if(projBBox == null){
+    		getImage();
+    	} 
+    	return projBBox;
+    }
+    
     public BufferedImage getImage(){
     	if(image == null){
-    		image = ObjectInfo.getImage(points);
+    		projBBox = new Rectangle();
+    		image = getImage(points, projBBox);
     	} 
     	return image;
     }

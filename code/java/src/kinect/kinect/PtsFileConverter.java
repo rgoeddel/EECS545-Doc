@@ -102,7 +102,7 @@ public class PtsFileConverter
                     pwout.printf("}\n");
                     pwout.flush();
                 } else {
-                	BufferedImage img = ObjectInfo.getImage(points);
+                	BufferedImage img = ObjectInfo.getImage(points, null);
                 	features = new ArrayList<Double>();
                 	double[] f = PCA.getFeatures(img, 7);
                 	for(int i = 0; i < f.length; i++){

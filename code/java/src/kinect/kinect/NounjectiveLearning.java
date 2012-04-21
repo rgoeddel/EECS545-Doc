@@ -330,7 +330,8 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Map.Entry<Integer, ObjectInfo> entry : da.objects.entrySet()){
         	//im = entry.getValue().getImage();
         }
-        double[] features = PCA.getFeatures(im, 5);
+        double[] features = PCA.getFeatures(im, 5);            System.err.println("ERR: Opts error - " + opts.getReason());
+
         //for(int i = 0; i < features.length; i++){
         //	System.out.print(features[i] + ", ");
         //}
