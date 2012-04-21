@@ -17,21 +17,21 @@ import java.awt.image.*;
 
 public class ObjectInfo{
 
-    double numPoints;
-    int color;
-    int repID;
-    int ufsID;
-    double[] sumPoints;
-    int[] sumColor;
-    double leftmost;
-    double rightmost;
-    double uppermost;
-    double lowermost;
-    BufferedImage image = null;
-    double[] shapeFeatures = null;
+    public double numPoints;
+    public int color;
+    public int repID;
+    public int ufsID;
+    public double[] sumPoints;
+    public int[] sumColor;
+    public double leftmost;
+    public double rightmost;
+    public double uppermost;
+    public double lowermost;
+    public  BufferedImage image = null;
+    public double[] shapeFeatures = null;
 
-    ArrayList<Double> features;
-    ArrayList<double[]> points;
+    public ArrayList<Double> features;
+    public ArrayList<double[]> points;
 
     public ObjectInfo(){
         features = new ArrayList<Double>();

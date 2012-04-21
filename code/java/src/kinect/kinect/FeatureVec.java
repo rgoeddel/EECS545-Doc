@@ -2,6 +2,7 @@ package kinect.kinect;
 
 import java.util.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**  Features to implement:
  **  - measure of sharpness
@@ -188,6 +189,15 @@ public class FeatureVec
         lwh[1] = Math.abs(bounds[4] - bounds[1]);
         lwh[2] = Math.abs(bounds[5] - bounds[2]);
         return lwh;
+    }
+    
+    public static String getShapeFeature(BufferedImage image){
+    	double[] features = PCA.getFeatures(image, 7);
+    	String shapeInput = "[";
+	    for (double f : features)
+	    	shapeInput += f + " ";
+	    shapeInput += "]";
+	    return shapeInput;
     }
 
     private static void divideEquals(double[] values, double divisor)

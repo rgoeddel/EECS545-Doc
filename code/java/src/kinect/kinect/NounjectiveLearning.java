@@ -191,14 +191,14 @@ public class NounjectiveLearning implements LCMSubscriber
 
             // Get features and corresponding classifications for this object
             String colorInput = FeatureVec.featureString(obj.points);
-	    double[] shapes = obj.getShapeFeatures();
-	    String shapeInput = "[";
-	    for (double d : shapes)
-		shapeInput += d + " ";
-	    shapeInput += "]";
-	    //String color = classColor.classify(colorInput);
-	    String color = knnColor.classify(colorInput); // Currenty only one being returned
-	    String shape = knnShape.classify(shapeInput);
+		    double[] shapes = obj.getShapeFeatures();
+		    String shapeInput = "[";
+		    for (double d : shapes)
+		    	shapeInput += d + " ";
+		    shapeInput += "]";
+		    //String color = classColor.classify(colorInput);
+		    String color = knnColor.classify(colorInput); // Currenty only one being returned
+		    String shape = knnShape.classify(shapeInput);
             categorized_data_t[] data = new categorized_data_t[2];
             categorized_data_t d = new categorized_data_t();
             d.cat = new category_t();
