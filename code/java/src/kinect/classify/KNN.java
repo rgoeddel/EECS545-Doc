@@ -83,42 +83,6 @@ class TrainingSample
     }
 }
 
-class ConfidenceLabel implements Comparable<ConfidenceLabel>
-{
-    double confidence;
-    String label;
-    
-    public ConfidenceLabel(double confidence, String label)
-    {
-	this.confidence = confidence;
-	this.label = label;
-    }
-    
-    public double getConfidence()
-    {
-	return confidence;
-    }
-    public String getLabel()
-    {
-    	return label;
-    }
-    
-    @Override
-    public int compareTo(ConfidenceLabel cl)
-    {
-	//ConfidenceLabel cl = (ConfidenceLabel) o;
-	double diff = this.confidence - cl.confidence;
-	if (diff < 0)
-	    return (1);
-	else if (diff > 0)
-	    return (-1);
-	else
-	    return 0;
-    }
-    
-}
-
-
 public class KNN {
     
     List<TrainingSample> data;
@@ -404,15 +368,15 @@ String datafile;
 	    System.err.println("Error: " + e.getMessage());
 	} 
     }
-    public String classify(String inputdata)
+    public ConfidenceLabel classify(String inputdata)
     {
 	Point test = getPointFromString(inputdata, this.dim);
 	List<ConfidenceLabel> cl = getMostConfidentLabels(this.Km, test);
 	ConfidenceLabel c = cl.get(0);
-	String ans = c.getLabel();
+	//String ans = c.getLabel();
 	//ans = ans + " " + c.getConfidence();
 	//return getNewLabel(10, test);
-	return ans;
+	return c;
     }
     /*
     public static void main(String []args)

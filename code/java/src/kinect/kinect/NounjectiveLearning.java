@@ -197,8 +197,10 @@ public class NounjectiveLearning implements LCMSubscriber
 		    	shapeInput += d + " ";
 		    shapeInput += "]";
 		    //String color = classColor.classify(colorInput);
-		    String color = knnColor.classify(colorInput); // Currenty only one being returned
-		    String shape = knnShape.classify(shapeInput);
+		    ConfidenceLabel colorCL = knnColor.classify(colorInput);
+		    String color = colorCL.getLabel(); // Currenty only one being returned
+		    ConfidenceLabel shapeCL = knnShape.classify(shapeInput);
+		    String shape = shapeCL.getLabel();
             categorized_data_t[] data = new categorized_data_t[2];
             categorized_data_t d = new categorized_data_t();
             d.cat = new category_t();
