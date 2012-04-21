@@ -42,7 +42,9 @@ public class NounjectiveLearning implements LCMSubscriber
     static VisWorld.Buffer vb;
     kinect_status_t ks;
     static LCM lcm = LCM.getSingleton();
-    Classifier classify = new Classifier();
+    KNN knnColor = new KNN(30, 6, "color_features.dat");
+    KNN knnShape = new KNN(10, 15, "shape_features.dat");
+    //Classifier classColor = new Classifier();
     
     final static int[] viewBorders = new int[]{75, 150, 575, 400};
     final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
@@ -51,12 +53,15 @@ public class NounjectiveLearning implements LCMSubscriber
     {
         opts = opts_;
 
+        knnColor.loadData();
+        knnShape.loadData();
+
         // Initialize all ov Vis stuff.
         vw = new VisWorld();
         vw2 = new VisWorld();
         vl = new VisLayer(vw);
         vl2 = new VisLayer(vw2);
-        double pct = 0.2;
+        double pct = 0.3;
         vl2.layerManager = new DefaultLayerManager(vl2, new double[]{0.0, 1.0-pct, pct, pct});
         vl2.cameraManager.fit2D(new double[2], new double[] {kinect_status_t.WIDTH, kinect_status_t.HEIGHT}, true);
         VisCanvas vc = new VisCanvas(vl);
@@ -72,7 +77,7 @@ public class NounjectiveLearning implements LCMSubscriber
         // Set up adjustable parameters, buttons
         ParameterGUI pg = new ParameterGUI();
         pg.addIntSlider("cThresh", "Color Threshold", 1, 100, initialColorThresh);
-        pg.addDoubleSlider("uThresh", "Union Threshold", 0.001, 0.5, initialUnionThresh);
+        pg.addDoubleSlider("uThresh", "Union Threshold", 0.001, 0.305, initialUnionThresh);
         pg.addDoubleSlider("rThresh", "Ransac Threshold", .001, .1, initialRansacThresh);
         pg.addDoubleSlider("rPercent", "Ransac Percent", .01, .3, initialRansacPercent);
         pg.addDoubleSlider("iThresh", "Intensity Threshold", 0.001, 0.999, .12);
@@ -185,16 +190,31 @@ public class NounjectiveLearning implements LCMSubscriber
             }
 
             // Get features and corresponding classifications for this object
-            String input = FeatureVec.featureString(obj.points);
-            String adjective = classify.classify(input); // Currenty only one being returned
-            categorized_data_t[] data = new categorized_data_t[1];
+            String colorInput = FeatureVec.featureString(obj.points);
+	    double[] shapes = obj.getShapeFeatures();
+	    String shapeInput = "[";
+	    for (double d : shapes)
+		shapeInput += d + " ";
+	    shapeInput += "]";
+	    //String color = classColor.classify(colorInput);
+	    String color = knnColor.classify(colorInput); // Currenty only one being returned
+	    String shape = knnShape.classify(shapeInput);
+            categorized_data_t[] data = new categorized_data_t[2];
             categorized_data_t d = new categorized_data_t();
             d.cat = new category_t();
             d.cat.cat = category_t.CAT_COLOR;
-            d.label = new String[]{adjective};
+            d.label = new String[]{color};
             d.len = 1;
             d.confidence = new double[]{.9};
             data[0] = d;
+
+            categorized_data_t dS = new categorized_data_t();
+            dS.cat = new category_t();
+            dS.cat.cat = category_t.CAT_SHAPE;
+            dS.label = new String[]{shape};
+            dS.len = 1;
+            dS.confidence = new double[]{.9};
+            data[1] = dS;
 
             // Create object data for lcm
             object_data_t obj_data = new object_data_t();
@@ -207,7 +227,7 @@ public class NounjectiveLearning implements LCMSubscriber
             obsList.add(obj_data);
 
             // XXX -Temporary - allow us to check how each object is being labeled
-            features.put(obj.repID, adjective);
+            features.put(obj.repID, (color+" "+shape));
         }
 
         obs.click_id = -1;
@@ -239,13 +259,13 @@ public class NounjectiveLearning implements LCMSubscriber
         Collection c = da.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
-            VzText text = new VzText(Integer.toString(obj.repID)+"-"+features.get(obj.repID));
+	    VzText text = new VzText(/*Integer.toString(obj.repID)+"-"+*/features.get(obj.repID));
             double[] bb = FeatureVec.boundingBox(obj.points);
             double[] xyz = new double[]{(bb[0]+bb[3])/2.0,
                                            (bb[1]+bb[4])/2.0,
                                            (bb[2]+bb[5])/2.0};
             VisChain chain = new VisChain(LinAlg.translate(xyz),LinAlg.translate(0, 0, -.2),
-            		LinAlg.scale(.003),LinAlg.scale(1, -1, 1), text);
+            		LinAlg.scale(.0015),LinAlg.scale(1, -1, 1), text);
             vb.addBack(chain);
         }
 
@@ -299,13 +319,22 @@ public class NounjectiveLearning implements LCMSubscriber
     {
         if(da.currentPoints.size() <= 0){ return; }
 
-        BufferedImage im = new BufferedImage(ks.WIDTH, ks.HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
+       BufferedImage im = new BufferedImage(ks.WIDTH, ks.HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
         byte[] buf = ((DataBufferByte)(im.getRaster().getDataBuffer())).getData();
         for (int i = 0; i < buf.length; i+=3) {
             buf[i] = ks.rgb[i+2];   // B
             buf[i+1] = ks.rgb[i+1]; // G
             buf[i+2] = ks.rgb[i];   // R
         }
+        
+        for(Map.Entry<Integer, ObjectInfo> entry : da.objects.entrySet()){
+        	//im = entry.getValue().getImage();
+        }
+        double[] features = PCA.getFeatures(im, 5);
+        //for(int i = 0; i < features.length; i++){
+        //	System.out.print(features[i] + ", ");
+        //}
+        //System.out.print("\n");
         
         double[][][] colorData = getColorData(im, im.getWidth(), im.getHeight());
         
@@ -333,9 +362,9 @@ public class NounjectiveLearning implements LCMSubscriber
         		}
         		
         		if(viewRegion.contains(x, y)){
-            		im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
+            		//im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
         		} else {
-        			im.setRGB(x, y, Color.black.getRGB());
+        			//im.setRGB(x, y, Color.black.getRGB());
         		}
         		
         		//

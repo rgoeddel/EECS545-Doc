@@ -27,10 +27,11 @@ public class ObjectInfo{
     double rightmost;
     double uppermost;
     double lowermost;
+    BufferedImage image = null;
+    double[] shapeFeatures = null;
 
     ArrayList<Double> features;
     ArrayList<double[]> points;
-    ArrayList<Color> colors;
 
     public ObjectInfo(){
         features = new ArrayList<Double>();
@@ -58,9 +59,6 @@ public class ObjectInfo{
 
         this.points = new ArrayList<double[]>();
         this.points.add(point);
-        
-        this.colors = new ArrayList<Color>();
-        this.colors.add(color);
     }
 
     /** Set the features of this object. **/
@@ -76,6 +74,8 @@ public class ObjectInfo{
         for(int i=0; i<f.length; i++){
             f[i] = features.get(i);
         }
+        
+        
         return f;
     }
 
@@ -100,7 +100,6 @@ public class ObjectInfo{
         sumColor[2] += c.getGreen();
 
         this.points.add(point);
-        this.colors.add(c);
     }
 
     /** Get the center of the object (mean x, y,z). **/
@@ -110,6 +109,7 @@ public class ObjectInfo{
         for(int i=0; i<sumPoints.length; i++){
             center[i] = sumPoints[i]/numPoints;
         }
+        
         return center;
     }
 
@@ -155,19 +155,43 @@ public class ObjectInfo{
         color = newColor;
     }
     
-//    public BufferedImage getImage(){
-//    	int[][] pixels = new int[points.size()][];
-//    	for(int i = 0; i < points.size(); i++){
-//    		double[] pixel = KUtils.getPixel(points.get(i));
-//    		pixels[i] = new int[]{(int)pixel[0], (int)pixel[1]};
-//    	}
-//    	
-//    	
-//    	
-//    	
-//    }
-//    
+    public static BufferedImage getImage(ArrayList<double[]> points){
+    	BufferedImage image;
+		int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+		int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+		for(double[] pt : points){
+			double[] pixel = KUtils.getPixel(pt);
+			minX = (pixel[0] < minX ? (int)Math.round(pixel[0]) : minX);
+			maxX = (pixel[0] > maxX ? (int)Math.round(pixel[0]) : maxX);
+			minY = (pixel[1] < minY ? (int)Math.round(pixel[1]) : minY);
+			maxY = (pixel[1] > maxY ? (int)Math.round(pixel[1]) : maxY);
+		}
+		int margin = 5;
+		image = new BufferedImage((maxX - minX + 1) + 2*margin, (maxY - minY + 1) + 2*margin, BufferedImage.TYPE_3BYTE_BGR);
+		for(int i = 0; i < points.size(); i++){
+			double[] pixel = KUtils.getPixel(points.get(i));
+			try{
+    			image.setRGB((int)Math.round(pixel[0])+margin-minX, (int)Math.round(pixel[1])+margin-minY, (int)points.get(i)[3]);
+			} catch (Exception e){
+				System.out.println("Out of Bounds pixel in ObjectInfo: " + pixel[0] + ", " + pixel[1]);
+				System.out.println(points.get(i)[0] + ", " + points.get(i)[1] + ", " + points.get(i)[2]);
+			}
+		}
+    	return image;
+    }
     
+    public BufferedImage getImage(){
+    	if(image == null){
+    		image = ObjectInfo.getImage(points);
+    	} 
+    	return image;
+    }
     
-    
+    public double[] getShapeFeatures(){
+    	if(shapeFeatures == null){
+    		getImage();
+        	shapeFeatures = PCA.getFeatures(image, 7);
+    	}
+    	return shapeFeatures;
+    }
 }

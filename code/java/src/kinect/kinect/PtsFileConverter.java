@@ -1,5 +1,7 @@
 package kinect.kinect;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
@@ -8,32 +10,51 @@ import april.util.*;
 /** Take in a pts file and output a feature vector file */
 public class PtsFileConverter
 {
+	enum FeatureType{
+		COLOR, SHAPE
+	}
     public PtsFileConverter(GetOpt opts)
     {
         FileInputStream fin;
         DataInputStream ins = null;
-        File fout = null;
+        FileWriter fout = null;
         try {
-           fin = new FileInputStream(opts.getString("infile"));
-           ins = new DataInputStream(fin);
-           fout = new File(opts.getString("outfile"));
+        	
+        	String inFileString = opts.getString("infile");
+        	String[] inFiles = inFileString.split(",");
+            fout = new FileWriter(opts.getString("outfile"), true);
+        	for(int i = 0; i < inFiles.length; i++){
+                fin = new FileInputStream(inFiles[i]);
+                ins = new DataInputStream(fin);
+
+                FeatureType type;
+                if(opts.getString("type").equals("color")){
+                	type = FeatureType.COLOR;
+                } else {
+                	type = FeatureType.SHAPE;
+                }
+                
+                if (ins != null && fout != null) {
+                    convertFile(ins, fout, type);
+                }
+                ins.close();
+                fin.close();
+        	}
+
         } catch (Exception ex) {
             System.err.println("ERR: "+ex);
             ex.printStackTrace();
         }
 
-        if (ins != null && fout != null) {
-            convertFile(ins, fout);
-        }
     }
 
-    private void convertFile(DataInputStream ins, File fout)
+    private void convertFile(DataInputStream ins, FileWriter fout, FeatureType type)
     {
         BinaryStructureReader bsr = new BinaryStructureReader(ins);
         PrintWriter pwout;
         try {
             pwout = new PrintWriter(fout);
-        } catch (IOException ioex) {
+        } catch (Exception ioex) {
             ioex.printStackTrace();
             return;
         }
@@ -58,18 +79,65 @@ public class PtsFileConverter
                 }
                 bsr.blockEnd();
 
-                // Write back out to FV file
-                pwout.printf("[");
-                ArrayList<Double> features = FeatureVec.getFeatureVec(points);
-                for (int i = 0; i < features.size(); i++) {
-                    pwout.printf("%f ", features.get(i));
+                ArrayList<Double> features;
+                if(type == FeatureType.COLOR){
+                	String colorString = "red,orange,yellow,green,blue,purple";
+                	String[] colors = colorString.split(",");
+                	Set<String> colorSet = new HashSet<String>();
+                    features = FeatureVec.getFeatureVec(points);
+                    for(int i = 0; i < colors.length; i++){
+                		colorSet.add(colors[i]);
+                	}
+                    // Write back out to FV file
+                    pwout.printf("[");
+                    for (int i = 0; i < features.size(); i++) {
+                        pwout.printf("%f ", features.get(i));
+                    }
+                    pwout.printf("] {");
+                    for (int i = 0; i <  labels.size(); i++) {
+                    	if(colorSet.contains(labels.get(i))){
+                            pwout.printf("%s", labels.get(i));
+                    	}
+                    }
+                    pwout.printf("}\n");
+                    pwout.flush();
+                } else {
+                	BufferedImage img = ObjectInfo.getImage(points);
+                	features = new ArrayList<Double>();
+                	double[] f = PCA.getFeatures(img, 7);
+                	for(int i = 0; i < f.length; i++){
+                		features.add(f[i]);
+                	}
+                	
+                	String shapeString = "arch,rectangle,triangular,rectangular,triangle,square,cylinder,t-shaped,l-shaped,half-cylinder";
+                	String[] shapes = shapeString.split(",");
+                	Set<String> shapeSet = new HashSet<String>();
+                	for(int i = 0; i < shapes.length; i++){
+                		shapeSet.add(shapes[i]);
+                	}
+                    // Write back out to FV file
+                    pwout.printf("[");
+                    for (int i = 0; i < features.size(); i++) {
+                        pwout.printf("%f ", features.get(i));
+                    }
+                    pwout.printf("] {");
+                    for (int i = 0; i <  labels.size(); i++) {
+                		String label = labels.get(i).toLowerCase();
+                    	if(shapeSet.contains(label)){
+                    		if(label.equals("rectangular")){
+                    			label = "rectangle";
+                    		} else if(label.equals("triangular")){
+                    			label = "triangle";
+                    		}
+                            pwout.printf("%s", label);
+                    	}
+                    }
+                    pwout.printf("}\n");
+                    pwout.flush();
+                	
                 }
-                pwout.printf("] {");
-                for (int i = 0; i <  labels.size(); i++) {
-                    pwout.printf("%s;", labels.get(i));
-                }
-                pwout.printf("}\n");
-                pwout.flush();
+                
+
             }
         } catch (Exception ex) {
         }
@@ -82,6 +150,7 @@ public class PtsFileConverter
         opts.addBoolean('h', "help", false, "Show this help screen");
         opts.addString('i', "infile", null, "Input .pts file");
         opts.addString('o', "outfile", null, "Output feature vector file");
+        opts.addString('t', "type", "shape", "Type of features to extract: {color, shape}");
 
         if (!opts.parse(args)) {
             System.err.println("ERR: "+opts.getReason());

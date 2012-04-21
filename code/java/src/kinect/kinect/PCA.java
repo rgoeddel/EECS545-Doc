@@ -105,16 +105,24 @@ public class PCA {
 		double y = start[1];
 		double dist = 0;
 		
-		
 		Rectangle bounds = new Rectangle(0, 0, img.getWidth(), img.getHeight());
 		
-		int xi = (int)x;
-		int yi = (int)y;
-		while(bounds.contains(xi, yi)){
+		boolean inBounds = false;
+		int iters = 0;
+		while(iters < 100000){
 			for(int i = 0; i < 2; i++){
 				for(int j = 0; j < 2; j++){
-					if(bounds.contains(xi+i, yi+j)){
-						Color color = new Color(img.getRGB(xi + i, yi + j));
+					int xi = (int)x + i;
+					int yi = (int)y + i;
+					if(i == 0 && j == 0){
+						if(bounds.contains((int)x, (int)y)){
+							inBounds = true;
+						} else if(inBounds){
+							return 0;
+						}
+					}
+					if(bounds.contains(xi, yi)){
+						Color color = new Color(img.getRGB(xi, yi));
 						if(isValidPixel(color)){
 							return dist;
 						}
@@ -125,10 +133,7 @@ public class PCA {
 			x += dir[0] * increment;
 			y += dir[1] * increment;
 			dist += increment;
-			xi = (int)x;
-			yi = (int)y;
 		}
-
 		return 0;
 	}
 	
@@ -153,9 +158,17 @@ public class PCA {
 	    double[] leftCenter = new double[2];
 	    leftCenter[0] = mean[0] + proj1[0]*v1[0];
 	    leftCenter[1] = mean[1] + proj1[0]*v1[1];
+
+//	    System.out.println(img.getWidth() + ", " + img.getHeight());
+//	    System.out.println(mean[0] + ", " + mean[1]);
+//	    System.out.println("v1" + v1[0] + ", " + v1[1]);
+//	    System.out.println("v2" + v2[0] + ", " + v2[1]);
+//	    System.out.println(proj1[0] + ", " + proj1[1]);
+//	    System.out.println(proj2[0] + ", " + proj2[1]);
 	    
-	    double[] features = new double[2*numFeatures];
-	    int f = 0;
+	    double[] features = new double[2*numFeatures+1];
+	    features[0] = (proj1[1] - proj1[0])/(proj2[1] - proj2[0]);
+	    int f = 1;
 	    for(int i = 0; i < 2; i++){
 	    	// Start at bottom-left or top-left
 	    	double[] start = new double[2];
@@ -166,7 +179,7 @@ public class PCA {
 	    	double[] dir = LinAlg.scale(v2, (i == 0 ? 1 : -1));
 	    	
 	    	// Pick points evenly along the line
-	    	for(float perc = .05f; perc <= .95; perc += .92f/(numFeatures-1)){
+	    	for(float perc = .02f; perc <= .98; perc += .95f/(numFeatures-1)){
 	    		double[] pt = new double[2];
 	    		pt[0] = start[0] + perc*(proj1[1] - proj1[0])*v1[0];
 	    		pt[1] = start[1] + perc*(proj1[1] - proj1[0])*v1[1];
@@ -182,7 +195,14 @@ public class PCA {
 		BufferedImage img = null;
 		try {
 		    img = ImageIO.read(new File("simple_tri.png"));		    
-		    getFeatures(img, 20);
+		    double[] f  = getFeatures(img, 10);
+		    for(int i = 0; i < f.length; i++){
+		    	System.out.print(f[i] + ", ");
+		    	if(i%10==9){
+		    		System.out.print("\n");
+		    	}
+		    }
+		    
 		} catch (IOException e) {
 		}
     }

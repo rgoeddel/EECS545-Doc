@@ -27,10 +27,10 @@ public class FeatureVec
     {
         ArrayList<Double> features = new ArrayList<Double>();
         addArray(features, avgRGB(points));
-        addArray(features, varRGB(points));
+        //addArray(features, varRGB(points));
         addArray(features, avgHSV(points));
-        addArray(features, varHSV(points));
-        addArray(features, lwh(points));
+        //addArray(features, varHSV(points));
+        //addArray(features, lwh(points));
         return features;
     }
 
@@ -60,7 +60,7 @@ public class FeatureVec
             avg[1] += bgr.getGreen();
             avg[0] += bgr.getBlue();
         }
-        divideEquals(avg, points.size());
+        divideEquals(avg, 255.0*points.size());
         return avg;
     }
 
