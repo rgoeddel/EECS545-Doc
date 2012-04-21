@@ -189,6 +189,7 @@ public class ISpy extends JFrame implements LCMSubscriber
         extractPointCloudData();
         BufferedImage image = getKinectImage();
         updateObjects();
+        
         drawDisplayLayer(image);
     }
     
@@ -241,12 +242,8 @@ public class ISpy extends JFrame implements LCMSubscriber
             
             String colorFeatures = FeatureVec.featureString(obj.points);
             String shapeFeatures = FeatureVec.getShapeFeature(obj.getImage());
-            String color = colorKNN.classify(colorFeatures);
-            String shape = shapeKNN.classify(shapeFeatures);
-            
-            ArrayList<String> labels = new ArrayList<String>();
-            labels.add(color);
-            labels.add(shape);
+            ConfidenceLabel color = colorKNN.classify(colorFeatures);
+            ConfidenceLabel shape = shapeKNN.classify(shapeFeatures);
            
             int id = obj.repID;
             SpyObject spyObject;
@@ -257,7 +254,8 @@ public class ISpy extends JFrame implements LCMSubscriber
             	spyObject = new SpyObject(id);
             	objects.put(id, spyObject);
             }
-        	spyObject.updateLabels(labels);
+            spyObject.updateColorConfidence(color);
+            spyObject.updateShapeConfidence(shape);
             spyObject.pos = pos;
             spyObject.bbox = projBBox;
             spyObject.lastObject = obj;
@@ -289,9 +287,8 @@ public class ISpy extends JFrame implements LCMSubscriber
     		VisChain vch2 = new VisChain(LinAlg.translate(x, y), rect);
     		
     		String labelString = "";
-    		for(String label : obj.labels){
-    			labelString += label + "\n";
-    		}
+    		labelString += String.format("%s:%.2f\n", obj.getColor(), obj.getColorConfidence());
+    		labelString += String.format("%s:%.2f\n", obj.getShape(), obj.getShapeConfidence());
     		VzText text = new VzText(labelString);
             VisChain vch3 = new VisChain(LinAlg.translate(obj.bbox.getMaxX(), K_HEIGHT - obj.bbox.getMaxY()),
             		LinAlg.scale(1), text);
