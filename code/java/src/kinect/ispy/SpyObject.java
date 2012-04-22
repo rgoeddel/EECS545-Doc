@@ -19,10 +19,15 @@ public class SpyObject implements Comparable<SpyObject>{
 	
     public Queue<ConfidenceLabel> shapeConLabels;
     public Queue<ConfidenceLabel> colorConLabels;
+    public Queue<ConfidenceLabel> sizeConLabels;
     double shapeConfidence;
     double colorConfidence;
+    double sizeConfidence;
+    
     String bestColor;
     String bestShape;
+    String bestSize;
+    
     String secondBestColor;
     String secondBestShape;
     double shapeThreshold;
@@ -32,11 +37,13 @@ public class SpyObject implements Comparable<SpyObject>{
     {
 	colorConLabels = new LinkedList<ConfidenceLabel>();
 	shapeConLabels = new LinkedList<ConfidenceLabel>();
+	sizeConLabels = new LinkedList<ConfidenceLabel>();
 	shapeList = new ArrayList<String>();
 	this.colorConfidence = 0.0;
 	this.shapeConfidence = 0.0;
 	this.bestColor = "unknown";
 	this.bestShape = "unknown";
+	this.bestSize = "unknown";
 	this.secondBestColor = "";
 	this.secondBestShape = "";
 	this.shapeThreshold = 0.5;
@@ -47,6 +54,10 @@ public class SpyObject implements Comparable<SpyObject>{
 	    {
 		return bestColor;
 	    }
+	public String getSize()
+	    {
+		return bestSize;
+	    }
 	
 	public String getShape()
 	    {
@@ -55,6 +66,9 @@ public class SpyObject implements Comparable<SpyObject>{
 	
 	public double getColorConfidence(){
 		return colorConfidence;
+	}
+	public double getSizeConfidence(){
+		return sizeConfidence;
 	}
 
 	public double getShapeConfidence(){
@@ -119,6 +133,58 @@ public class SpyObject implements Comparable<SpyObject>{
 	return colorConfidence;
     }
 
+    public double updateSizeConfidence(ConfidenceLabel cl)
+    {
+	sizeConLabels.offer(cl);
+	if (sizeConLabels.size() > 10)
+	    sizeConLabels.remove();
+	double sum = 0;
+	int count = 0;
+	ArrayList<String> bestS = new ArrayList<String>();
+	ArrayList<Integer> bestCount = new ArrayList<Integer>();
+	int max = 0;
+	int max2 = 0;
+	int index;
+	for (ConfidenceLabel c : sizeConLabels)
+	{
+	    String label = c.getLabel();
+	    
+	    int cnt = 0;
+	    if ((index = bestS.indexOf(label)) >= 0)
+	    {
+		cnt = bestCount.get(index) + 1;
+		bestCount.set(index, cnt);
+	    }
+	    else
+	    {
+		cnt = 1;
+		bestS.add(label);
+		bestCount.add(cnt);
+	    }
+	    if (cnt > max)
+	    {
+		max2 = max;
+		max = cnt;
+	    }
+	    sum+= c.getConfidence();
+	    count++;
+	}
+	//best label
+	if ((index = bestCount.indexOf(max)) >= 0)
+	{
+	    bestSize = bestS.get(index);
+	}
+	//second best
+	/*
+	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
+	{
+	    secondBestColor = bestS.get(index);
+	}
+	*/
+	sizeConfidence = sum/(double)count * (double)max/(double)count; 
+	return sizeConfidence;
+    }
+
     public double updateShapeConfidence(ConfidenceLabel cl, 
 	ArrayList<ConfidenceLabel> confidenceThresholds)
     {
@@ -164,16 +230,16 @@ public class SpyObject implements Comparable<SpyObject>{
 	//second best
 	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
 	{
-	    secondBestColor = bestS.get(index);
+	    secondBestShape = bestS.get(index);
 	}
 	
 	for (ConfidenceLabel thresh : confidenceThresholds)
 	{
-		if (!shapeList.contains(thresh.getLabel()))
-		{
-			//System.out.println("ADDED SHAPE : " + thresh.getLabel());
-				shapeList.add(thresh.getLabel());
-		}
+	    if (!shapeList.contains(thresh.getLabel()))
+	    {
+		//System.out.println("ADDED SHAPE : " + thresh.getLabel());
+		shapeList.add(thresh.getLabel());
+	    }
 	    if (bestShape.equals(thresh.getLabel()))
 	    {
 		shapeThreshold = thresh.getConfidence();
@@ -230,11 +296,35 @@ public class SpyObject implements Comparable<SpyObject>{
 	}
 	return true;
     }
+    
+    public boolean matchesBestColor(ArrayList<String> labels)
+    {	
+	for(String label : labels)
+	{
+	    if(bestColor.equals(label)){
+		return true;
+	    } 
+	}
+	return false;
+    }
+    public boolean matchesBestShape(ArrayList<String> labels)
+    {	
+	for(String label : labels)
+	{
+	    if(bestShape.equals(label)){
+		return true;
+	    } 
+	}
+	return false;
+    }
+
     public boolean matches(ArrayList<String> labels){
 	for(String label : labels){
 	    if(bestColor.equals(label)){
 		continue;
 	    } else if(bestShape.equals(label)){
+		continue;
+	    } else if(bestSize.equals(label)){
 		continue;
 	    } 
 	    return false;
