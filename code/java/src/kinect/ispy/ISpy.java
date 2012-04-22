@@ -211,11 +211,12 @@ public class ISpy extends JFrame implements LCMSubscriber
 	{
 	    //manipulate each objects
 	    sweepObject(obj);
+	    System.out.println("SWEEP");
 	    //TODO change only sweeps first object
 	    boolean success = true;
 	    if (success)
 	    {
-		colorKNN.adjustThreshold(obj.getShape(), 1);
+		shapeKNN.adjustThreshold(obj.getShape(), 1);
 		return;
 	    }
 	}
