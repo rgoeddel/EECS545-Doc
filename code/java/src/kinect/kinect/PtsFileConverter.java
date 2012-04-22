@@ -104,16 +104,18 @@ public class PtsFileConverter
                 
                 boolean hasLabel = false;
                 for(int i = 0; i < labels.size(); i++){
-                	if(validFeatures.contains(labels.get(i))){
-                		featureString += String.format(" {%s}\n", labels.get(i));
+                	if(validFeatures.contains(labels.get(i).toLowerCase())){
+                		featureString += String.format(" {%s}\n", labels.get(i).toLowerCase());
                 		hasLabel = true;
                 		break;
                 	}
                 }
+                featureString.replace("triangular", "triangle");
+                featureString.replace("rectangular", "rectangle");
                 if(hasLabel){
                 	pwout.print(featureString);
                 	pwout.flush();
-                }     
+                }
             }
         } catch (Exception ex) {
         }

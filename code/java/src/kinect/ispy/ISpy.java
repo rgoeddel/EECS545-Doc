@@ -287,7 +287,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		for (int i = 0; i < 3; i++) {
 			command.dest[i] = center[i];
 		}
-		command.action = "POINT";
+		command.action = "SWEEP";
 		lcm.publish("ROBOT_COMMAND", command);
 		return;
 	}
