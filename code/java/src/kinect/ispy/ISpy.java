@@ -9,6 +9,7 @@ import kinect.lcmtypes.*;
 import kinect.kinect.*;
 
 import kinect.classify.*;
+import kinect.classify.FeatureExtractor.FeatureType;
 
 import java.io.*;
 import javax.swing.*;
@@ -345,8 +346,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			double[] pos = new double[] { projBBox.getCenterX(),
 					projBBox.getCenterY() };
 
-			obj.colorFeatures = FeatureVec.featureString(obj.points);
-			obj.shapeFeatures = FeatureVec.getShapeFeature(obj.getImage());
+			obj.colorFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.COLOR);
+			obj.shapeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SHAPE);
 			ConfidenceLabel color, shape;
 			ArrayList<ConfidenceLabel> shapeThresholds;
 			synchronized (colorKNN) {

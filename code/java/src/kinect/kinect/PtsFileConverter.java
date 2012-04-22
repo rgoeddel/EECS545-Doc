@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
+import kinect.classify.FeatureExtractor;
+
 import april.util.*;
 
 /** Take in a pts file and output a feature vector file */
@@ -84,7 +86,7 @@ public class PtsFileConverter
                 	String colorString = "red,orange,yellow,green,blue,purple";
                 	String[] colors = colorString.split(",");
                 	Set<String> colorSet = new HashSet<String>();
-                    features = FeatureVec.getFeatureVec(points);
+                	features = FeatureExtractor.getColorFeatures(points);
                     for(int i = 0; i < colors.length; i++){
                 		colorSet.add(colors[i]);
                 	}
@@ -103,11 +105,7 @@ public class PtsFileConverter
                     pwout.flush();
                 } else {
                 	BufferedImage img = ObjectInfo.getImage(points, null);
-                	features = new ArrayList<Double>();
-                	double[] f = PCA.getFeatures(img, 7);
-                	for(int i = 0; i < f.length; i++){
-                		features.add(f[i]);
-                	}
+                	features = FeatureExtractor.getShapeFeatures(img);
                 	
                 	String shapeString = "arch,rectangle,triangular,rectangular,triangle,square,cylinder,t-shaped,l-shaped,half-cylinder";
                 	String[] shapes = shapeString.split(",");

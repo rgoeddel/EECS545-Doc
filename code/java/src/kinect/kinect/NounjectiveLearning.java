@@ -8,6 +8,8 @@ import lcm.lcm.*;
 import kinect.lcmtypes.*;
 
 import kinect.classify.*;
+import kinect.classify.FeatureExtractor.FeatureType;
+
 import java.io.*;
 import java.nio.*;
 import javax.swing.*;
@@ -178,7 +180,7 @@ public class NounjectiveLearning implements LCMSubscriber
         Collection c = da.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
-            double[] bb = FeatureVec.boundingBox(obj.points);
+            double[] bb = FeatureExtractor.boundingBox(obj.points);
             
             double[] min = KUtils.getWorldCoordinates(new double[]{bb[0], bb[1], bb[2]});
             double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});    
@@ -190,8 +192,8 @@ public class NounjectiveLearning implements LCMSubscriber
             }
 
             // Get features and corresponding classifications for this object
-            String colorInput = FeatureVec.featureString(obj.points);
-            String shapeInput = FeatureVec.getShapeFeature(obj.getImage());
+            String colorInput = FeatureExtractor.getFeatureString(obj, FeatureType.COLOR);
+            String shapeInput = FeatureExtractor.getFeatureString(obj, FeatureType.SHAPE);
             
 		    //String color = classColor.classify(colorInput);
 		    ConfidenceLabel colorCL = knnColor.classify(colorInput);
@@ -259,7 +261,7 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
 	    VzText text = new VzText(/*Integer.toString(obj.repID)+"-"+*/features.get(obj.repID));
-            double[] bb = FeatureVec.boundingBox(obj.points);
+            double[] bb = FeatureExtractor.boundingBox(obj.points);
             double[] xyz = new double[]{(bb[0]+bb[3])/2.0,
                                            (bb[1]+bb[4])/2.0,
                                            (bb[2]+bb[5])/2.0};
@@ -329,7 +331,7 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Map.Entry<Integer, ObjectInfo> entry : da.objects.entrySet()){
         	//im = entry.getValue().getImage();
         }
-        double[] features = PCA.getFeatures(im, 5);            System.err.println("ERR: Opts error - " + opts.getReason());
+        //double[] features = PCA.getFeatures(im, 5);            System.err.println("ERR: Opts error - " + opts.getReason());
 
         //for(int i = 0; i < features.length; i++){
         //	System.out.print(features[i] + ", ");
