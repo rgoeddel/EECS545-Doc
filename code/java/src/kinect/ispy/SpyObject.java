@@ -1,5 +1,6 @@
 package kinect.ispy;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import kinect.classify.*;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class SpyObject implements Comparable<SpyObject>{
     String secondBestColor;
     String secondBestShape;
     double shapeThreshold;
+    public Color boxColor = Color.white;
     
     public SpyObject(int id)
     {
@@ -56,6 +58,14 @@ public class SpyObject implements Comparable<SpyObject>{
 
 	public double getShapeConfidence(){
 		return shapeConfidence;
+	}
+	
+	public Color getBoxColor(){
+		// Add 5 to each color channel up to the max of 255
+		boxColor = new Color(boxColor.getRed() < 245 ? boxColor.getRed() + 10 : 255,
+				boxColor.getGreen() < 245 ? boxColor.getGreen() + 10 : 255,
+				boxColor.getBlue() < 245 ? boxColor.getBlue() + 10 : 255);
+		return boxColor;				
 	}
 	
     public double updateColorConfidence(ConfidenceLabel cl)
