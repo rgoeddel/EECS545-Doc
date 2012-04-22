@@ -110,8 +110,8 @@ public class PtsFileConverter
                 		break;
                 	}
                 }
-                featureString.replace("triangular", "triangle");
-                featureString.replace("rectangular", "rectangle");
+                featureString = featureString.replace("triangular", "triangle");
+                featureString = featureString.replace("rectangular", "rectangle");
                 if(hasLabel){
                 	pwout.print(featureString);
                 	pwout.flush();
