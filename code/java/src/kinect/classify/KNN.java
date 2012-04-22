@@ -170,7 +170,7 @@ String datafile;
 	
 	return new Point(pt, dim);
     }
-    public void add(String datainput)
+    public void add(String datainput, boolean shape)
     {
 	String label = getLabelFromString(datainput);
 	String reg = "[0-9]{1,}+(\\.[0-9]{1,})";
@@ -180,10 +180,19 @@ String datafile;
 	int i = 0;
 	
 	//get first 12 features- RGB vvv HSV vvv
+	double first = 0.0;
 	List<Double> pt = new ArrayList<Double>();
+	List<Double> pt1 = new ArrayList<Double>();
+	List<Double> pt2 = new ArrayList<Double>();
+
 	while (m.find() && i < dim)
 	{
-	    pt.add(Double.valueOf(m.group()).doubleValue());
+			if (i == 0)
+				first = Double.valueOf(m.group()).doubleValue();
+			else if (i>0 && i < 8)
+				pt1.add(Double.valueOf(m.group()).doubleValue());
+			else
+				pt2.add(Double.valueOf(m.group()).doubleValue());
 	    i++;
 	}
 	if (i != dim)
@@ -192,8 +201,31 @@ String datafile;
 			       " features and K=" + dim);
 	    return;
 	}
-      
+	pt.add(first);
+	pt.addAll(pt1);
+	pt.addAll(pt2);
 	data.add(new TrainingSample(new Point(pt, dim), label));
+	if (false)
+	{
+		pt.clear();
+		pt.add(first);
+		pt.addAll(pt2);
+		pt.addAll(pt1);
+		data.add(new TrainingSample(new Point(pt, dim), label));
+		
+		Collections.reverse(pt1);
+		Collections.reverse(pt2);
+		pt.clear();
+		pt.add(first);
+		pt.addAll(pt1);
+		pt.addAll(pt2);
+		data.add(new TrainingSample(new Point(pt, dim), label));
+		pt.clear();
+		pt.add(first);
+		pt.addAll(pt2);
+		pt.addAll(pt1);
+		data.add(new TrainingSample(new Point(pt, dim), label));
+	}
 	if (!labels.contains(label))
 	{
 	    System.out.println("New label: " + label);
@@ -201,7 +233,7 @@ String datafile;
 	    thresholds.add(0.05); //TODO magic number default threshold
 	}
 	
-    }
+ }
     public void add(TrainingSample ts)
     {
 	data.add(ts);
@@ -349,9 +381,9 @@ String datafile;
 	return cl;	
     }
     
-    public void loadData()
+  public void loadData(boolean shape)
     {
-	try
+  	 try
 	{    	    
 	    FileInputStream fstream = 
 		new FileInputStream(this.datafile);
@@ -362,9 +394,11 @@ String datafile;
 	    int i = 0;
 	    while ((strLine = br.readLine()) != null)
 	    {
+	    	if(strLine.contains("doughnut"))
+	    		continue;
 	    	//if (strLine.contains("triangle"))
 	    			//continue;
-		add(strLine);
+	    	add(strLine, shape);
 	    }
 	    in.close();
 	}

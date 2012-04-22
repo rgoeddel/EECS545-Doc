@@ -48,8 +48,8 @@ public class ISpy extends JFrame implements LCMSubscriber
     static double  initialRansacPercent = .1;
 
     // Subset of the image used 
-    final static int[] viewBorders = new int[]{75, 150, 575, 400};
-    final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
+   public final static int[] viewBorders = new int[]{75, 150, 620, 400};
+   public final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
 	
 	private SceneRenderer sceneRenderer;
 	private JLabel ispyLabel;
@@ -156,10 +156,10 @@ public class ISpy extends JFrame implements LCMSubscriber
 
         lcm.subscribe("KINECT_STATUS", this);
         
-        colorKNN = new KNN(30, 6, "color_features.dat");
-        shapeKNN = new KNN(10, 15, "shape_features.dat");
-        colorKNN.loadData();
-        shapeKNN.loadData();
+        colorKNN = new KNN(30, 6, "/home/bolt/mlbolt/code/java/color_features.dat");
+        shapeKNN = new KNN(10, 15, "/home/bolt/mlbolt/code/java/shape_features.dat");
+        colorKNN.loadData(false);
+        shapeKNN.loadData(true);
         
 
         this.setVisible(true);
@@ -192,7 +192,7 @@ public class ISpy extends JFrame implements LCMSubscriber
 		for(int i = 0; i < 3; i++){
 				command.dest[i] = center[i];
 		}
-		command.action = "";
+		command.action = "POINT";
     lcm.publish("ROBOT_COMMAND",command);
 		return;
 	}
@@ -208,14 +208,14 @@ public class ISpy extends JFrame implements LCMSubscriber
 					String label = String.format("%s {%s}", obj.lastObject.colorFeatures, trainingBox.getText());
 					System.out.println(label);
 					synchronized(colorKNN){
-						colorKNN.add(label);
+						colorKNN.add(label, false);
 					}
 					obj.boxColor = Color.cyan;
 					break;
 				case ADD_SHAPE:
 					label = String.format("%s {%s}", obj.lastObject.shapeFeatures, trainingBox.getText());
 					synchronized(shapeKNN){
-						shapeKNN.add(label);
+						shapeKNN.add(label, true);
 					}
 					obj.boxColor = Color.cyan;
 					break;

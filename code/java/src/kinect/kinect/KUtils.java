@@ -41,7 +41,7 @@ public class KUtils
     public static double[][] kinectToWorldXForm;
     static{
     	try{
-    		BufferedReader in = new BufferedReader(new FileReader("kinect.calib"));
+    		BufferedReader in = new BufferedReader(new FileReader("/home/bolt/mlbolt/code/java/kinect.calib"));
         	kinectToWorldXForm = new double[4][4];
     		for(int i = 0; i < 4; i++){
     			for(int j = 0; j < 4; j++){

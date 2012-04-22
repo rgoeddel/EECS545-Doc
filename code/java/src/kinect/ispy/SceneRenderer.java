@@ -28,10 +28,6 @@ public class SceneRenderer extends VisLayer
 	final static int K_WIDTH = kinect_status_t.WIDTH;
 	final static int K_HEIGHT = kinect_status_t.HEIGHT;
 
-    // Subset of the image used 
-    final static int[] viewBorders = new int[]{75, 150, 575, 400};
-    final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
-	
 	private final ISpy ispy;
 	private VisCanvas canvas;
 	
@@ -42,8 +38,8 @@ public class SceneRenderer extends VisLayer
 		canvas = new VisCanvas(this);
     
     // Set up camera
-    this.cameraManager.uiLookAt(new double[]{viewRegion.getCenterX(), kinect_status_t.HEIGHT-viewRegion.getCenterY(), viewRegion.width},  //Position
-        								    new double[]{viewRegion.getCenterX(), kinect_status_t.HEIGHT-viewRegion.getCenterY(), 0}, // Lookat
+    this.cameraManager.uiLookAt(new double[]{ISpy.viewRegion.getCenterX(), kinect_status_t.HEIGHT-ISpy.viewRegion.getCenterY(), ISpy.viewRegion.width},  //Position
+        								    new double[]{ISpy.viewRegion.getCenterX(), kinect_status_t.HEIGHT-ISpy.viewRegion.getCenterY(), 0}, // Lookat
         								    new double[]{0, 1, 0}, false); // Up 
   	this.addEventHandler(new DisplayClickEventHandler());
 	}
@@ -73,7 +69,7 @@ public class SceneRenderer extends VisLayer
 			for (int i = 0; i < buf.length; i+=3) {
 				int x = (i/3)%kinect_status_t.WIDTH;
 				int y = (i/3)/kinect_status_t.WIDTH;
-				if(viewRegion.contains(x, y)){
+				if(ISpy.viewRegion.contains(x, y)){
 				  buf[i] = kinectData.rgb[i+2];   // B
 					buf[i+1] = kinectData.rgb[i+1]; // G
 					buf[i+2] = kinectData.rgb[i];   // R
@@ -118,8 +114,8 @@ public class SceneRenderer extends VisLayer
       VisWorld.Buffer worldBuffer = this.world.getBuffer("displayImage");
       
     	BufferedImage background = getKinectImage(kinectData);
-    	for(int y= (int)viewRegion.getMinY(); y<viewRegion.getMaxY(); y++){
-        for(int x=(int)viewRegion.getMinX(); x<viewRegion.getMaxX(); x++){
+    	for(int y= (int)ISpy.viewRegion.getMinY(); y<ISpy.viewRegion.getMaxY(); y++){
+        for(int x=(int)ISpy.viewRegion.getMinX(); x<ISpy.viewRegion.getMaxX(); x++){
             int i = y*kinect_status_t.WIDTH + x;
             int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
                     (kinectData.depth[2*i+0]&0xff);

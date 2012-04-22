@@ -53,8 +53,8 @@ public class NounjectiveLearning implements LCMSubscriber
     {
         opts = opts_;
 
-        knnColor.loadData();
-        knnShape.loadData();
+        knnColor.loadData(false);
+        knnShape.loadData(true);
 
         // Initialize all ov Vis stuff.
         vw = new VisWorld();
