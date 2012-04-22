@@ -69,6 +69,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private Map<Integer, SpyObject> objects;
 	private KNN colorKNN;
 	private KNN shapeKNN;
+	private KNN sizeKNN;
 
 	private ISpyMode curMode = ISpyMode.NORMAL;
 
@@ -162,8 +163,10 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				"/home/bolt/mlbolt/code/java/color_features.dat");
 		shapeKNN = new KNN(10, 15,
 				"/home/bolt/mlbolt/code/java/shape_features.dat");
+		sizeKNN = new KNN(5, 2, "/home/bolt/mlbolt/code/java/size_features.dat");
 		colorKNN.loadData(false);
 		shapeKNN.loadData(true);
+		sizeKNN.loadData(false);
 
 		this.setVisible(true);
 	}
@@ -348,7 +351,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 
 			obj.colorFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.COLOR);
 			obj.shapeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SHAPE);
-			ConfidenceLabel color, shape;
+			obj.sizeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SIZE);
+			ConfidenceLabel color, shape, size;
 			ArrayList<ConfidenceLabel> shapeThresholds;
 			synchronized (colorKNN) {
 				color = colorKNN.classify(obj.colorFeatures);
@@ -356,6 +360,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 			synchronized (shapeKNN) {
 				shape = shapeKNN.classify(obj.shapeFeatures);
+			}
+			synchronized (sizeKNN){
+				size = sizeKNN.classify(obj.sizeFeatures);
 			}
 
 			if (color.getLabel().equals("black")) {
@@ -373,6 +380,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 			spyObject.updateColorConfidence(color);
 			spyObject.updateShapeConfidence(shape, shapeThresholds);
+			spyObject.updateSizeConfidence(size);
 			spyObject.pos = pos;
 			spyObject.bbox = projBBox;
 			spyObject.lastObject = obj;

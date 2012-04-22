@@ -22,7 +22,7 @@ public class PtsFileConverter
         	
         	String inFileString = opts.getString("infile");
         	String[] inFiles = inFileString.split(",");
-            fout = new FileWriter(opts.getString("outfile"), true);
+            fout = new FileWriter(opts.getString("outfile"), false);
         	for(int i = 0; i < inFiles.length; i++){
                 fin = new FileInputStream(inFiles[i]);
                 ins = new DataInputStream(fin);

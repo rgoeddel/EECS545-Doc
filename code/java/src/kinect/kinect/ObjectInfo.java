@@ -33,6 +33,7 @@ public class ObjectInfo{
 
     public String colorFeatures;
     public String shapeFeatures;
+    public String sizeFeatures;
     public ArrayList<double[]> points;
 
     public ObjectInfo(){
