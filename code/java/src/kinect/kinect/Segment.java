@@ -21,7 +21,6 @@ public class Segment
     Boolean colorSegments;
     int width, height;
     double OBJECT_THRESH = 250;
-    Scene scene;
 
     static Random rand = new Random(56436337);
     static double[] t = new double[] { -0.0254, -0.00013, -0.01218 }; // Added .01 to t[2] here rather than below
@@ -36,7 +35,6 @@ public class Segment
     public Segment(DataAggregator dataAg, Boolean colorSegments_)
     {
         da = dataAg;
-        scene = new Scene(da);
         colorSegments = colorSegments_;
         width = da.WIDTH;
         height = da.HEIGHT;

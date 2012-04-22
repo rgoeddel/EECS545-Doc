@@ -261,7 +261,7 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
             VzText text = new VzText(Integer.toString(obj.repID));//+"-"+*/features.get(obj.repID));
-            double[] bb = FeatureVec.boundingBox(obj.points);
+            double[] bb = FeatureExtractor.boundingBox(obj.points);
             double[] xyz = new double[]{(bb[0]+bb[3])/2.0,
                                            (bb[1]+bb[4])/2.0,
                                            (bb[2]+bb[5])/2.0};
@@ -335,7 +335,6 @@ public class NounjectiveLearning implements LCMSubscriber
         	//im = entry.getValue().getImage();
         }
         //double[] features = PCA.getFeatures(im, 5);            System.err.println("ERR: Opts error - " + opts.getReason());
-        double[] features = PCA.getFeatures(im, 5);
 
         double[][][] colorData = getColorData(im, im.getWidth(), im.getHeight());
 
