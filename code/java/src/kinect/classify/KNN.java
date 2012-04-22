@@ -79,6 +79,9 @@ class TrainingSample
     }
     public double distance(Point pt)
     {
+    		//TODO better than this hack
+    		if (p == null || pt == null)
+    			return 10000;
 	return p.distance(pt);
     }
 }
@@ -359,6 +362,8 @@ String datafile;
 	    int i = 0;
 	    while ((strLine = br.readLine()) != null)
 	    {
+	    	//if (strLine.contains("triangle"))
+	    			//continue;
 		add(strLine);
 	    }
 	    in.close();

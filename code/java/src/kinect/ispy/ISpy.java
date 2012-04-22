@@ -1,10 +1,9 @@
 package kinect.ispy;
 
+import april.util.TimeUtil;
 import april.vis.*;
 import april.jmat.*;
 import april.jmat.geom.GRay3D;
-import april.util.*;
-
 import lcm.lcm.*;
 import kinect.lcmtypes.*;
 import kinect.kinect.*;
@@ -12,21 +11,29 @@ import kinect.kinect.*;
 import kinect.classify.*;
 
 import java.io.*;
-import java.nio.*;
 import javax.swing.*;
 
 import java.awt.*;
 import java.util.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.*;
 
 /* To Do:
  *  - Add features for shape recognition to FeatureVec
  */
-
+enum ISpyMode {
+	NORMAL, ADD_COLOR, ADD_SHAPE
+}
 
 public class ISpy extends JFrame implements LCMSubscriber
 {
@@ -44,14 +51,12 @@ public class ISpy extends JFrame implements LCMSubscriber
     final static int[] viewBorders = new int[]{75, 150, 575, 400};
     final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
 	
-	private VisWorld visWorld;
-	private VisLayer displayLayer;
-	private VisCanvas displayCanvas;
-	
+	private SceneRenderer sceneRenderer;
 	private JLabel ispyLabel;
 	private JTextField inputField;
 	private JButton addColorButton;
 	private JButton addShapeButton;
+	private TrainingBox trainingBox;
 	
     static LCM lcm = LCM.getSingleton();
 	
@@ -63,14 +68,13 @@ public class ISpy extends JFrame implements LCMSubscriber
 	private KNN colorKNN;
 	private KNN shapeKNN;
 	
-	
-	
+	private ISpyMode curMode = ISpyMode.NORMAL;
 	
 	public ISpy(DataAggregator da, Segment segmenter){
 		super("ISpy");
         this.setSize(WIDTH, HEIGHT);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLayout(new GridBagLayout());
+        this.setLayout(new GridBagLayout());        
         GridBagConstraints gbc = new GridBagConstraints();
         
         addColorButton = new JButton("Add Color");
@@ -79,27 +83,41 @@ public class ISpy extends JFrame implements LCMSubscriber
         gbc.weighty = .05;
         gbc.gridx = 0;
         gbc.gridy = 0;
-        this.add(addColorButton, gbc);
+        this.add(addColorButton, gbc);     
+        addColorButton.addActionListener(new ActionListener(){
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						curMode = ISpyMode.ADD_COLOR;
+						trainingBox.setTitle("Add Color Label");
+						trainingBox.clearText();
+						trainingBox.setVisible(true);
+					}
+        });
         
+        addShapeButton = new JButton("Add Shape");
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = .5;
+        gbc.gridx = 1;
+        this.add(addShapeButton, gbc);   
+        addShapeButton.addActionListener(new ActionListener(){
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						curMode = ISpyMode.ADD_SHAPE;
+						trainingBox.setTitle("Add Shape Label");
+						trainingBox.clearText();
+						trainingBox.setVisible(true);
+					}
+        });
         
-        // Set up vis world
-        visWorld = new VisWorld();
-        displayLayer = new VisLayer(visWorld);
-        displayCanvas = new VisCanvas(displayLayer);
-        
-        // Set up camera
-        displayLayer.cameraManager.uiLookAt(new double[]{viewRegion.getCenterX(), kinect_status_t.HEIGHT-viewRegion.getCenterY(), viewRegion.width},  //Position
-        								    new double[]{viewRegion.getCenterX(), kinect_status_t.HEIGHT-viewRegion.getCenterY(), 0}, // Lookat
-        								    new double[]{0, 1, 0}, false); // Up 
-    	displayLayer.addEventHandler(new DisplayClickEventHandler());
-
+        VisWorld visWorld = new VisWorld();
+        sceneRenderer = new SceneRenderer(visWorld, this);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridwidth = 2;
         gbc.weighty = .95;
         gbc.weightx = 1;
         gbc.gridx = 0;
         gbc.gridy = 1;
-        this.add(displayCanvas, gbc);
+        this.add(sceneRenderer.getCanvas(), gbc);
         
         ispyLabel = new JLabel("I spy something");
         gbc.ipadx = 20;
@@ -122,6 +140,14 @@ public class ISpy extends JFrame implements LCMSubscriber
 				findObject(inputField.getText());
 				inputField.setText("");
 			}
+        });
+        
+        trainingBox = new TrainingBox();
+        trainingBox.addComponentListener(new ComponentAdapter(){
+					@Override
+					public void componentHidden(ComponentEvent arg0) {
+						curMode = ISpyMode.NORMAL;
+					}
         });
         
         this.da = da;
@@ -150,34 +176,65 @@ public class ISpy extends JFrame implements LCMSubscriber
 		}
 		for(SpyObject obj : objects.values()){
 			if(obj.matches(labels)){
-				System.out.println("FOUND IT!");
+				pointToObject(obj);
 				return;
 			}
 		}
 		System.out.println("NO MATCH");
-		
 	}
 	
-	protected class DisplayClickEventHandler extends VisEventAdapter{
-    	public boolean mouseClicked(VisCanvas vc, VisLayer vl, VisCanvas.RenderInfo rinfo, GRay3D ray, MouseEvent e)
-        {
-    		double[] intersect = ray.intersectPlaneXY();
-    		double x = intersect[0];
-    		double y = K_HEIGHT - intersect[1];
-    		for(SpyObject obj : objects.values()){
-    			if(obj.bbox.contains(x, y)){
-    				System.out.println("CLICKED");
-    				break;
-    			}
-    		}
-    		return false;
-        }
-    }
+	public void pointToObject(SpyObject obj){
+		robot_command_t command = new robot_command_t();
+		command.utime = TimeUtil.utime();
+		command.updateDest = true;
+		command.dest = new double[6];
+		double[] center = KUtils.getWorldCoordinates(obj.lastObject.getCenter());
+		for(int i = 0; i < 3; i++){
+				command.dest[i] = center[i];
+		}
+		command.action = "";
+    lcm.publish("ROBOT_COMMAND",command);
+		return;
+	}
+	
+	public void mouseClicked(double x, double y){
+		if(curMode != ISpyMode.NORMAL){
+			System.out.println("CLICKED");
+		}
+		for(SpyObject obj : objects.values()){
+			if(obj.bbox.contains(x, y)){
+				switch(curMode){
+				case ADD_COLOR:
+					String label = String.format("%s {%s}", obj.lastObject.colorFeatures, trainingBox.getText());
+					System.out.println(label);
+					synchronized(colorKNN){
+						colorKNN.add(label);
+					}
+					obj.boxColor = Color.cyan;
+					break;
+				case ADD_SHAPE:
+					label = String.format("%s {%s}", obj.lastObject.shapeFeatures, trainingBox.getText());
+					synchronized(shapeKNN){
+						shapeKNN.add(label);
+					}
+					obj.boxColor = Color.cyan;
+					break;
+				}
+				
+				
+				
+				
+				break;
+			}
+		}
+	}
+
 	
     /** Upon recieving a message from the Kinect, translate each depth point into
      ** x,y,z space and find the pixel color for it.  Then draw it.
      **/
-    public void messageReceived(LCM lcm, String channel, LCMDataInputStream ins)
+    @Override
+		public void messageReceived(LCM lcm, String channel, LCMDataInputStream ins)
     {
         try {
         	kinectData = new kinect_status_t(ins);
@@ -187,11 +244,11 @@ public class ISpy extends JFrame implements LCMSubscriber
         }
         
         extractPointCloudData();
-        BufferedImage image = getKinectImage();
         updateObjects();
         
-        drawDisplayLayer(image);
+        sceneRenderer.drawScene(kinectData, objects, da);
     }
+    
     
     private void extractPointCloudData(){
     	da.currentPoints = new ArrayList<double[]>();
@@ -199,31 +256,13 @@ public class ISpy extends JFrame implements LCMSubscriber
 
         for(int y= (int)viewRegion.getMinY(); y<viewRegion.getMaxY(); y++){
             for(int x=(int)viewRegion.getMinX(); x<viewRegion.getMaxX(); x++){
-                int i = y*kinectData.WIDTH + x;
+                int i = y*kinect_status_t.WIDTH + x;
                 int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
                         (kinectData.depth[2*i+0]&0xff);
                 double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], kinectData);
                 da.currentPoints.add(pKinect);
             }
         }
-    }
-    
-    private BufferedImage getKinectImage(){
-    	if(kinectData == null){
-    		return new BufferedImage(10, 10, BufferedImage.TYPE_3BYTE_BGR);
-    	}
-    	BufferedImage image = new BufferedImage(kinectData.WIDTH, kinectData.HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
-		byte[] buf = ((DataBufferByte)(image.getRaster().getDataBuffer())).getData();
-		for (int i = 0; i < buf.length; i+=3) {
-			int x = (i/3)%kinectData.WIDTH;
-			int y = (i/3)/kinectData.WIDTH;
-			if(viewRegion.contains(x, y)){
-			    buf[i] = kinectData.rgb[i+2];   // B
-				buf[i+1] = kinectData.rgb[i+1]; // G
-				buf[i+2] = kinectData.rgb[i];   // R
-			}
-		}
-		return image;
     }
     
     private void updateObjects(){
@@ -240,10 +279,19 @@ public class ISpy extends JFrame implements LCMSubscriber
     		Rectangle projBBox = obj.getProjectedBBox();
             double[] pos = new double[]{projBBox.getCenterX(), projBBox.getCenterY()};
             
-            String colorFeatures = FeatureVec.featureString(obj.points);
-            String shapeFeatures = FeatureVec.getShapeFeature(obj.getImage());
-            ConfidenceLabel color = colorKNN.classify(colorFeatures);
-            ConfidenceLabel shape = shapeKNN.classify(shapeFeatures);
+            obj.colorFeatures = FeatureVec.featureString(obj.points);
+            obj.shapeFeatures = FeatureVec.getShapeFeature(obj.getImage());
+            ConfidenceLabel color, shape;
+            synchronized(colorKNN){
+              color = colorKNN.classify(obj.colorFeatures);
+            }
+            synchronized(shapeKNN){
+              shape = shapeKNN.classify(obj.shapeFeatures);
+            }
+            
+            if(color.getLabel().equals("black")){
+            	continue;
+            }
            
             int id = obj.repID;
             SpyObject spyObject;
@@ -264,50 +312,6 @@ public class ISpy extends JFrame implements LCMSubscriber
     	for(Integer id : objsToRemove){
     		objects.remove(id);
     	}
-    }
-       
-    public void drawObjects(VisWorld.Buffer worldBuffer){
-    	for(SpyObject obj : objects.values()){  
-//    		// Get image a 
-//    		BufferedImage img = obj.lastObject.getImage();
-//    		AffineTransform tx = AffineTransform.getScaleInstance(1, -1);
-//    		tx.translate(0, -img.getHeight(null));
-//    		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-//    		img = op.filter(img, null);
-//    		
-    		//VisChain vch = new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT-obj.bbox.getMaxY()), new VzImage(img));
-    		//worldBuffer.addBack(vch);
-
-    		double x = obj.pos[0];
-    		double y = K_HEIGHT-obj.pos[1];
-    		
-    		
-    		
-    		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(Color.WHITE, 2));
-    		VisChain vch2 = new VisChain(LinAlg.translate(x, y), rect);
-    		
-    		String labelString = "";
-    		labelString += String.format("%s:%.2f\n", obj.getColor(), obj.getColorConfidence());
-    		labelString += String.format("%s:%.2f\n", obj.getShape(), obj.getShapeConfidence());
-    		VzText text = new VzText(labelString);
-            VisChain vch3 = new VisChain(LinAlg.translate(obj.bbox.getMaxX(), K_HEIGHT - obj.bbox.getMaxY()),
-            		LinAlg.scale(1), text);
-    		
-    		
-    		
-    		worldBuffer.addBack(vch2);
-    		worldBuffer.addBack(vch3);
-    	}
-    }
-        
-    public void drawDisplayLayer(BufferedImage kinectImage){
-        VisWorld.Buffer worldBuffer = visWorld.getBuffer("displayImage");
-        worldBuffer.addBack(new VzImage(kinectImage, VzImage.FLIP));
-        
-        drawObjects(worldBuffer);      
-        
-        
-        worldBuffer.swap();
     }
     
     public static void main(String args[])

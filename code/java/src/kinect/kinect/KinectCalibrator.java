@@ -213,7 +213,7 @@ class KinectCalibrator // implements LCMSubscriber
     			{1, 0, 0, 0},
     			{0, 1, 0, 0},
     			{0, 0, 1, 0},
-    			{0, 0, 0, 1}
+    			{.061, 0, 0, 1}
     	};
     	
     	// Overall transform is k2wTranslate * inv(w2kTransform) * wTranslate

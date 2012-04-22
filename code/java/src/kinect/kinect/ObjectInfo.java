@@ -28,15 +28,14 @@ public class ObjectInfo{
     public double uppermost;
     public double lowermost;
     public  BufferedImage image = null;
-    public double[] shapeFeatures = null;
     
     public Rectangle projBBox = null;
 
-    public ArrayList<Double> features;
+    public String colorFeatures;
+    public String shapeFeatures;
     public ArrayList<double[]> points;
 
     public ObjectInfo(){
-        features = new ArrayList<Double>();
     }
 
     /** Create a new object with info about it. Objects begin with a single point.**/
@@ -44,7 +43,6 @@ public class ObjectInfo{
     {
         Random r = new Random();
         this.repID = r.nextInt();
-        features = new ArrayList<Double>();
         this.numPoints = 1;
         this.color = color;
         this.ufsID = repID;
@@ -61,24 +59,6 @@ public class ObjectInfo{
 
         this.points = new ArrayList<double[]>();
         this.points.add(point);
-    }
-
-    /** Set the features of this object. **/
-    public void setFeatures(ArrayList<Double> f)
-    {
-        features = f;
-    }
-
-    /** Return a list of the features that have been assigned to this object. **/
-    public double[] getFeatures()
-    {
-        double[] f = new double[features.size()];
-        for(int i=0; i<f.length; i++){
-            f[i] = features.get(i);
-        }
-        
-        
-        return f;
     }
 
     /** Add a new point to this object. **/
@@ -200,13 +180,5 @@ public class ObjectInfo{
     		image = getImage(points, projBBox);
     	} 
     	return image;
-    }
-    
-    public double[] getShapeFeatures(){
-    	if(shapeFeatures == null){
-    		getImage();
-        	shapeFeatures = PCA.getFeatures(image, 7);
-    	}
-    	return shapeFeatures;
     }
 }

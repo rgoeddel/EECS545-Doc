@@ -265,27 +265,12 @@ class ObjectLabeler // implements LCMSubscriber
 
         // Get the feature vector
         int id = objRefs[currentObject];
-        ArrayList<Double> features = da.objects.get(id).features;
         ArrayList<double[]> points = da.objects.get(id).points;
+        
 
         // Write labels and pointclouds to file
         try{
             boolean append = true;
-            FileWriter outFile = new FileWriter(labelsFile, append);
-            PrintWriter out = new PrintWriter(outFile);
-
-            String line = "[";
-            for(int i=0; i<features.size(); i++){
-                line += features.get(i) + " ";
-            }
-            line += "] {";
-            for (int i=0; i<labels.size(); i++){
-                line += labels.get(i)+";";
-            }
-            line += "}";
-            out.println(line);
-            out.close();
-
             // Write out po9int clouds for each object
             FileOutputStream fos = new FileOutputStream(labelsFile+".pts", append);
             DataOutputStream dos = new DataOutputStream(fos);

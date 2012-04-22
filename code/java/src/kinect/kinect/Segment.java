@@ -47,36 +47,6 @@ public class Segment
     public void segmentFrame()
     {
         unionFind();
-        getFeatures();
-    }
-
-    /** Get features for each of the objects identified in the frame.**/
-    public void getFeatures()
-    {
-        Collection c = da.objects.values();
-        for(Iterator itr = c.iterator(); itr.hasNext(); ){
-            ObjectInfo d = (ObjectInfo)itr.next();
-            ArrayList<double[]> points = d.points;
-            d.setFeatures(FeatureVec.getFeatureVec(points));
-        }
-    }
-
-    /** Given the representative ID of an object, return its features.
-     ** @param ID of object in question
-     ** @return corresponding feature vector
-     **/
-    public double[] getObjectFeatures(int id)
-    {
-        double[] features = null;
-        Collection c = da.objects.values();
-        for(Iterator itr = c.iterator(); itr.hasNext(); ){
-            ObjectInfo d = (ObjectInfo)itr.next();
-            if (d.repID == id){
-                features = d.getFeatures();
-                break;
-            }
-        }
-        return features;
     }
 
     /** Get the difference in the z-direction of two pixels. **/
