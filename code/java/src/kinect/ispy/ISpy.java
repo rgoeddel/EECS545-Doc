@@ -187,60 +187,53 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		}
 		System.out.println("NO INITIAL MATCH!!");
 		// No match initially found: create list of objects to consider
-		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
+		ArrayList<SpyObject> considerCalc = new ArrayList<SpyObject>();
 		// best options to consider match atleast one best
+		
+		ArrayList<Double> considerConf = new ArrayList<Double>();
+		//TODO sort hack
+		ArrayList<Double> considerConfSortHack = new ArrayList<Double>();
 		
 		for (SpyObject obj : objects.values())
 		{
 		    if (obj.matchesBestShape(labels))
 		    {
-			
+			double wrongconf = obj.wrongColorConf();
+			if (wrongconf >= 100)
+			    continue;
+			considerCalc.add(obj);
+			considerConf.add(wrongconf);
+			considerConfSortHack.add(wrongconf);
 		    }
 		    else if (obj.matchesBestColor(labels))
 		    {
 			
+			double wrongconf = obj.wrongShapeConf();
+			if (wrongconf >= 100)
+			    continue;
+			considerCalc.add(obj);
+			considerConf.add(wrongconf);
+			considerConfSortHack.add(wrongconf);
 		    }
 		}
-		
-		//if matches bestcolor
-/*
-		for (SpyObject obj : objects.values()) {
-			if (!consider.contains(obj)
-					&& obj.matchesOneAndSecondBest(labels, 1))
-			{
-				System.out.println("HAHA");
-				consider.add(obj);
-			}
+		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
+		Collections.sort(considerConfSortHack);
+		for (Double d : considerConfSortHack)
+		{
+		    consider.add(considerCalc.get(considerConf.indexOf(d)));
 		}
 		
-		// matches or very unconfident
-		for (SpyObject obj : objects.values()) {
-			if (!consider.contains(obj) && obj.matchesOrUnconfident(labels))
-			{
-				consider.add(obj);
-				System.out.println(obj.getShape() + " " + obj.getColor());
-			}
-		}
-*/
-		Collections.sort(consider);
-
-		// secondary options accept both second best
-		/*
-		 * for(SpyObject obj : objects.values()) { if (!consider.contains(obj)
-		 * && obj.matchesOneAndSecondBest(labels, 0)) consider.add(obj); }
-		 */
-		// Manipulate considered objects
-
 		for (SpyObject obj : consider) {
 			// manipulate each objects
 			sweepObject(obj);
-			System.out.println("POINT");
+			System.out.println("SWEEEPx");
 			System.out.println(obj.getShape() + " " + obj.getColor());
 			// TODO change only sweeps first object
 			boolean success = true;
-			if (success) {
-				shapeKNN.adjustThreshold(obj.getShape(), 1);
-				return;
+			if (success)
+			{
+			    shapeKNN.adjustThreshold(obj.getShape(), 1);
+			    return;
 			}
 		}
 		System.out.println("NO MATCH");

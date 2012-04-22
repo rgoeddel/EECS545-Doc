@@ -30,15 +30,18 @@ public class SpyObject implements Comparable<SpyObject>{
     
     String secondBestColor;
     String secondBestShape;
+    String secondBestSize;
+    
     double shapeThreshold;
+    double colorThreshold;
     public Color boxColor = Color.white;
-    ArrayList<String> shapeList;
+    
     public SpyObject(int id)
     {
 	colorConLabels = new LinkedList<ConfidenceLabel>();
 	shapeConLabels = new LinkedList<ConfidenceLabel>();
 	sizeConLabels = new LinkedList<ConfidenceLabel>();
-	shapeList = new ArrayList<String>();
+	
 	this.colorConfidence = 0.0;
 	this.shapeConfidence = 0.0;
 	this.bestColor = "unknown";
@@ -47,6 +50,7 @@ public class SpyObject implements Comparable<SpyObject>{
 	this.secondBestColor = "";
 	this.secondBestShape = "";
 	this.shapeThreshold = 0.5;
+	this.colorThreshold = 0.3;
 	this.id = id;
     }
     
@@ -175,12 +179,12 @@ public class SpyObject implements Comparable<SpyObject>{
 	    bestSize = bestS.get(index);
 	}
 	//second best
-	/*
+	
 	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
 	{
-	    secondBestColor = bestS.get(index);
+	    secondBestSize = bestS.get(index);
 	}
-	*/
+	
 	sizeConfidence = sum/(double)count * (double)max/(double)count; 
 	return sizeConfidence;
     }
@@ -235,11 +239,6 @@ public class SpyObject implements Comparable<SpyObject>{
 	
 	for (ConfidenceLabel thresh : confidenceThresholds)
 	{
-	    if (!shapeList.contains(thresh.getLabel()))
-	    {
-		//System.out.println("ADDED SHAPE : " + thresh.getLabel());
-		shapeList.add(thresh.getLabel());
-	    }
 	    if (bestShape.equals(thresh.getLabel()))
 	    {
 		shapeThreshold = thresh.getConfidence();
@@ -273,6 +272,7 @@ public class SpyObject implements Comparable<SpyObject>{
     }
     
     //TODO terrible temporary hack
+    /*
     public boolean isShape(String label)
     {
     	return (label.equals("blue") ||
@@ -282,19 +282,19 @@ public class SpyObject implements Comparable<SpyObject>{
     			label.equals("purple") ||
     			label.equals("orange"));
     }
-    public boolean matchesOrUnconfident(ArrayList<String> labels){
-	//double shapeThreshold = 0.5;
-	
-	for(String label : labels)
-	{	    		
-	    if (isShape(label) && ((bestColor.equals(label)) || colorConfidence < 0.4)){
-		continue;
-	    } else if (!isShape(label) && ((bestShape.equals(label)) || shapeConfidence < 0.7)) {
-		continue;
-	    } 
-	    return false;
-	}
-	return true;
+    */
+    
+    public double wrongShapeConf()
+    {
+	if (this.shapeThreshold < this.shapeConfidence)
+	    return 100.0;
+	return this.shapeConfidence - this.shapeThreshold;
+    }
+    public double wrongColorConf()
+    {
+	if (this.shapeThreshold < this.shapeConfidence)
+	    return 100.0;
+	return this.colorConfidence - this.colorThreshold;
     }
     
     public boolean matchesBestColor(ArrayList<String> labels)
