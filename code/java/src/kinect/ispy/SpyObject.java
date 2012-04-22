@@ -9,9 +9,9 @@ import java.util.Collections;
 
 import kinect.kinect.ObjectInfo;
 
-public class SpyObject {
-	public double[] pos;
-	public Rectangle bbox;
+public class SpyObject implements Comparable<SpyObject>{
+    public double[] pos;
+    public Rectangle bbox;
     
     public int id;
     public ObjectInfo lastObject;
@@ -22,16 +22,22 @@ public class SpyObject {
     double colorConfidence;
     String bestColor;
     String bestShape;
+    String secondBestColor;
+    String secondBestShape;
+    double shapeThreshold;
     
     public SpyObject(int id)
     {
-		colorConLabels = new LinkedList<ConfidenceLabel>();
-		shapeConLabels = new LinkedList<ConfidenceLabel>();
-		this.colorConfidence = 0.0;
-		this.shapeConfidence = 0.0;
-		this.bestColor = "unknown";
-		this.bestShape = "unknown";
-		this.id = id;
+	colorConLabels = new LinkedList<ConfidenceLabel>();
+	shapeConLabels = new LinkedList<ConfidenceLabel>();
+	this.colorConfidence = 0.0;
+	this.shapeConfidence = 0.0;
+	this.bestColor = "unknown";
+	this.bestShape = "unknown";
+	this.secondBestColor = "";
+	this.secondBestShape = "";
+	this.shapeThreshold = 0.5;
+	this.id = id;
     }
     
 	public String getColor()
@@ -62,6 +68,7 @@ public class SpyObject {
 	ArrayList<String> bestS = new ArrayList<String>();
 	ArrayList<Integer> bestCount = new ArrayList<Integer>();
 	int max = 0;
+	int max2 = 0;
 	int index;
 	for (ConfidenceLabel c : colorConLabels)
 	{
@@ -80,7 +87,10 @@ public class SpyObject {
 		bestCount.add(cnt);
 	    }
 	    if (cnt > max)
+	    {
+		max2 = max;
 		max = cnt;
+	    }
 	    sum+= c.getConfidence();
 	    count++;
 	}
@@ -88,21 +98,28 @@ public class SpyObject {
 	if ((index = bestCount.indexOf(max)) >= 0)
 	{
 	    bestColor = bestS.get(index);
-	}	
+	}
+	//second best
+	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
+	{
+	    secondBestColor = bestS.get(index);
+	}
 	colorConfidence = sum/(double)count * (double)max/(double)count; 
 	return colorConfidence;
     }
 
-    public double updateShapeConfidence(ConfidenceLabel cl)
+    public double updateShapeConfidence(ConfidenceLabel cl, 
+	ArrayList<ConfidenceLabel> confidenceThresholds)
     {
 	shapeConLabels.offer(cl);
-	if (shapeConLabels.size() > 10)
+	if (shapeConLabels.size() > 15)
 	    shapeConLabels.remove();
 	double sum = 0;
 	int count = 0;
 	ArrayList<String> bestS = new ArrayList<String>();
 	ArrayList<Integer> bestCount = new ArrayList<Integer>();
 	int max = 0;
+	int max2 = 0;
 	int index;
 	for (ConfidenceLabel c : shapeConLabels)
 	{
@@ -121,7 +138,10 @@ public class SpyObject {
 		bestCount.add(cnt);
 	    }
 	    if (cnt > max)
+	    {
+		max2 = max;
 		max = cnt;
+	    }
 	    sum+= c.getConfidence();
 	    count++;
 	}
@@ -129,20 +149,83 @@ public class SpyObject {
 	if ((index = bestCount.indexOf(max)) >= 0)
 	{
 	    bestShape = bestS.get(index);
-	}	
+	}
+	//second best
+	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
+	{
+	    secondBestColor = bestS.get(index);
+	}
+	
+	for (ConfidenceLabel thresh : confidenceThresholds)
+	{
+	    if (bestShape.equals(thresh.getLabel()))
+	    {
+		shapeThreshold = thresh.getConfidence();
+		break;
+	    }
+	}
 	shapeConfidence = sum/(double)count * (double)max/(double)count; 
 	return shapeConfidence;
     }
     
-    public boolean matches(ArrayList<String> labels){
-		for(String label : labels){
-			if(bestColor.equals(label)){
-				continue;
-			} else if(bestShape.equals(label)){
-				continue;
-			} 
-			return false;
-		}
-		return true;
+    public boolean matchesOneAndSecondBest(ArrayList<String> labels, int numbest)
+    {
+	int cntbest = 0;
+	for(String label : labels){
+	    if (bestColor.equals(label)) {
+		cntbest++;
+		continue;
+	    } else if (bestShape.equals(label)) {
+		cntbest++;
+		continue;
+	    } else if (secondBestColor.equals(label)) {
+		continue;
+	    } else if (secondBestShape.equals(label)) {
+		continue;
+	    } 
+	    return false;
 	}
+	if (cntbest >= numbest)
+	    return true;
+	return false;
+    }
+    public boolean matchesOrUnconfident(ArrayList<String> labels){
+	double shapeThreshold = 0.5;
+	
+	for(String label : labels)
+	{	    		
+	    if ((bestColor.equals(label)) || colorConfidence < 0.3){
+		continue;
+	    } else if((bestShape.equals(label))|| shapeConfidence < shapeThreshold) {
+		continue;
+	    } 
+	    return false;
+	}
+	return true;
+    }
+    public boolean matches(ArrayList<String> labels){
+	for(String label : labels){
+	    if(bestColor.equals(label)){
+		continue;
+	    } else if(bestShape.equals(label)){
+		continue;
+	    } 
+	    return false;
+	}
+	return true;
+    }
+    
+    @Override
+    public int compareTo(SpyObject obj)
+    {
+	double diff = (this.shapeConfidence - this.shapeThreshold) - 
+	    (obj.shapeConfidence - obj.shapeThreshold);
+	    
+	if (diff < 0)
+	    return (-1);
+	else if (diff > 0)
+	    return (1);
+	else
+	    return 0;
+    }
 }

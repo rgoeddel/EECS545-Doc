@@ -154,6 +154,42 @@ public class ISpy extends JFrame implements LCMSubscriber
 				return;
 			}
 		}
+		System.out.println("NO INITIAL MATCH");
+		//No match initially found: create list of objects to consider
+		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
+		//best options to consider match atleast one best
+		for(SpyObject obj : objects.values()) {
+		    if (!consider.contains(obj) && 
+			obj.matchesOneAndSecondBest(labels, 1))
+			consider.add(obj);
+		}
+		//matches or very unconfident
+		for(SpyObject obj : objects.values()) {
+		    if (!consider.contains(obj) && 
+			obj.matchesOrUnconfident(labels))
+			consider.add(obj);
+		}
+		Collections.sort(consider);
+		
+		//secondary options accept both second best
+                 /*
+		for(SpyObject obj : objects.values()) {
+		    if (!consider.contains(obj) && 
+			obj.matchesOneAndSecondBest(labels, 0))
+			consider.add(obj);
+		}
+                */
+		// Manipulate considered objects
+		
+		for (SpyObject obj : consider)
+		{
+		    //manipulate each objects
+                    boolean success = true;
+		    if (success)
+		    {
+			colorKNN.adjustThreshold(obj.getShape(), 1);
+		    }
+		}
 		System.out.println("NO MATCH");
 		
 	}
@@ -244,7 +280,7 @@ public class ISpy extends JFrame implements LCMSubscriber
             String shapeFeatures = FeatureVec.getShapeFeature(obj.getImage());
             ConfidenceLabel color = colorKNN.classify(colorFeatures);
             ConfidenceLabel shape = shapeKNN.classify(shapeFeatures);
-           
+	    ArrayList<ConfidenceLabel> shapeThresholds = shapeKNN.getThresholds();
             int id = obj.repID;
             SpyObject spyObject;
             if(objects.containsKey(id)){
@@ -255,7 +291,7 @@ public class ISpy extends JFrame implements LCMSubscriber
             	objects.put(id, spyObject);
             }
             spyObject.updateColorConfidence(color);
-            spyObject.updateShapeConfidence(shape);
+            spyObject.updateShapeConfidence(shape, shapeThresholds);
             spyObject.pos = pos;
             spyObject.bbox = projBBox;
             spyObject.lastObject = obj;
