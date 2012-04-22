@@ -161,8 +161,8 @@ public class ObjectInfo{
 				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
     			image.setRGB((int)Math.round(pixel[0])+margin-minX, (int)Math.round(pixel[1])+margin-minY, rc.getRGB());
 			} catch (Exception e){
-				System.out.println("Out of Bounds pixel in ObjectInfo: " + pixel[0] + ", " + pixel[1]);
-				System.out.println(points.get(i)[0] + ", " + points.get(i)[1] + ", " + points.get(i)[2]);
+				//System.out.println("Out of Bounds pixel in ObjectInfo: " + pixel[0] + ", " + pixel[1]);
+				//System.out.println(points.get(i)[0] + ", " + points.get(i)[1] + ", " + points.get(i)[2]);
 			}
 		}
     	return image;
