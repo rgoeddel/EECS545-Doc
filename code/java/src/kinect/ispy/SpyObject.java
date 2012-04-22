@@ -27,11 +27,12 @@ public class SpyObject implements Comparable<SpyObject>{
     String secondBestShape;
     double shapeThreshold;
     public Color boxColor = Color.white;
-    
+    ArrayList<String> shapeList;
     public SpyObject(int id)
     {
 	colorConLabels = new LinkedList<ConfidenceLabel>();
 	shapeConLabels = new LinkedList<ConfidenceLabel>();
+	shapeList = new ArrayList<String>();
 	this.colorConfidence = 0.0;
 	this.shapeConfidence = 0.0;
 	this.bestColor = "unknown";
@@ -168,6 +169,11 @@ public class SpyObject implements Comparable<SpyObject>{
 	
 	for (ConfidenceLabel thresh : confidenceThresholds)
 	{
+		if (!shapeList.contains(thresh.getLabel()))
+		{
+			//System.out.println("ADDED SHAPE : " + thresh.getLabel());
+				shapeList.add(thresh.getLabel());
+		}
 	    if (bestShape.equals(thresh.getLabel()))
 	    {
 		shapeThreshold = thresh.getConfidence();
@@ -199,14 +205,25 @@ public class SpyObject implements Comparable<SpyObject>{
 	    return true;
 	return false;
     }
+    
+    //TODO terrible temporary hack
+    public boolean isShape(String label)
+    {
+    	return (label.equals("blue") ||
+    			label.equals("red") ||
+    			label.equals("yellow") ||
+    			label.equals("green") ||
+    			label.equals("purple") ||
+    			label.equals("orange"));
+    }
     public boolean matchesOrUnconfident(ArrayList<String> labels){
-	double shapeThreshold = 0.5;
+	//double shapeThreshold = 0.5;
 	
 	for(String label : labels)
 	{	    		
-	    if ((bestColor.equals(label)) || colorConfidence < 0.3){
+	    if (isShape(label) && ((bestColor.equals(label)) || colorConfidence < 0.4)){
 		continue;
-	    } else if((bestShape.equals(label))|| shapeConfidence < shapeThreshold) {
+	    } else if (!isShape(label) && ((bestShape.equals(label)) || shapeConfidence < 0.7)) {
 		continue;
 	    } 
 	    return false;
@@ -228,8 +245,8 @@ public class SpyObject implements Comparable<SpyObject>{
     @Override
     public int compareTo(SpyObject obj)
     {
-	double diff = (this.shapeConfidence - this.shapeThreshold) - 
-	    (obj.shapeConfidence - obj.shapeThreshold);
+	double diff = (this.colorConfidence + this.shapeConfidence - this.shapeThreshold) - 
+	    (obj.colorConfidence + obj.shapeConfidence - obj.shapeThreshold);
 	    
 	if (diff < 0)
 	    return (-1);
