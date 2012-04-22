@@ -6,15 +6,13 @@ import java.io.*;
 import java.util.*;
 
 import kinect.classify.FeatureExtractor;
+import kinect.classify.FeatureExtractor.FeatureType;
 
 import april.util.*;
 
 /** Take in a pts file and output a feature vector file */
 public class PtsFileConverter
 {
-	enum FeatureType{
-		COLOR, SHAPE
-	}
     public PtsFileConverter(GetOpt opts)
     {
         FileInputStream fin;
@@ -32,8 +30,10 @@ public class PtsFileConverter
                 FeatureType type;
                 if(opts.getString("type").equals("color")){
                 	type = FeatureType.COLOR;
-                } else {
+                } else if(opts.getString("type").equals("shape")){
                 	type = FeatureType.SHAPE;
+                } else {
+                	type = FeatureType.SIZE;
                 }
                 
                 if (ins != null && fout != null) {
@@ -80,62 +80,40 @@ public class PtsFileConverter
                     points.add(bsr.readDoubles());
                 }
                 bsr.blockEnd();
-
-                ArrayList<Double> features;
-                if(type == FeatureType.COLOR){
-                	String colorString = "red,orange,yellow,green,blue,purple";
-                	String[] colors = colorString.split(",");
-                	Set<String> colorSet = new HashSet<String>();
-                	features = FeatureExtractor.getColorFeatures(points);
-                    for(int i = 0; i < colors.length; i++){
-                		colorSet.add(colors[i]);
-                	}
-                    // Write back out to FV file
-                    pwout.printf("[");
-                    for (int i = 0; i < features.size(); i++) {
-                        pwout.printf("%f ", features.get(i));
-                    }
-                    pwout.printf("] {");
-                    for (int i = 0; i <  labels.size(); i++) {
-                    	if(colorSet.contains(labels.get(i))){
-                            pwout.printf("%s", labels.get(i));
-                    	}
-                    }
-                    pwout.printf("}\n");
-                    pwout.flush();
-                } else {
-                	BufferedImage img = ObjectInfo.getImage(points, null);
-                	features = FeatureExtractor.getShapeFeatures(img);
-                	
-                	String shapeString = "arch,rectangle,triangular,rectangular,triangle,square,cylinder,t-shaped,l-shaped,half-cylinder";
-                	String[] shapes = shapeString.split(",");
-                	Set<String> shapeSet = new HashSet<String>();
-                	for(int i = 0; i < shapes.length; i++){
-                		shapeSet.add(shapes[i]);
-                	}
-                    // Write back out to FV file
-                    pwout.printf("[");
-                    for (int i = 0; i < features.size(); i++) {
-                        pwout.printf("%f ", features.get(i));
-                    }
-                    pwout.printf("] {");
-                    for (int i = 0; i <  labels.size(); i++) {
-                		String label = labels.get(i).toLowerCase();
-                    	if(shapeSet.contains(label)){
-                    		if(label.equals("rectangular")){
-                    			label = "rectangle";
-                    		} else if(label.equals("triangular")){
-                    			label = "triangle";
-                    		}
-                            pwout.printf("%s", label);
-                    	}
-                    }
-                    pwout.printf("}\n");
-                    pwout.flush();
-                	
+                
+                String featureString = FeatureExtractor.getFeatureString(points, type);
+                
+                Set<String> validFeatures = new HashSet<String>();
+                String[] validFeatureList;
+                switch(type){
+                case COLOR:
+                	validFeatureList = "red,orange,yellow,green,blue,purple".split(",");
+                	break;
+                case SHAPE:
+                	validFeatureList = "arch,rectangle,triangular,rectangular,triangle,square,cylinder,t-shaped,l-shaped,half-cylinder".split(",");
+                	break;
+                case SIZE:
+                	validFeatureList = "small,medium,large".split(",");
+                	break;
+                default:
+                	validFeatureList = new String[]{};
+                }
+                for(int i = 0; i < validFeatureList.length; i++){
+                	validFeatures.add(validFeatureList[i]);
                 }
                 
-
+                boolean hasLabel = false;
+                for(int i = 0; i < labels.size(); i++){
+                	if(validFeatures.contains(labels.get(i))){
+                		featureString += String.format(" {%s}\n", labels.get(i));
+                		hasLabel = true;
+                		break;
+                	}
+                }
+                if(hasLabel){
+                	pwout.print(featureString);
+                	pwout.flush();
+                }     
             }
         } catch (Exception ex) {
         }

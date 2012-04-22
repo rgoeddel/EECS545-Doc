@@ -398,7 +398,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		}
 	}
 
-	public static void main(String args[]) {
+	public static void main(String args[]) {	
+		
 		// Set up data aggregator and segmenter
 		DataAggregator da = new DataAggregator(false);
 		da.colorThresh = initialColorThresh;
