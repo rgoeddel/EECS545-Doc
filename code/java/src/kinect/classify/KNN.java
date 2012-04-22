@@ -111,7 +111,7 @@ String datafile;
 	if (!labels.contains(label))
 	{
 	    labels.add(label);
-	    thresholds.add(0.05); //TODO magic number default threshold
+	    thresholds.add(0.6); //TODO magic number default threshold
 	}
     }
     
@@ -121,7 +121,7 @@ String datafile;
 	if (!labels.contains(label))
 	{
 	    labels.add(label);
-	    thresholds.add(0.05); //TODO magic number default threshold
+	    thresholds.add(0.6); //TODO magic number default threshold
 	}
     }
     public String getLabelFromString(String datainput)
@@ -144,6 +144,18 @@ String datafile;
 	    return "unknown";
 	}
     }
+    public ArrayList<ConfidenceLabel> getThresholds()
+    {
+	ArrayList<ConfidenceLabel> shapeThresholds = new ArrayList<ConfidenceLabel>();;
+	for (int i =0; i < this.labels.size(); i++)
+	{
+	    String s = this.labels.get(i);
+	    double conf = this.thresholds.get(i);
+	    shapeThresholds.add(new ConfidenceLabel(conf, s));
+	}
+	return shapeThresholds;
+    }
+
     //public static Point getLabelFromString(String datainput)
     //{
     public static Point getPointFromString(String datainput, int dim)
@@ -230,7 +242,7 @@ String datafile;
 	{
 	    System.out.println("New label: " + label);
 	    labels.add(label);
-	    thresholds.add(0.05); //TODO magic number default threshold
+	    thresholds.add(0.6); //TODO magic number default threshold
 	}
 	
  }
@@ -241,7 +253,7 @@ String datafile;
 	if (!labels.contains(label))
 	{
 	    labels.add(label);
-	    thresholds.add(0.05); //TODO magic number default threshold
+	    thresholds.add(0.6); //TODO magic number default threshold
 	}
     }
     public void adjustThreshold(String label, int direction)
@@ -260,7 +272,7 @@ String datafile;
 	    if (direction > 0)
 		threshold = threshold + Math.pow(0.9 - threshold, 2);
 	    else
-		threshold = threshold - Math.pow(threshold - 0.5, 2);
+		threshold = threshold - Math.pow(threshold - 0.1, 2);
 	    //System.out.println(threshold);
 	    thresholds.set(index, threshold);
 	}
