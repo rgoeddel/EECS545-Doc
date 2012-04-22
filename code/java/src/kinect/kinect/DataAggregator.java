@@ -7,7 +7,7 @@ import java.util.*;
 public class DataAggregator{
 	public int WIDTH = 640;
 	public int HEIGHT = 480;
-    final static int MAX_HISTORY = 300;
+    final static int MAX_HISTORY = 100;
 
 	public float[] depthLookUp = new float[2048];          //holds depth conversions so we only have to calculate them once
     public double[] t;
@@ -19,6 +19,8 @@ public class DataAggregator{
 	public HashMap<Integer, Integer> map;                  //map of object ID to color
 	public HashMap<Integer, Integer> prevMap;              // "                    "   for previous frame
     public ArrayList<HashMap<Integer,ObjectInfo>> history;
+    //public HashMap<Integer, ObjectInfo> history;
+    //public HashMap<Integer, Integer> timeCounts;
 
 	public UnionFindSimple ufs;                            //Union Find class for keeping track of union find algo
 
@@ -31,6 +33,8 @@ public class DataAggregator{
         map = new HashMap<Integer, Integer>();
         prevMap = new HashMap<Integer, Integer>();
         history = new ArrayList<HashMap<Integer,ObjectInfo>>();
+        //history = new HashMap<Integer,ObjectInfo>();
+        //timeCounts = new HashMap<Integer,Integer>();
     }
 
 
@@ -102,7 +106,6 @@ public class DataAggregator{
             history.remove(0);
         }
     }
-
 
 
     private ArrayList<Integer> inOneButNotOther(HashMap<Integer, ObjectInfo> larger,

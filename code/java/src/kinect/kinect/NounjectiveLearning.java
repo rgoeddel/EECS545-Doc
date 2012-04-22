@@ -28,7 +28,7 @@ public class NounjectiveLearning implements LCMSubscriber
     final static int FRAME_HEIGHT = 480;
 
     static int initialColorThresh = 13;
-    static double initialUnionThresh = 0.5;
+    static double initialUnionThresh = 0.05;
     static double  initialRansacThresh = .02;
     static double  initialRansacPercent = .1;
 
