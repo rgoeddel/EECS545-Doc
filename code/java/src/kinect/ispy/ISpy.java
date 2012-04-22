@@ -188,13 +188,13 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		ArrayList<String> labels = new ArrayList<String>();
 		String[] splitDesc = desc.toLowerCase().trim().split(" ");
 		for (int i = 0; i < splitDesc.length; i++) {
-			if (splitDesc[i].trim().equals("")
-					|| splitDesc[i].trim().equals("and")) {
-				continue;
-			}
-			labels.add(splitDesc[i]);
+		    if (splitDesc[i].trim().equals("")
+			|| splitDesc[i].trim().equals("and")) {
+			continue;
+		    }
+		    labels.add(splitDesc[i]);
 		}
-
+		
 		for (SpyObject obj : objects.values()) {
 			if (obj.matches(labels)) {
 				pointToObject(obj);
@@ -242,7 +242,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		for (SpyObject obj : consider) {
 			// manipulate each objects
 			sweepObject(obj);
-			System.out.println("SWEEEPx");
+			System.out.println("SWEEEP");
 			System.out.println(obj.getShape() + " " + obj.getColor());
 			// TODO change only sweeps first object
 			boolean success = true;
