@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import april.jmat.LinAlg;
+
 import kinect.kinect.ObjectInfo;
 import kinect.kinect.PCA;
 
@@ -11,9 +13,18 @@ public class FeatureExtractor {
 	public enum FeatureType {
 		COLOR, SHAPE, SIZE
 	}
+	
+	public static String getFeatureString(ArrayList<double[]> points, FeatureType type){
+		ArrayList<Double> features = getFeatures(points, type);
+		return featuresToString(features);
+	}
 
 	public static String getFeatureString(ObjectInfo object, FeatureType type) {
 		ArrayList<Double> features = getFeatures(object, type);
+		return featuresToString(features);
+	}
+	
+	public static String featuresToString(ArrayList<Double> features){
 		String s = "[";
 		for (Double d : features) {
 			s += d + " ";
@@ -31,6 +42,19 @@ public class FeatureExtractor {
 			return getShapeFeatures(object);
 		case SIZE:
 			return getSizeFeatures(object);
+		}
+		return null;
+	}
+	
+	public static ArrayList<Double> getFeatures(ArrayList<double[]> points, FeatureType type){
+		switch (type) {
+		case COLOR:
+			return getColorFeatures(points);
+		case SHAPE:
+			BufferedImage img = ObjectInfo.getImage(points, null);
+			return getShapeFeatures(img);
+		case SIZE:
+			return getSizeFeatures(points);
 		}
 		return null;
 	}
@@ -66,7 +90,14 @@ public class FeatureExtractor {
 	}
 
 	public static ArrayList<Double> getSizeFeatures(ObjectInfo object) {
-		return null;
+		return getSizeFeatures(object.points);
+	}
+	
+	public static ArrayList<Double> getSizeFeatures(ArrayList<double[]> points){
+		double[] bbox = boundingBox(points);
+		ArrayList<Double> features = new ArrayList<Double>();
+		features.add(Math.sqrt(LinAlg.normF(new double[]{bbox[3] - bbox[0], bbox[4] - bbox[1], bbox[5] - bbox[2]})));
+		return features;
 	}
 
 	/**
