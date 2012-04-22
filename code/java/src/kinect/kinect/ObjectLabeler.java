@@ -6,6 +6,7 @@ import april.util.*;
 
 import lcm.logging.*;
 import lcm.lcm.*;
+import kinect.classify.FeatureExtractor;
 import kinect.lcmtypes.*;
 
 
@@ -343,7 +344,7 @@ class ObjectLabeler // implements LCMSubscriber
                                    (vd, new VzPoints.Style(cd, 1.0))));
         if(oi != null){
             VisVertexData square = new VisVertexData();
-            double[] bounds = FeatureVec.boundingBox(oi.points);
+            double[] bounds = FeatureExtractor.boundingBox(oi.points);
             square.add(new double[]{bounds[0], bounds[1],0});
             square.add(new double[]{bounds[0], bounds[4],0});
             square.add(new double[]{bounds[3], bounds[4],0});

@@ -137,7 +137,7 @@ public class PCA {
 		return 0;
 	}
 	
-	public static double[] getFeatures(BufferedImage img, int numFeatures){
+	public static ArrayList<Double> getFeatures(BufferedImage img, int numFeatures){
 		// Directions are with right being +v1 and up being +v2
 		
 	    ArrayList<int[]> pixels = getPixels(img);
@@ -166,9 +166,8 @@ public class PCA {
 //	    System.out.println(proj1[0] + ", " + proj1[1]);
 //	    System.out.println(proj2[0] + ", " + proj2[1]);
 	    
-	    double[] features = new double[2*numFeatures+1];
-	    features[0] = (proj1[1] - proj1[0])/(proj2[1] - proj2[0]);
-	    int f = 1;
+	    ArrayList<Double> features = new ArrayList<Double>();
+	    features.add((proj1[1] - proj1[0])/(proj2[1] - proj2[0]));
 	    for(int i = 0; i < 2; i++){
 	    	// Start at bottom-left or top-left
 	    	double[] start = new double[2];
@@ -183,7 +182,7 @@ public class PCA {
 	    		double[] pt = new double[2];
 	    		pt[0] = start[0] + perc*(proj1[1] - proj1[0])*v1[0];
 	    		pt[1] = start[1] + perc*(proj1[1] - proj1[0])*v1[1];
-	    		features[f++] = getFeature(img, pt, dir)/(proj2[1] - proj2[0]);
+	    		features.add(getFeature(img, pt, dir)/(proj2[1] - proj2[0]));
 	    	}
 	    }
 
@@ -195,9 +194,9 @@ public class PCA {
 		BufferedImage img = null;
 		try {
 		    img = ImageIO.read(new File("simple_tri.png"));		    
-		    double[] f  = getFeatures(img, 10);
-		    for(int i = 0; i < f.length; i++){
-		    	System.out.print(f[i] + ", ");
+		    ArrayList<Double> f  = getFeatures(img, 10);
+		    for(int i = 0; i < f.size(); i++){
+		    	System.out.print(f.get(i) + ", ");
 		    	if(i%10==9){
 		    		System.out.print("\n");
 		    	}
