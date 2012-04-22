@@ -127,6 +127,12 @@ public class KNN {
 	    thresholds.add(thresholdDefault);
 	}
     }
+    
+    public List<String> getListofLabels()
+    {
+	return labels;
+    }
+
     public String getLabelFromString(String datainput)
     {
 	String reg = "\\{.*\\}";
@@ -426,7 +432,7 @@ public class KNN {
 	catch (Exception e)
 	{
 	    System.err.println("Error: " + e.getMessage());
-	} 
+	}
     }
     public double LOOCV()
     {

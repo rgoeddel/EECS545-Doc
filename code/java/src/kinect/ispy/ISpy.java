@@ -188,11 +188,25 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				return;
 			}
 		}
-		System.out.println("NO INITIAL MATCH---");
+		System.out.println("NO INITIAL MATCH!!");
 		// No match initially found: create list of objects to consider
 		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
 		// best options to consider match atleast one best
 		
+		for (SpyObject obj : objects.values())
+		{
+		    if (obj.matchesBestShape(labels))
+		    {
+			
+		    }
+		    else if (obj.matchesBestColor(labels))
+		    {
+			
+		    }
+		}
+		
+		//if matches bestcolor
+/*
 		for (SpyObject obj : objects.values()) {
 			if (!consider.contains(obj)
 					&& obj.matchesOneAndSecondBest(labels, 1))
@@ -210,6 +224,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				System.out.println(obj.getShape() + " " + obj.getColor());
 			}
 		}
+*/
 		Collections.sort(consider);
 
 		// secondary options accept both second best
