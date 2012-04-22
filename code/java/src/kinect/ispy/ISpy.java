@@ -33,7 +33,7 @@ import java.awt.image.*;
  *  - Add features for shape recognition to FeatureVec
  */
 enum ISpyMode {
-	NORMAL, ADD_COLOR, ADD_SHAPE
+	NORMAL, ADD_COLOR, ADD_SHAPE, ADD_SIZE
 }
 
 public class ISpy extends JFrame implements LCMSubscriber {
@@ -58,6 +58,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private JTextField inputField;
 	private JButton addColorButton;
 	private JButton addShapeButton;
+	private JButton addSizeButton;
 	private TrainingBox trainingBox;
 
 	static LCM lcm = LCM.getSingleton();
@@ -69,6 +70,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private Map<Integer, SpyObject> objects;
 	private KNN colorKNN;
 	private KNN shapeKNN;
+	private KNN sizeKNN;
 
 	private ISpyMode curMode = ISpyMode.NORMAL;
 
@@ -81,7 +83,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 
 		addColorButton = new JButton("Add Color");
 		gbc.fill = GridBagConstraints.BOTH;
-		gbc.weightx = .5;
+		gbc.weightx = .3;
 		gbc.weighty = .05;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
@@ -97,8 +99,6 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		});
 
 		addShapeButton = new JButton("Add Shape");
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.weightx = .5;
 		gbc.gridx = 1;
 		this.add(addShapeButton, gbc);
 		addShapeButton.addActionListener(new ActionListener() {
@@ -110,11 +110,24 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				trainingBox.setVisible(true);
 			}
 		});
+		
+		addSizeButton = new JButton("Add Size");
+		gbc.gridx = 2;
+		this.add(addSizeButton, gbc);
+		addSizeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				curMode = ISpyMode.ADD_SIZE;
+				trainingBox.setTitle("Add Size Label");
+				trainingBox.clearText();
+				trainingBox.setVisible(true);
+			}
+		});
 
 		VisWorld visWorld = new VisWorld();
 		sceneRenderer = new SceneRenderer(visWorld, this);
 		gbc.fill = GridBagConstraints.BOTH;
-		gbc.gridwidth = 2;
+		gbc.gridwidth = 3;
 		gbc.weighty = .95;
 		gbc.weightx = 1;
 		gbc.gridx = 0;
@@ -125,14 +138,15 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		gbc.ipadx = 20;
 		gbc.gridwidth = 1;
 		gbc.weighty = .05;
-		gbc.weightx = .5;
+		gbc.weightx = .3;
 		gbc.gridx = 0;
 		gbc.gridy = 2;
 		gbc.insets = new Insets(20, 20, 10, 20);
 		this.add(ispyLabel, gbc);
 
 		inputField = new JTextField();
-		gbc.weightx = .5;
+		gbc.gridwidth = 2;
+		gbc.weightx = .6;
 		gbc.gridx = 1;
 		gbc.insets = new Insets(10, 20, 10, 20);
 		this.add(inputField, gbc);
@@ -162,8 +176,10 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				"/home/bolt/mlbolt/code/java/color_features.dat");
 		shapeKNN = new KNN(10, 15,
 				"/home/bolt/mlbolt/code/java/shape_features.dat");
+		sizeKNN = new KNN(5, 2, "/home/bolt/mlbolt/code/java/size_features.dat");
 		colorKNN.loadData(false);
 		shapeKNN.loadData(true);
+		sizeKNN.loadData(false);
 
 		this.setVisible(true);
 	}
@@ -189,7 +205,6 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		// No match initially found: create list of objects to consider
 		ArrayList<SpyObject> considerCalc = new ArrayList<SpyObject>();
 		// best options to consider match atleast one best
-		
 		ArrayList<Double> considerConf = new ArrayList<Double>();
 		//TODO sort hack
 		ArrayList<Double> considerConfSortHack = new ArrayList<Double>();
@@ -216,6 +231,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			considerConfSortHack.add(wrongconf);
 		    }
 		}
+		
 		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
 		Collections.sort(considerConfSortHack);
 		for (Double d : considerConfSortHack)
@@ -295,8 +311,15 @@ public class ISpy extends JFrame implements LCMSubscriber {
 					}
 					obj.boxColor = Color.cyan;
 					break;
+				case ADD_SIZE:
+					label = String.format("%s {%s}", obj.lastObject.sizeFeatures,
+							trainingBox.getText());
+					synchronized (sizeKNN) {
+						sizeKNN.add(label, true);
+						}
+						obj.boxColor = Color.cyan;
+					break;
 				}
-
 				break;
 			}
 		}
@@ -342,7 +365,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			return;
 		}
 		ArrayList<ObjectInfo> objs = new ArrayList<ObjectInfo>();
-		segmenter.unionFind();
+		segmenter.segmentFrame();
 
 		Set<Integer> objsToRemove = new HashSet<Integer>();
 		for (Integer id : objects.keySet()) {
@@ -356,7 +379,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 
 			obj.colorFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.COLOR);
 			obj.shapeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SHAPE);
-			ConfidenceLabel color, shape;
+			obj.sizeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SIZE);
+			ConfidenceLabel color, shape, size;
 			ArrayList<ConfidenceLabel> shapeThresholds;
 			synchronized (colorKNN) {
 				color = colorKNN.classify(obj.colorFeatures);
@@ -364,6 +388,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 			synchronized (shapeKNN) {
 				shape = shapeKNN.classify(obj.shapeFeatures);
+			}
+			synchronized (sizeKNN){
+				size = sizeKNN.classify(obj.sizeFeatures);
 			}
 
 			if (color.getLabel().equals("black")) {
@@ -381,6 +408,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 			spyObject.updateColorConfidence(color);
 			spyObject.updateShapeConfidence(shape, shapeThresholds);
+			spyObject.updateSizeConfidence(size);
 			spyObject.pos = pos;
 			spyObject.bbox = projBBox;
 			spyObject.lastObject = obj;
@@ -391,8 +419,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		}
 	}
 
-	public static void main(String args[]) {	
-		
+	public static void main(String args[]) {
+
 		// Set up data aggregator and segmenter
 		DataAggregator da = new DataAggregator(false);
 		da.colorThresh = initialColorThresh;

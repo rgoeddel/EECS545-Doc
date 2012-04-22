@@ -47,6 +47,7 @@ public class Segment
     public void segmentFrame()
     {
         unionFind();
+        da.newFrame();
     }
 
     /** Get the difference in the z-direction of two pixels. **/
@@ -104,7 +105,7 @@ public class Segment
                     if (loc3>=0 && loc3<width*height){
                         double[] p2 = da.currentPoints.get(loc3);
                         if(!Arrays.equals(p2, new double[4])
-                           && (depthDiff(p1, p2) < da.unionThresh
+                           && (dist(p1, p2) < da.unionThresh
                                || colorDiff(p1[3], p2[3]) < da.colorThresh)){
                             da.ufs.connectNodes(loc1, loc3);
                         }

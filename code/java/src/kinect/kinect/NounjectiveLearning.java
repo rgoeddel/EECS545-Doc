@@ -31,8 +31,8 @@ public class NounjectiveLearning implements LCMSubscriber
     static double initialUnionThresh = 0.5;
     static double  initialRansacThresh = .02;
     static double  initialRansacPercent = .1;
-    
-    
+
+
     double intensityThreshold = .12;
     int divider = 320;
 
@@ -47,7 +47,7 @@ public class NounjectiveLearning implements LCMSubscriber
     KNN knnColor = new KNN(30, 6, "color_features.dat");
     KNN knnShape = new KNN(10, 15, "shape_features.dat");
     //Classifier classColor = new Classifier();
-    
+
     final static int[] viewBorders = new int[]{75, 150, 575, 400};
     final static Rectangle viewRegion = new Rectangle(viewBorders[0], viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
 
@@ -105,7 +105,7 @@ public class NounjectiveLearning implements LCMSubscriber
                     else if (name.equals("dSlider")) {
                     	divider =  pg.gi("dSlider");
                     }
-                    
+
                 }
             });
 
@@ -139,7 +139,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
         da.currentPoints = new ArrayList<double[]>();
         da.coloredPoints = new ArrayList<double[]>();
-        
+
 //        System.out.println("mat");
 //        for(int i = 0; i < 4; i++){
 //        	System.out.println(KinectCalibrator.v2s(KUtils.kinectToWorldXForm[i]));
@@ -153,18 +153,17 @@ public class NounjectiveLearning implements LCMSubscriber
                 double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
                 double[] pWorld = KUtils.getWorldCoordinates(new double[]{
                         pKinect[0], pKinect[1], pKinect[2]});
-                
+
                 //da.currentPoints.add(new double[]{pWorld[0], pWorld[1], pWorld[2], pKinect[3]});
                 da.currentPoints.add(pKinect);
             }
         }
-
         HashMap<Integer, String> features = sendMessage();
         draw3DImage(features);
         draw2DImage();
     }
-    
-    
+
+
 
     public HashMap<Integer, String> sendMessage()
     {
@@ -181,11 +180,10 @@ public class NounjectiveLearning implements LCMSubscriber
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
             double[] bb = FeatureExtractor.boundingBox(obj.points);
-            
             double[] min = KUtils.getWorldCoordinates(new double[]{bb[0], bb[1], bb[2]});
-            double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});    
-            
-            
+            double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});
+
+
             double[] xyzrpy = new double[]{0, 0, 0, 0, 0, 0};
             for(int i = 0; i < 3; i++){
             	xyzrpy[i] = (min[i] + max[i])/2;
@@ -194,7 +192,6 @@ public class NounjectiveLearning implements LCMSubscriber
             // Get features and corresponding classifications for this object
             String colorInput = FeatureExtractor.getFeatureString(obj, FeatureType.COLOR);
             String shapeInput = FeatureExtractor.getFeatureString(obj, FeatureType.SHAPE);
-            
 		    //String color = classColor.classify(colorInput);
 		    ConfidenceLabel colorCL = knnColor.classify(colorInput);
 		    String color = colorCL.getLabel(); // Currenty only one being returned
@@ -246,9 +243,12 @@ public class NounjectiveLearning implements LCMSubscriber
 
     public void draw3DImage(HashMap<Integer, String> features)
     {
-        if(da.currentPoints.size() <= 0){ return; }
+        if(da.currentPoints.size() <= 0 && da.coloredPoints.size() <= 0){
+            System.out.println("No points found.");
+            return;
+        }
 
-        segment.unionFind();
+        segment.segmentFrame();
 
         VisColorData cd = new VisColorData();
         VisVertexData vd = new VisVertexData();
@@ -260,7 +260,7 @@ public class NounjectiveLearning implements LCMSubscriber
         Collection c = da.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
-	    VzText text = new VzText(/*Integer.toString(obj.repID)+"-"+*/features.get(obj.repID));
+            VzText text = new VzText(Integer.toString(obj.repID));//+"-"+*/features.get(obj.repID));
             double[] bb = FeatureExtractor.boundingBox(obj.points);
             double[] xyz = new double[]{(bb[0]+bb[3])/2.0,
                                            (bb[1]+bb[4])/2.0,
@@ -289,7 +289,7 @@ public class NounjectiveLearning implements LCMSubscriber
         }
         return colorData;
     }
-    
+
     public double getDelta(double[][][] data, int x, int y, int scale, int channel){
     	double min = data[y][x][channel];
     	double max = data[y][x][channel];
@@ -310,7 +310,7 @@ public class NounjectiveLearning implements LCMSubscriber
     	    			max = data[yp][xp][channel];
     	    		}
     	    	}
-    			
+
     		}
     	}
     	return max - min;
@@ -318,31 +318,29 @@ public class NounjectiveLearning implements LCMSubscriber
 
     public void draw2DImage()
     {
-        if(da.currentPoints.size() <= 0){ return; }
+        if(da.currentPoints.size() <= 0 && da.coloredPoints.size() <= 0){
+            System.out.println("No points found.");
+            return;
+        }
 
-       BufferedImage im = new BufferedImage(ks.WIDTH, ks.HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage im = new BufferedImage(ks.WIDTH, ks.HEIGHT, BufferedImage.TYPE_3BYTE_BGR);
         byte[] buf = ((DataBufferByte)(im.getRaster().getDataBuffer())).getData();
         for (int i = 0; i < buf.length; i+=3) {
             buf[i] = ks.rgb[i+2];   // B
             buf[i+1] = ks.rgb[i+1]; // G
             buf[i+2] = ks.rgb[i];   // R
         }
-        
+
         for(Map.Entry<Integer, ObjectInfo> entry : da.objects.entrySet()){
         	//im = entry.getValue().getImage();
         }
         //double[] features = PCA.getFeatures(im, 5);            System.err.println("ERR: Opts error - " + opts.getReason());
 
-        //for(int i = 0; i < features.length; i++){
-        //	System.out.print(features[i] + ", ");
-        //}
-        //System.out.print("\n");
-        
         double[][][] colorData = getColorData(im, im.getWidth(), im.getHeight());
-        
+
         for(int x = 0; x < im.getWidth(); x++){
-    		for(int y = 0; y < im.getHeight(); y++){  
-            	float intensity;    
+    		for(int y = 0; y < im.getHeight(); y++){
+            	float intensity;
         		double maxDelta = 0;
         		for(int channel = 0; channel < 3; channel++){
         			double delta = getDelta(colorData, x, y, 1, channel)/255;
@@ -355,20 +353,20 @@ public class NounjectiveLearning implements LCMSubscriber
         			// Only use intensity (grayscale)
             		intensity = (float)getDelta(colorData, x, y, 1, 3)/255;
         		}
-        		
-        		
+
+
         		if(x < divider){
         			intensity = (intensity > intensityThreshold ? 1 : 0);
         		} else {
-        			
+
         		}
-        		
+
         		if(viewRegion.contains(x, y)){
-            		//im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());	
+            		//im.setRGB(x, y, (new Color(intensity, intensity, intensity)).getRGB());
         		} else {
         			//im.setRGB(x, y, Color.black.getRGB());
         		}
-        		
+
         		//
 
         	}

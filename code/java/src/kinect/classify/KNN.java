@@ -437,14 +437,22 @@ public class KNN {
     public double LOOCV()
     {
 	int correct = 0;
+	int total = 0;
 	for (int i = 0; i < data.size(); i++)
 	{
 	    TrainingSample out = data.get(i);
 	    String label = testSample(out);
+	    if (label.equals("unknown"))
+	    {
+	    	continue;
+	    }
 	    if (label.equals(out.getLabel()))
-		correct++;
+	    {
+	    	correct++;
+	    }
+	    total++;
 	}
-	return (double)correct/(double)data.size();
+	return (double)correct/(double)total;
     }
     
     public String testSample(TrainingSample test)
@@ -455,6 +463,7 @@ public class KNN {
 	if (!nearest.remove(test))
 	{
 	    System.out.println("ERROR in Leave One out Cross Validation");
+	    return "unknown";
 	}
 	if (nearest.isEmpty())
 	{

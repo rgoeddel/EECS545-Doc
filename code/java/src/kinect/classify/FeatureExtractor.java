@@ -94,9 +94,35 @@ public class FeatureExtractor {
 	}
 	
 	public static ArrayList<Double> getSizeFeatures(ArrayList<double[]> points){
-		double[] bbox = boundingBox(points);
 		ArrayList<Double> features = new ArrayList<Double>();
+		if(points.size() == 0){
+			features.add(0.0);
+			features.add(0.0);
+			return features;
+		}
+		
+		// Feature: Length of bbox diagonal
+		double[] bbox = boundingBox(points);
 		features.add(Math.sqrt(LinAlg.normF(new double[]{bbox[3] - bbox[0], bbox[4] - bbox[1], bbox[5] - bbox[2]})));
+		
+		
+		// Feature: average distance from the mean
+		double[] mean = new double[4];
+		for(double[] pt : points){
+			mean = LinAlg.add(mean, pt);
+		}
+		mean = LinAlg.scale(mean, 1.0/points.size());
+		
+		double distSum = 0;
+		for(double[] pt : points){
+			double[] diff = LinAlg.subtract(pt, mean);
+			diff[3] = 0;
+			distSum += Math.sqrt(LinAlg.normF(diff));
+		}
+		distSum /= points.size();
+		
+		features.add(distSum);		
+		
 		return features;
 	}
 
