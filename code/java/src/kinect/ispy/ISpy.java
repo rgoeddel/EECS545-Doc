@@ -263,49 +263,25 @@ public class ISpy extends JFrame implements LCMSubscriber
 		    String label = String.format("%s {%s}", obj.lastObject.colorFeatures, trainingBox.getText());
 		    System.out.println(label);
 		    synchronized(colorKNN){
-			colorKNN.add(label);
+			colorKNN.add(label, false);
 		    }
 		    obj.boxColor = Color.cyan;
 		    break;
 		case ADD_SHAPE:
 		    label = String.format("%s {%s}", obj.lastObject.shapeFeatures, trainingBox.getText());
 		    synchronized(shapeKNN){
-			shapeKNN.add(label);
-		    }
+			shapeKNN.add(label, true);
+					}
 		    obj.boxColor = Color.cyan;
 		    break;
 		}
-<<<<<<< HEAD
-		for(SpyObject obj : objects.values()){
-			if(obj.bbox.contains(x, y)){
-				switch(curMode){
-				case ADD_COLOR:
-					String label = String.format("%s {%s}", obj.lastObject.colorFeatures, trainingBox.getText());
-					System.out.println(label);
-					synchronized(colorKNN){
-						colorKNN.add(label, false);
-					}
-					obj.boxColor = Color.cyan;
-					break;
-				case ADD_SHAPE:
-					label = String.format("%s {%s}", obj.lastObject.shapeFeatures, trainingBox.getText());
-					synchronized(shapeKNN){
-						shapeKNN.add(label, true);
-					}
-					obj.boxColor = Color.cyan;
-					break;
-				}
-=======
->>>>>>> 94f583b0d0f7649b8c70e9073e44bbdb4787d361
-				
-				
-				
+		
 				
 		break;
 	    }
 	}
     }
-
+    
 	
     /** Upon recieving a message from the Kinect, translate each depth point into
      ** x,y,z space and find the pixel color for it.  Then draw it.
