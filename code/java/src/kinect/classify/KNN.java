@@ -79,9 +79,6 @@ class TrainingSample
     }
     public double distance(Point pt)
     {
-    		//TODO better than this hack
-    		if (p == null || pt == null)
-    			return 10000;
 	return p.distance(pt);
     }
 }
@@ -89,12 +86,18 @@ class TrainingSample
 public class KNN {
     
     List<TrainingSample> data;
-String datafile;
+    String datafile;
     //thresholds and respective labes
     List<Double> thresholds;
     List<String> labels;
+    
     int Km;
     int dim;
+
+    //constants
+    final double thresholdDefault =0.60;
+    final double maxThresholdDefault =0.95;
+    final double minThresholdDefault =0.10;
     public KNN(int Km, int dim, String datafile)
     {
 	this.Km = Km;
@@ -111,7 +114,7 @@ String datafile;
 	if (!labels.contains(label))
 	{
 	    labels.add(label);
-	    thresholds.add(0.6); //TODO magic number default threshold
+	    thresholds.add(thresholdDefault); 
 	}
     }
     
@@ -121,7 +124,7 @@ String datafile;
 	if (!labels.contains(label))
 	{
 	    labels.add(label);
-	    thresholds.add(0.6); //TODO magic number default threshold
+	    thresholds.add(thresholdDefault);
 	}
     }
     public String getLabelFromString(String datainput)
@@ -199,12 +202,12 @@ String datafile;
 
 	while (m.find() && i < dim)
 	{
-			if (i == 0)
-				first = Double.valueOf(m.group()).doubleValue();
-			else if (i>0 && i < 8)
-				pt1.add(Double.valueOf(m.group()).doubleValue());
-			else
-				pt2.add(Double.valueOf(m.group()).doubleValue());
+	    if (i == 0)
+		first = Double.valueOf(m.group()).doubleValue();
+	    else if (i>0 && i < 8)
+		pt1.add(Double.valueOf(m.group()).doubleValue());
+	    else
+		pt2.add(Double.valueOf(m.group()).doubleValue());
 	    i++;
 	}
 	if (i != dim)
@@ -219,33 +222,33 @@ String datafile;
 	data.add(new TrainingSample(new Point(pt, dim), label));
 	if (false)
 	{
-		pt.clear();
-		pt.add(first);
-		pt.addAll(pt2);
-		pt.addAll(pt1);
-		data.add(new TrainingSample(new Point(pt, dim), label));
+	    pt.clear();
+	    pt.add(first);
+	    pt.addAll(pt2);
+	    pt.addAll(pt1);
+	    data.add(new TrainingSample(new Point(pt, dim), label));
 		
-		Collections.reverse(pt1);
-		Collections.reverse(pt2);
-		pt.clear();
-		pt.add(first);
-		pt.addAll(pt1);
-		pt.addAll(pt2);
-		data.add(new TrainingSample(new Point(pt, dim), label));
-		pt.clear();
-		pt.add(first);
-		pt.addAll(pt2);
-		pt.addAll(pt1);
-		data.add(new TrainingSample(new Point(pt, dim), label));
+	    Collections.reverse(pt1);
+	    Collections.reverse(pt2);
+	    pt.clear();
+	    pt.add(first);
+	    pt.addAll(pt1);
+	    pt.addAll(pt2);
+	    data.add(new TrainingSample(new Point(pt, dim), label));
+	    pt.clear();
+	    pt.add(first);
+	    pt.addAll(pt2);
+	    pt.addAll(pt1);
+	    data.add(new TrainingSample(new Point(pt, dim), label));
 	}
 	if (!labels.contains(label))
 	{
 	    System.out.println("New label: " + label);
 	    labels.add(label);
-	    thresholds.add(0.6); //TODO magic number default threshold
+	    thresholds.add(thresholdDefault); 
 	}
 	
- }
+    }
     public void add(TrainingSample ts)
     {
 	data.add(ts);
@@ -253,7 +256,7 @@ String datafile;
 	if (!labels.contains(label))
 	{
 	    labels.add(label);
-	    thresholds.add(0.6); //TODO magic number default threshold
+	    thresholds.add(thresholdDefault); 
 	}
     }
     public void adjustThreshold(String label, int direction)
@@ -268,11 +271,13 @@ String datafile;
 	{
 	    double threshold = thresholds.get(index);
 	    
-	    //TODO magic numbers
+	    
 	    if (direction > 0)
-		threshold = threshold + Math.pow(0.9 - threshold, 2);
+		threshold = threshold + 
+		    Math.pow(maxThresholdDefault - threshold, 2);
 	    else
-		threshold = threshold - Math.pow(threshold - 0.1, 2);
+		threshold = threshold - 
+		    Math.pow(threshold - minThresholdDefault, 2);
 	    //System.out.println(threshold);
 	    thresholds.set(index, threshold);
 	}
@@ -303,6 +308,10 @@ String datafile;
     public String getNewLabel(int k, Point p)
     {
 	List<ConfidenceLabel> results = getMostConfidentLabels(k, p);
+	if (results == null)
+	{
+	    return "unknown";
+	}
 	int index = -1;
 	ConfidenceLabel best = results.get(0);
 	String nearestLabel = best.getLabel();
@@ -393,9 +402,9 @@ String datafile;
 	return cl;	
     }
     
-  public void loadData(boolean shape)
+    public void loadData(boolean shape)
     {
-  	 try
+	try
 	{    	    
 	    FileInputStream fstream = 
 		new FileInputStream(this.datafile);
@@ -407,9 +416,9 @@ String datafile;
 	    while ((strLine = br.readLine()) != null)
 	    {
 	    	if(strLine.contains("doughnut"))
-	    		continue;
+		    continue;
 	    	//if (strLine.contains("triangle"))
-	    			//continue;
+		//continue;
 	    	add(strLine, shape);
 	    }
 	    in.close();
@@ -419,24 +428,94 @@ String datafile;
 	    System.err.println("Error: " + e.getMessage());
 	} 
     }
+    public double LOOCV()
+    {
+	int correct = 0;
+	for (int i = 0; i < data.size(); i++)
+	{
+	    TrainingSample out = data.get(i);
+	    String label = testSample(out);
+	    if (label.equals(out.getLabel()))
+		correct++;
+	}
+	return (double)correct/(double)data.size();
+    }
+    
+    public String testSample(TrainingSample test)
+    {
+	Point testPoint = test.getPoint();
+	List<TrainingSample> nearest = getKNearestNeighbors(this.Km + 1, testPoint);
+	// remove self from testing
+	if (!nearest.remove(test))
+	{
+	    System.out.println("ERROR in Leave One out Cross Validation");
+	}
+	if (nearest.isEmpty())
+	{
+	    return "unknown";
+	}
+	
+	List<ConfidenceLabel> cl = new ArrayList<ConfidenceLabel> ();
+	List<String> answers = new ArrayList<String> ();
+	
+	for (int i = 0; i < nearest.size(); i++)
+	{
+	    TrainingSample ts = nearest.get(i);
+	    
+	    String label = ts.getLabel();
+	    if (answers.contains(label))
+		continue;
+	    
+	    answers.add(label);
+	    
+	    int count = 1;
+	    for (int j = 0; j < nearest.size(); j++)
+	    {
+		if (i == j)
+		{
+		    continue;
+		}
+		TrainingSample ts2 = nearest.get(j);
+    
+		if (label.equals(ts2.getLabel()))
+		{
+		    count++;
+		}
+	    }
+	    
+	    cl.add(new ConfidenceLabel(((double) count)/
+				       ((double) nearest.size()), label));
+	}
+	
+	Collections.sort(cl);
+	ConfidenceLabel best = cl.get(0);
+	return best.getLabel();
+    }
+
     public ConfidenceLabel classify(String inputdata)
     {
 	Point test = getPointFromString(inputdata, this.dim);
+	if (test == null)
+	{
+	    return new ConfidenceLabel(0.0, "unknown");
+	}
+	
 	List<ConfidenceLabel> cl = getMostConfidentLabels(this.Km, test);
+	if (cl == null)
+	{
+	    return new ConfidenceLabel(0.0, "unknown");
+	}
 	ConfidenceLabel c = cl.get(0);
-	//String ans = c.getLabel();
-	//ans = ans + " " + c.getConfidence();
-	//return getNewLabel(10, test);
 	return c;
     }
     /*
-    public static void main(String []args)
-    {
-	KNN k = new KNN(15,"");
-	k.loadData();
-	String label = k.classifyShape("[0.145120 0.058048 0.406336 0.406336 0.087072 0.029024 0.174144 0.261216 0.145120 0.087072 0.058048 0.058048 0.087072 0.261216 ]");
-	System.out.println(label);
-    }
+      public static void main(String []args)
+      {
+      KNN k = new KNN(15,"");
+      k.loadData();
+      String label = k.classifyShape("[0.145120 0.058048 0.406336 0.406336 0.087072 0.029024 0.174144 0.261216 0.145120 0.087072 0.058048 0.058048 0.087072 0.261216 ]");
+      System.out.println(label);
+      }
     */
     
 }
