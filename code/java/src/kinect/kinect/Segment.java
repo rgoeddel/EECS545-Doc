@@ -21,6 +21,7 @@ public class Segment
     Boolean colorSegments;
     int width, height;
     double OBJECT_THRESH = 250;
+    Scene scene;
 
     static Random rand = new Random(56436337);
     static double[] t = new double[] { -0.0254, -0.00013, -0.01218 }; // Added .01 to t[2] here rather than below
@@ -35,6 +36,7 @@ public class Segment
     public Segment(DataAggregator dataAg, Boolean colorSegments_)
     {
         da = dataAg;
+        scene = new Scene(da);
         colorSegments = colorSegments_;
         width = da.WIDTH;
         height = da.HEIGHT;
@@ -47,6 +49,7 @@ public class Segment
     public void segmentFrame()
     {
         unionFind();
+        da.newFrame();
     }
 
     /** Get the difference in the z-direction of two pixels. **/
@@ -104,7 +107,7 @@ public class Segment
                     if (loc3>=0 && loc3<width*height){
                         double[] p2 = da.currentPoints.get(loc3);
                         if(!Arrays.equals(p2, new double[4])
-                           && (depthDiff(p1, p2) < da.unionThresh
+                           && (dist(p1, p2) < da.unionThresh
                                || colorDiff(p1[3], p2[3]) < da.colorThresh)){
                             da.ufs.connectNodes(loc1, loc3);
                         }

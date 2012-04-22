@@ -205,19 +205,19 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		// No match initially found: create list of objects to consider
 		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
 		// best options to consider match atleast one best
-		
+
 		for (SpyObject obj : objects.values())
 		{
 		    if (obj.matchesBestShape(labels))
 		    {
-			
+
 		    }
 		    else if (obj.matchesBestColor(labels))
 		    {
-			
+
 		    }
 		}
-		
+
 		//if matches bestcolor
 /*
 		for (SpyObject obj : objects.values()) {
@@ -228,7 +228,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				consider.add(obj);
 			}
 		}
-		
+
 		// matches or very unconfident
 		for (SpyObject obj : objects.values()) {
 			if (!consider.contains(obj) && obj.matchesOrUnconfident(labels))
@@ -372,7 +372,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			return;
 		}
 		ArrayList<ObjectInfo> objs = new ArrayList<ObjectInfo>();
-		segmenter.unionFind();
+		segmenter.segmentFrame();
 
 		Set<Integer> objsToRemove = new HashSet<Integer>();
 		for (Integer id : objects.keySet()) {
@@ -426,8 +426,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		}
 	}
 
-	public static void main(String args[]) {	
-		
+	public static void main(String args[]) {
+
 		// Set up data aggregator and segmenter
 		DataAggregator da = new DataAggregator(false);
 		da.colorThresh = initialColorThresh;
