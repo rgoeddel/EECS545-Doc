@@ -254,6 +254,14 @@ used.  The result is determined by which class is selected by most classifiers.
 \label{tbl:testresults}
 \end{table}
 
+\section{Methodology}
+
+Once an object was segmented we extracted relevant features in order to classify color, size, and shape. We considered objects that were of a single color, therefore average red, green, blue, hue, saturation, and value levels across the pixels were used as a six-dimensional feature vector. For size we calcuated the diagonal of the 3D axis-aligned bounding box and used that as one of our features. The second feature was the average distance of the points from the centroid. Having the point-cloud data from the Kinect allowed us to compute those features more accurately in three-dimensions and saved us from having to do more complicated depth estimates. 
+
+Correctly classifying shapes required much more complicated features. First we projected the point-cloud back onto the image plane. Next we transformed the image into a canonical representation. To do this we applied Principal Component Analysis to find the axis the points were most spread out along, and rotated the image so that axis was horizontal. An axis-aligned bounding box was found for the image and its heigh and width were scaled to unit lenghts. To extract features we took evenly-spaced points from the top and bottom edges of the box and calculated the vertical distance from each point to the image. This process is illustrated by [FIGURE]. We used seven sample points along the top and bottom; experimental evaluation showed no signficant improvement with additional samples. In addition, we calculated the ratio of the width and height before scaling to get an idea of how elongated the shape was. 
+
+
+
 
 \section{Conclusion}
 %\xxx{Summary of your progress and your final expected goal (what do you expect
