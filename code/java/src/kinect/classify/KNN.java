@@ -226,7 +226,7 @@ public class KNN {
 	pt.addAll(pt1);
 	pt.addAll(pt2);
 	data.add(new TrainingSample(new Point(pt, dim), label));
-	if (false)
+	if (shape)
 	{
 	    pt.clear();
 	    pt.add(first);
