@@ -165,7 +165,31 @@ high-level reasoning and language processing. Our Soar agent will interpret the
 commands given by the users, determine which object is being described, and give
 the appropriate commands to the robotic arm.
 
+\meh{maybe this belongs in introduction? or did someone already write this}
 
+One of the difficulties with reasoning about real objects is that the world is 
+partially observable. Objects can have a dramatically different appearance at 
+different orientations.  Naturally when given such an object, a human may move 
+their head around to gain more information and confidence as to what the object is.  Our system has a fixed vision angle, but it is possible for it to 
+manipulate objects to gain information on objects whose appearance has high 
+orientation dependency.  For this purpose a confidence threshold system was 
+developed to learn what objects may have high uncertainty, and therefor would 
+be good candidate for manipulation.  When the system is queried for an object 
+that it cannot currently see, it should manipulate an uncertain object with the 
+highest probability of actually being the queried object.
+
+All attributes are given the same default confidence threshold.  When an object 
+is correctly labeled and verified by the user, the thresholds for those labels 
+is decreased.  When an object manipulation correctly reveals that it was 
+previously mislabeled the associated label thresholds are increased.  To 
+determine the likelihood of a mislabel, the confidence of a label, calculated 
+from the classification system, is compared to the threshold for that shape.  
+If the confidence exceeds the threshold then it is reported as unlikely to be a 
+mislabel.  For example in our system the rectangle label is commonly misplaced 
+on objects presented head on, so the learned threshold confidence for rectangle 
+is very high.
+
+\xxx{equations}
 \section{Experimental Results}
 
 \subsection{Data Collection and Training}
