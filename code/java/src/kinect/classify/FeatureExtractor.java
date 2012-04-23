@@ -86,7 +86,7 @@ public class FeatureExtractor {
 	}
 	
 	public static ArrayList<Double> getShapeFeatures(BufferedImage image){
-		return PCA.getFeatures(image, 5);
+		return PCA.getFeatures(image, 7);
 	}
 
 	public static ArrayList<Double> getSizeFeatures(ObjectInfo object) {
