@@ -17,7 +17,6 @@
 %    -- Mention bolt
 %    -- Confidence and uncertainty
 %-- Prior Work on nudging (Everyone)
-%    -- move final paragraph to methodology
 %-- Methodology
 %    -- Info about Kinect (Rob)
 %    -- Object Detection and Tracking (Lauren)
@@ -33,7 +32,6 @@
 %-- Future work section
 %    -- Expand on BOLT
 %-- Conclusion
-%-- ``RGB-D'' (Lauren)
 
 
 
@@ -59,7 +57,7 @@ Of particular interest is the desire to interact with robots or agents using
 natural language. This gives humans a more natural and effective way of teaching,
 commanding, and interacting with robotic agents or computers. Our work is
 designed to process images and provide descriptions of objects that can then be
-used in interactions with humans. We use images from an RGBD camera in order to
+used in interactions with humans. We use images from an RGB-D camera in order to
 classify properties of objects including size, shape, and color. These
 descriptions are then fed into a higher-level agent which handles the human
 interaction. We specifically use a simple I-Spy game to allow users to refer to
@@ -88,7 +86,7 @@ Our long-term goal is to leverage machine learning techniques in order to train
 a system to know a small vocabulary of nouns, adjectives, and actions. As a proof
 of concept, we develop a system that can play the children's game ``I spy'' using
 a robotic arm for pointing at and interacting with objects and a Microsoft Kinect
-which acts as the ``eyes'' of the system, giving RGBD data about the scene for
+which acts as the ``eyes'' of the system, giving RGB-D data about the scene for
 classification. To play I Spy, a collection of objects is placed in the view
 of the camera and a person gives a description of one of the objects. The agent
 then determines which object is most likely to match the description, and points
@@ -132,7 +130,7 @@ addition of depth can help disambiguate situations that would be very difficult
 with a normal camera image alone. Depth can make the determination of an object’s
 underlying geometry much easier, leading to better identification
 ~\cite{marton2010hierarchical}.
-Previous work has successfully incorporated such cameras (often called RGBD
+Previous work has successfully incorporated such cameras (often called RGB-D
 cameras) with object recognition in indoors domains featuring common household
 objects~\cite{marton2010hierarchical, lai2011sparse}.
 
@@ -162,18 +160,6 @@ objects. We are unaware of previous work that uses interaction with objects to
 see them from new angles and thus obtain additional information to make guesses
 about object descriptions more confident.
 
-During this work we explored several options for extracting features from
-objects before settling on the method described in this paper. We experimented
-with ORB, a rotation invariant feature extractor similar to SIFT and SURF
-~\cite{rublee2011orb}. Additionally we tested several feature detectors from
-OpenCV, including their square detector~\cite{opencv_library}. We also explored
-using RANSAC to discover simple shape types (such as planes, curves, and spheres),
-in order to determine the number of faces and edges each object has. This work
-was based off the RANSAC algorithms of Schnabel et
-al~\cite{schnabel2007efficient}. Although these and other feature detectors are
-frequently used in object recognition and learning tasks, we ultimately chose to
-use our own PCA-based method which resulted in more accurate guesses from the
-agent than the other methods.
 
 \section{Methodology}
 %\xxx{How are you going to solve this problem? Why should the proposed method
@@ -202,7 +188,19 @@ the average distance of the points from the centroid. Having the point-cloud dat
 the Kinect allowed us to compute those features more accurately in three-dimensions
 and saved us from having to do more complicated depth estimates.
 
-Correctly classifying shapes required much more complicated features. First we
+Correctly classifying shapes required much more complicated features.
+During this work we explored several options for extracting features from
+objects before settling on the method described in this paper. We experimented
+with ORB, a rotation invariant feature extractor similar to SIFT and SURF
+~\cite{rublee2011orb}. Additionally we tested several feature detectors from
+OpenCV, including their square detector~\cite{opencv_library}. We also explored
+using RANSAC to discover simple shape types (such as planes, curves, and spheres),
+in order to determine the number of faces and edges each object has. This work
+was based off the RANSAC algorithms of Schnabel et
+al~\cite{schnabel2007efficient}. Although these and other feature detectors are
+frequently used in object recognition and learning tasks, we ultimately chose to
+use our own PCA-based method which resulted in more accurate guesses from the
+agent than the other methods. First we
 projected the point-cloud back onto the image plane. Next we transformed the image
 into a canonical representation. To do this we applied Principal Component Analysis to
 find the axis the points were most spread out along, and rotated the image so that
@@ -217,14 +215,6 @@ and height before scaling to get an idea of how elongated the shape was.
 of the process?}
 
 \subsection{Classification}
-We use supervised learning to generate a description of each object in the ``play
-area'' using training data we collected to predict descriptions of new objects.
-
-We gathered our own training data by collecting hundreds of RGBD frames of objects
-of each color, size, and shape in varying positions. Each object is manually
-labeled with descriptors that include color, shape, and size, and these labels
-were saved with their corresponding feature vectors.
-
 Initially we used SVM classification to validate our method, but we have since
 moved to a K-nearest neighbor approach.  With the K-nearest neighbor algorithm
 it is easy to add another example to the training, without recreating the
@@ -267,13 +257,13 @@ is very high.
 \section{Experimental Results}
 
 \subsection{Data Collection and Training}
-We have acquired a large variety of children's foam blocks in many shapes, sizes,
+We acquired a large variety of children's foam blocks in many shapes, sizes,
 and colors to act as our objects for classification. A small subset of the
-blocks can be seen in Figure~\ref{fig:blocks}. Additionally we have collected
+blocks can be seen in Figure~\ref{fig:blocks}. The foam of the blocks is an
+ideal material to work with as it. Additionally we collected
 more familiar objects to test our classifier on, demonstrating the ability of
 the system to abstract general shapes to real world objects. Some of these
-objects can be seen in Figure \meh{figure}. The foam of the blocks is an
-ideal material to work with as it
+objects can be seen in Figure \meh{figure}.
 \begin{inparaenum}[(1)]
 \item has a smooth, matte finish,
 \item comes in a variety of distinct colors, and
