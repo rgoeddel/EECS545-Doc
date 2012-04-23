@@ -79,42 +79,53 @@ public class SceneRenderer extends VisLayer
 			return image;
     }
        
-    public void drawObjects(VisWorld.Buffer worldBuffer, Map<Integer, SpyObject> objects){
-    	for(SpyObject obj : objects.values()){  
-//    		// Get image a 
-//    		BufferedImage img = obj.lastObject.getImage();
-//    		AffineTransform tx = AffineTransform.getScaleInstance(1, -1);
-//    		tx.translate(0, -img.getHeight(null));
-//    		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-//    		img = op.filter(img, null);
-//    		
-//    		VisChain vch = new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT-obj.bbox.getMaxY()), new VzImage(img));
-//    		worldBuffer.addBack(vch);
-
-    		double x = obj.pos[0];
-    		double y = K_HEIGHT-obj.pos[1];
-//    		double theta = Math.atan2(obj.bbox.getCenterY() - ISpy.viewRegion.getCenterY(), obj.bbox.getCenterX() - ISpy.viewRegion.getCenterX());
-//    		//theta = MathUtil.mod2pi(arg0)
-//    		x = ISpy.viewRegion.getCenterX() + 200 * Math.cos(theta);
-//    		y = ISpy.viewRegion.getCenterY() - 200 * Math.sin(theta);
-    		
-    
-
-
-    		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(obj.getBoxColor(), 2));
-    		VisChain vch2 = new VisChain(LinAlg.translate(x, y), rect);
+    public void drawObjects(VisWorld.Buffer buffer, Map<Integer, SpyObject> objects){
+    	double width = ISpy.viewRegion.getWidth() / 2 + 80;
+    	double height = ISpy.viewRegion.getHeight() / 2 + 60;
+    	
+    	double theta = 0;
+    	for(SpyObject obj : objects.values()){
+    		double x, y;
+    		theta = Math.atan2(obj.bbox.getCenterY() - ISpy.viewRegion.getCenterY(), obj.bbox.getCenterX() - ISpy.viewRegion.getCenterX());
+    		double vert = (Math.sin(theta) == 0) ? Double.MAX_VALUE : height / Math.abs(Math.sin(theta));
+    		double horiz = (Math.cos(theta) == 0) ? Double.MAX_VALUE : width / Math.abs(Math.cos(theta));
+    		if(vert < horiz){
+    			x = ISpy.viewRegion.getCenterX() - 40 + Math.cos(theta) * vert;
+    			y = ISpy.viewRegion.getCenterY() + 30 + Math.sin(theta) * vert;
+    		} else {
+    			x = ISpy.viewRegion.getCenterX() - 40 + Math.cos(theta) * horiz;
+    			y = ISpy.viewRegion.getCenterY() + 30 + Math.sin(theta) * horiz;
+    		}
     		
     		String labelString = "";
     		//labelString += String.format("<<monospaced,black>>%d\n", obj.id);
-    		labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getColor(), obj.getColorConfidence());
-    		labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getShape(), obj.getShapeConfidence());
-    		labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getSize(), obj.getSizeConfidence());
+    		String tf="<<monospaced,white,dropshadow=false>>";
+    		labelString += String.format("%s%s:%.2f\n", tf, obj.getColor(), obj.getColorConfidence());
+    		labelString += String.format("%s%s:%.2f\n", tf, obj.getShape(), obj.getShapeConfidence());
+    		labelString += String.format("%s%s:%.2f\n", tf, obj.getSize(), obj.getSizeConfidence());
     		VzText text = new VzText(labelString);
-            VisChain vch3 = new VisChain(LinAlg.translate(obj.bbox.getMaxX(), K_HEIGHT - obj.bbox.getMaxY()),
-            		LinAlg.scale(1), text);
+            VisChain vch3 = new VisChain(LinAlg.translate(x, K_HEIGHT - y), LinAlg.scale(1.2), text);
+            buffer.addBack(vch3);
     		
-    		worldBuffer.addBack(vch2);
-    		worldBuffer.addBack(vch3);
+    		VisVertexData line = new VisVertexData();
+    		double[] objPos = new double[]{obj.bbox.getCenterX(),K_HEIGHT-obj.bbox.getCenterY()};
+    		double minDist = Double.MAX_VALUE;
+    		double bestX = 0, bestY = 0;
+    		for(int i = 0; i <= 1; i ++){
+    			for(int j = 0; j <= 1; j ++){
+    				double cx = x + i * 100;
+    				double cy = y - j * 70;
+    				double dist = LinAlg.normF(new double[]{cx - objPos[0], cy - objPos[1]});
+    				if(dist < minDist){
+    					minDist = dist;
+    					bestX = cx;
+    					bestY = cy;
+    				}
+    			}
+    		}
+    		line.add(objPos);
+    		line.add(new double[]{bestX,K_HEIGHT-bestY});
+    		buffer.addBack(new VzLines(line, VzLines.LINES,new VzLines.Style(Color.WHITE, 3)));
     	}
     }
     
@@ -135,10 +146,12 @@ public class SceneRenderer extends VisLayer
         }
     }
       worldBuffer.addBack(new VzImage(background, VzImage.FLIP));
-      
-      drawObjects(worldBuffer, objects);
-
+      worldBuffer.setDrawOrder(-10);
       worldBuffer.swap();
-    	
+      
+      VisWorld.Buffer textBuffer = this.world.getBuffer("textInfo");
+      drawObjects(textBuffer, objects);
+      textBuffer.setDrawOrder(10);
+      textBuffer.swap();
     }
 }
