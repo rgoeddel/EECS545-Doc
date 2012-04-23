@@ -90,7 +90,7 @@ public class KNN {
 	int dim;
 
 	// constants
-	final double thresholdDefault = 0.60;
+	final double thresholdDefault = 0.95;
 	final double maxThresholdDefault = 0.95;
 	final double minThresholdDefault = 0.10;
 
