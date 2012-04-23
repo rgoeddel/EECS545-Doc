@@ -27,7 +27,7 @@ import java.awt.image.*;
  *  - Add features for shape recognition to FeatureVec
  */
 enum ISpyMode {
-    STANDBY, MANIPULATING, ADD_COLOR, ADD_SHAPE, ADD_SIZE, SEARCHING, FEEDBACK, GET_COLOR, GET_SHAPE, GET_SIZE
+    STANDBY, MANIPULATING, ADD_COLOR, ADD_SHAPE, ADD_SIZE, SEARCHING, FEEDBACK, GET_COLOR, GET_SHAPE, GET_SIZE, NOT_FOUND
 }
 
 public class ISpy extends JFrame implements LCMSubscriber {
@@ -79,10 +79,11 @@ public class ISpy extends JFrame implements LCMSubscriber {
     String lastReferencedShape;
     String lastReferencedColor;
     String lastReferencedSize;
+    String lastText;
     
 	private ISpyMode curMode = ISpyMode.STANDBY;
 	private boolean filterDark = true;
-	private double darkThreshold = .3;
+	private double darkThreshold = .4;
 
 	public ISpy(DataAggregator da, Segment segmenter) {
 		super("ISpy");
@@ -348,8 +349,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				       lastReferenced.getShape());
 		    return ISpyMode.MANIPULATING;
 		}
-		//todo cannot find should request for training
-		return ISpyMode.SEARCHING;		
+		//cannot find should request for training
+		System.out.println("NOT FOUND");
+		return ISpyMode.NOT_FOUND;		
 	}
 
 	public void sweepObject(SpyObject obj) {
@@ -425,9 +427,17 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		}
 		switch(curMode){
 		case STANDBY:
-			curMode = findObject(inputField.getText());
+			curMode = findObject(text);
+			lastText = text;
 			//curMode = ISpyMode.SEARCHING;
-			ispyLabel.setText("Searching for object");
+			if (curMode == ISpyMode.NOT_FOUND)
+		    {
+		    	ispyLabel.setText("Cannot find object. Please label it on the field. Press y to continue.");
+		    }
+			else
+			{
+				ispyLabel.setText("Searching for object");
+			}
 			break;
 		case SEARCHING:
 			if(text.toLowerCase().equals("stop") || text.toLowerCase().equals("quit") || text.toLowerCase().equals("x")){
@@ -474,7 +484,11 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 			gotoStandbyMode();
 			break;
-			
+		case NOT_FOUND:
+			if(text.toLowerCase().charAt(0) == 'y') {
+				gotoStandbyMode();
+			}
+		    break;
 		} 
 		
 		
@@ -517,8 +531,11 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 			else if(curMode == ISpyMode.MANIPULATING){
 			    
-			    curMode = findObject(inputField.getText());
-			    //ispyLabel.setText("Is this it? (y/n/x)");
+			    curMode = findObject(lastText);
+			    if (curMode == ISpyMode.NOT_FOUND)
+			    {
+			    	ispyLabel.setText("Cannot find object. Please label it on the field. Press y to continue.");
+			    }
 			}
 		} else if(channel.equals("KINECT_STATUS")){
 			try {

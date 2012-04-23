@@ -252,7 +252,7 @@ public class KNN {
 		}
 		if ((index = labels.indexOf(label)) >= 0) {
 			double threshold = thresholds.get(index);
-
+			System.out.print("Changing " + label + " threshold from " + threshold + " to ");
 			if (direction > 0)
 				threshold = threshold
 						+ Math.pow(maxThresholdDefault - threshold, 2);
@@ -261,6 +261,7 @@ public class KNN {
 						- Math.pow(threshold - minThresholdDefault, 2);
 			// System.out.println(threshold);
 			thresholds.set(index, threshold);
+			System.out.println(threshold);
 		} else {
 			System.out.println("ERROR: label not found)");
 		}
