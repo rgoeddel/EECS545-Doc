@@ -26,7 +26,7 @@ import java.awt.image.*;
  *  - Add features for shape recognition to FeatureVec
  */
 enum ISpyMode {
-	STANDBY, ADD_COLOR, ADD_SHAPE, ADD_SIZE, SEARCHING, FEEDBACK, GET_COLOR, GET_SHAPE, GET_SIZE
+    STANDBY, MANIPULATING, ADD_COLOR, ADD_SHAPE, ADD_SIZE, SEARCHING, FEEDBACK, GET_COLOR, GET_SHAPE, GET_SIZE
 }
 
 public class ISpy extends JFrame implements LCMSubscriber {
@@ -64,7 +64,13 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private KNN colorKNN;
 	private KNN shapeKNN;
 	private KNN sizeKNN;
-
+    //TODO better way than this?
+    private Queue<SpyObject> consider;
+    SpyObject lastReferenced;
+    String lastReferencedShape;
+    String lastReferencedColor;
+    String lastReferencedSize;
+    
 	private ISpyMode curMode = ISpyMode.STANDBY;
 
 	public ISpy(DataAggregator da, Segment segmenter) {
@@ -181,7 +187,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		this.setVisible(true);
 	}
 
-	public void findObject(String desc) {
+	public ISpyMode findObject(String desc) {
 		ArrayList<String> labels = new ArrayList<String>();
 		String[] splitDesc = desc.toLowerCase().trim().split(" ");
 		for (int i = 0; i < splitDesc.length; i++) {
@@ -194,62 +200,92 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		
 		for (SpyObject obj : objects.values()) {
 			if (obj.matches(labels)) {
-				pointToObject(obj);
-				return;
+			    //if found during manipulation adjust thresholds 
+			    // of last reference and adjust training
+			    if ((curMode == ISpyMode.MANIPULATING) &&
+				(lastReferenced != null))
+			    {
+				//todo assume found object was last referenced?
+				//adjust threshold on all changed attributes
+				if (!lastReferencedColor.equals(obj.getColor()))
+				{
+				    colorKNN.adjustThreshold(
+					lastReferencedColor, 1);
+				}
+				if (!lastReferencedShape.equals(obj.getShape()))
+				{
+				    shapeKNN.adjustThreshold(
+					lastReferencedShape, 1);
+				}
+				if (!lastReferencedSize.equals(obj.getSize()))
+				{
+				    sizeKNN.adjustThreshold(
+					lastReferencedSize, 1);
+				}
+
+			    }
+			    pointToObject(obj);
+			    return ISpyMode.SEARCHING; 
 			}
 		}
 		System.out.println("NO INITIAL MATCH!!");
-		// No match initially found: create list of objects to consider
-		ArrayList<SpyObject> considerCalc = new ArrayList<SpyObject>();
-		// best options to consider match atleast one best
-		ArrayList<Double> considerConf = new ArrayList<Double>();
-		//TODO sort hack
-		ArrayList<Double> considerConfSortHack = new ArrayList<Double>();
 		
-		for (SpyObject obj : objects.values())
+                //if not already in the middle of manipulation
+		if (curMode != ISpyMode.MANIPULATING)
 		{
-		    if (obj.matchesBestShape(labels))
+		    // No match found:create list of objects to consider
+		    ArrayList<SpyObject> considerCalc = 
+			new ArrayList<SpyObject>();
+		    // best options to consider match atleast one best
+		    ArrayList<Double> considerConf = new ArrayList<Double>();
+		    //TODO sort hack
+		    ArrayList<Double> considerConfSortHack = new ArrayList<Double>();
+		    
+		    for (SpyObject obj : objects.values())
 		    {
-			double wrongconf = obj.wrongColorConf();
-			if (wrongconf >= 100)
-			    continue;
-			considerCalc.add(obj);
-			considerConf.add(wrongconf);
-			considerConfSortHack.add(wrongconf);
-		    }
-		    else if (obj.matchesBestColor(labels))
-		    {
-			
-			double wrongconf = obj.wrongShapeConf();
-			if (wrongconf >= 100)
-			    continue;
-			considerCalc.add(obj);
-			considerConf.add(wrongconf);
-			considerConfSortHack.add(wrongconf);
-		    }
-		}
-		
-		ArrayList<SpyObject> consider = new ArrayList<SpyObject>();
-		Collections.sort(considerConfSortHack);
-		for (Double d : considerConfSortHack)
-		{
-		    consider.add(considerCalc.get(considerConf.indexOf(d)));
-		}
-		
-		for (SpyObject obj : consider) {
-			// manipulate each objects
-			sweepObject(obj);
-			System.out.println("SWEEEP");
-			System.out.println(obj.getShape() + " " + obj.getColor());
-			// TODO change only sweeps first object
-			boolean success = true;
-			if (success)
+			if (obj.matchesBestShape(labels))
 			{
-			    shapeKNN.adjustThreshold(obj.getShape(), 1);
-			    return;
+			    double wrongconf = obj.wrongColorConf();
+			    if (wrongconf >= 100)
+				continue;
+			    considerCalc.add(obj);
+			    considerConf.add(wrongconf);
+			    considerConfSortHack.add(wrongconf);
 			}
+			else if (obj.matchesBestColor(labels))
+			{
+			    
+			    double wrongconf = obj.wrongShapeConf();
+			    if (wrongconf >= 100)
+				continue;
+			    considerCalc.add(obj);
+			    considerConf.add(wrongconf);
+			    considerConfSortHack.add(wrongconf);
+			}
+		    }
+		
+		    consider = new LinkedList<SpyObject>();
+		    Collections.sort(considerConfSortHack);
+		    for (Double d : considerConfSortHack)
+		    {
+			consider.add(considerCalc.get(considerConf.indexOf(d)));
+		    }
 		}
-		System.out.println("NO MATCH");
+		
+		if ((lastReferenced = consider.poll()) != null) {
+		    // manipulate objects
+		    lastReferencedColor = lastReferenced.getColor();
+		    lastReferencedShape = lastReferenced.getShape();
+		    lastReferencedSize = lastReferenced.getSize();
+		    
+		    sweepObject(lastReferenced);
+		    System.out.print("SWEEP the ");
+		    System.out.println(lastReferenced.getColor() + " " + 
+				       lastReferenced.getShape());
+		    return ISpyMode.MANIPULATING;
+		}
+		//todo cannot find should request for training
+		return ISpyMode.SEARCHING;		
 	}
 
 	public void sweepObject(SpyObject obj) {
@@ -325,11 +361,16 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		}
 		switch(curMode){
 		case STANDBY:
-			findObject(inputField.getText());
-			curMode = ISpyMode.SEARCHING;
+			curMode = findObject(inputField.getText());
+			//curMode = ISpyMode.SEARCHING;
 			ispyLabel.setText("Searching for object");
 			break;
 		case SEARCHING:
+			if(text.toLowerCase().equals("stop") || text.toLowerCase().equals("quit") || text.toLowerCase().equals("x")){
+				gotoStandbyMode();
+			}
+			break;
+		case MANIPULATING:
 			if(text.toLowerCase().equals("stop") || text.toLowerCase().equals("quit") || text.toLowerCase().equals("x")){
 				gotoStandbyMode();
 			}
@@ -389,6 +430,11 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				|| curMode == ISpyMode.GET_SHAPE || curMode == ISpyMode.GET_SIZE){
 			// MODIFY: Stuff here to clear information
 		}
+		else if (curMode == ISpyMode.MANIPULATING)
+		{
+		    lastReferenced = null;
+		    consider.clear();
+		}
 		curMode = ISpyMode.STANDBY;
 		ispyLabel.setText("I spy something:");
 	}
@@ -403,6 +449,11 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			if(curMode == ISpyMode.SEARCHING){
 				curMode = ISpyMode.FEEDBACK;
 				ispyLabel.setText("Is this it? (y/n/x)");
+			}
+			else if(curMode == ISpyMode.MANIPULATING){
+			    
+			    curMode = findObject(inputField.getText());
+			    //ispyLabel.setText("Is this it? (y/n/x)");
 			}
 		} else if(channel.equals("KINECT_STATUS")){
 			try {
