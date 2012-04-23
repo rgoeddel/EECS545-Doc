@@ -93,6 +93,13 @@ public class SceneRenderer extends VisLayer
 
     		double x = obj.pos[0];
     		double y = K_HEIGHT-obj.pos[1];
+//    		double theta = Math.atan2(y - ISpy.viewRegion.getMinY(), x - ISpy.viewRegion.getCenterX());
+//    		theta = MathUtil.mod2pi(arg0)
+//    		x = ISpy.viewRegion.getCenterX() + 200 * Math.cos(theta);
+//    		y = ISpy.viewRegion.getCenterY() - 200 * Math.sin(theta);
+    		
+    		
+
 
     		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(obj.getBoxColor(), 2));
     		VisChain vch2 = new VisChain(LinAlg.translate(x, y), rect);
