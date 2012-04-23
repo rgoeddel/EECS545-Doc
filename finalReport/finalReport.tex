@@ -132,6 +132,10 @@ Though our work does not extend dramatically on this concept, our long term
 trajectory focuses more on the complex action space, previously less explored.
 This project lays the groundwork for developing an action-space, both for
 learning said actions as well as learning objects upon which to act.
+Additionally, we explore a novel way of extracting additional information from
+objects. We are unaware of previous work that uses interaction with objects to
+see them from new angles and thus obtain additional information to make guesses
+about object descriptions more confident.
 
 During this work we explored several options for extracting features from
 objects before settling on the method described in this paper. We experimented
@@ -150,6 +154,16 @@ agent than the other methods.
 %\xxx{How are you going to solve this problem? Why should the proposed method
 %    work? Provide technical details of your approach if you are proposing a
 %    novel method.}
+
+\subsection{Object Detection}
+
+\subsection{Feature Extraction}
+
+\subsection{Classification}
+
+\subsection{Robot Arm Manipulation}
+
+\subsection{Active Learning}
 
 Our approach will use supervised learning techniques to generate a description
 of each object. First, we will gather our training data by collecting a number
@@ -185,26 +199,26 @@ the appropriate commands to the robotic arm.
 
 \meh{maybe this belongs in introduction? or did someone already write this}
 
-One of the difficulties with reasoning about real objects is that the world is 
-partially observable. Objects can have a dramatically different appearance at 
-different orientations.  Naturally when given such an object, a human may move 
-their head around to gain more information and confidence as to what the object is.  Our system has a fixed vision angle, but it is possible for it to 
-manipulate objects to gain information on objects whose appearance has high 
-orientation dependency.  For this purpose a confidence threshold system was 
-developed to learn what objects may have high uncertainty, and therefor would 
-be good candidate for manipulation.  When the system is queried for an object 
-that it cannot currently see, it should manipulate an uncertain object with the 
+One of the difficulties with reasoning about real objects is that the world is
+partially observable. Objects can have a dramatically different appearance at
+different orientations.  Naturally when given such an object, a human may move
+their head around to gain more information and confidence as to what the object is.  Our system has a fixed vision angle, but it is possible for it to
+manipulate objects to gain information on objects whose appearance has high
+orientation dependency.  For this purpose a confidence threshold system was
+developed to learn what objects may have high uncertainty, and therefor would
+be good candidate for manipulation.  When the system is queried for an object
+that it cannot currently see, it should manipulate an uncertain object with the
 highest probability of actually being the queried object.
 
-All attributes are given the same default confidence threshold.  When an object 
-is correctly labeled and verified by the user, the thresholds for those labels 
-is decreased.  When an object manipulation correctly reveals that it was 
-previously mislabeled the associated label thresholds are increased.  To 
-determine the likelihood of a mislabel, the confidence of a label, calculated 
-from the classification system, is compared to the threshold for that shape.  
-If the confidence exceeds the threshold then it is reported as unlikely to be a 
-mislabel.  For example in our system the rectangle label is commonly misplaced 
-on objects presented head on, so the learned threshold confidence for rectangle 
+All attributes are given the same default confidence threshold.  When an object
+is correctly labeled and verified by the user, the thresholds for those labels
+is decreased.  When an object manipulation correctly reveals that it was
+previously mislabeled the associated label thresholds are increased.  To
+determine the likelihood of a mislabel, the confidence of a label, calculated
+from the classification system, is compared to the threshold for that shape.
+If the confidence exceeds the threshold then it is reported as unlikely to be a
+mislabel.  For example in our system the rectangle label is commonly misplaced
+on objects presented head on, so the learned threshold confidence for rectangle
 is very high.
 
 \xxx{equations}
@@ -213,9 +227,9 @@ is very high.
 \subsection{Data Collection and Training}
 We have acquired a large variety of children's foam blocks in many shapes, sizes,
 and colors to act as our objects for classification. A small subset of the
-blocks can be seen in Figure~\ref{fig:blocks}. Additionally we have collected 
-more familiar objects to test our classifier on, demonstrating the ability of 
-the system to abstract general shapes to real world objects. Some of these 
+blocks can be seen in Figure~\ref{fig:blocks}. Additionally we have collected
+more familiar objects to test our classifier on, demonstrating the ability of
+the system to abstract general shapes to real world objects. Some of these
 objects can be seen in Figure \meh{figure}. The foam of the blocks is an
 ideal material to work with as it
 \begin{inparaenum}[(1)]
@@ -226,14 +240,14 @@ shape.
 \end{inparaenum}
 
 
-Our system, seen in figure \meh{screenshot}, segments objects found in the 
-predefined play area and labels them with the most confident shape, size, and 
-color.  Additionally a user can train new shapes, colors, and sizes by simply 
-clicking on that image and supplying the relevant label.  This is sufficient 
-for creating a large number of training samples, preferably at different 
-positions and orientations.  This method is not efficient for generating a 
-large number of training samples of many different objects, so we collected a 
-training dataset of footage of the foam blocks at numerous positions and angles throughout the play area which were then segmented and labeled with relevant 
+Our system, seen in figure \meh{screenshot}, segments objects found in the
+predefined play area and labels them with the most confident shape, size, and
+color.  Additionally a user can train new shapes, colors, and sizes by simply
+clicking on that image and supplying the relevant label.  This is sufficient
+for creating a large number of training samples, preferably at different
+positions and orientations.  This method is not efficient for generating a
+large number of training samples of many different objects, so we collected a
+training dataset of footage of the foam blocks at numerous positions and angles throughout the play area which were then segmented and labeled with relevant
 descriptors.
 
 
@@ -264,30 +278,30 @@ descriptors.
 
 
 
-Initially we used SVM classification to validate our method, but we have since 
-moved to a K-nearest neighbor approach.  With the K-nearest neighbor algorithm 
-it is easy to add another example to the training, without recreating the 
-entire training model as was done with SVM classification.  Additionally we no 
-longer rely on third party software, namely liblinear ~\cite{LIBLINEAR} to do 
-classification.  Using our implementation of a K-nearest neighbor 
-classification we also reported a confidence metric for each label based on the 
+Initially we used SVM classification to validate our method, but we have since
+moved to a K-nearest neighbor approach.  With the K-nearest neighbor algorithm
+it is easy to add another example to the training, without recreating the
+entire training model as was done with SVM classification.  Additionally we no
+longer rely on third party software, namely liblinear ~\cite{LIBLINEAR} to do
+classification.  Using our implementation of a K-nearest neighbor
+classification we also reported a confidence metric for each label based on the
 percentage of neighbors with a given label.
 
-Testing our system requires direct interaction and presentation of new objects 
-or objects at new angles.  Additional testing can be done by training the 
-system with new shapes and colors and observing how quickly and effectively it 
-can learn and apply the new information.  Qualitatively it is easy to see 
-whether the system is performing well.  However to do a less subjective, 
-quantitative evaluation of our methodology, we used the leave-one-out-cross-validation 
-(LOOCV) method on our collected training data.  This testing method mirrors the 
+Testing our system requires direct interaction and presentation of new objects
+or objects at new angles.  Additional testing can be done by training the
+system with new shapes and colors and observing how quickly and effectively it
+can learn and apply the new information.  Qualitatively it is easy to see
+whether the system is performing well.  However to do a less subjective,
+quantitative evaluation of our methodology, we used the leave-one-out-cross-validation
+(LOOCV) method on our collected training data.  This testing method mirrors the
 scenario where a novel object is presented to this system.
 
-The results in Table~\ref{tbl:testresults} \xxx{todo} show LOOCV percentages 
+The results in Table~\ref{tbl:testresults} \xxx{todo} show LOOCV percentages
 for the shape, color and size.  Unsurprisingly it has more difficulty with shape
-, which varies greatly by angle and position, and size, which is a more 
-subjective attribute. It has particular problems with shapes that are presented 
-head on, which tend to resemble rectangles.  This is the primary motivation for 
-developing a confidence threshold learning mechanism, which allows the system 
+, which varies greatly by angle and position, and size, which is a more
+subjective attribute. It has particular problems with shapes that are presented
+head on, which tend to resemble rectangles.  This is the primary motivation for
+developing a confidence threshold learning mechanism, which allows the system
 to determine which labels are inherently uninformative.
 
 
@@ -307,9 +321,9 @@ to determine which labels are inherently uninformative.
 
 \section{Methodology}
 
-Once an object was segmented we extracted relevant features in order to classify color, size, and shape. We considered objects that were of a single color, therefore average red, green, blue, hue, saturation, and value levels across the pixels were used as a six-dimensional feature vector. For size we calcuated the diagonal of the 3D axis-aligned bounding box and used that as one of our features. The second feature was the average distance of the points from the centroid. Having the point-cloud data from the Kinect allowed us to compute those features more accurately in three-dimensions and saved us from having to do more complicated depth estimates. 
+Once an object was segmented we extracted relevant features in order to classify color, size, and shape. We considered objects that were of a single color, therefore average red, green, blue, hue, saturation, and value levels across the pixels were used as a six-dimensional feature vector. For size we calcuated the diagonal of the 3D axis-aligned bounding box and used that as one of our features. The second feature was the average distance of the points from the centroid. Having the point-cloud data from the Kinect allowed us to compute those features more accurately in three-dimensions and saved us from having to do more complicated depth estimates.
 
-Correctly classifying shapes required much more complicated features. First we projected the point-cloud back onto the image plane. Next we transformed the image into a canonical representation. To do this we applied Principal Component Analysis to find the axis the points were most spread out along, and rotated the image so that axis was horizontal. An axis-aligned bounding box was found for the image and its heigh and width were scaled to unit lenghts. To extract features we took evenly-spaced points from the top and bottom edges of the box and calculated the vertical distance from each point to the image. This process is illustrated by [FIGURE]. We used seven sample points along the top and bottom; experimental evaluation showed no signficant improvement with additional samples. In addition, we calculated the ratio of the width and height before scaling to get an idea of how elongated the shape was. 
+Correctly classifying shapes required much more complicated features. First we projected the point-cloud back onto the image plane. Next we transformed the image into a canonical representation. To do this we applied Principal Component Analysis to find the axis the points were most spread out along, and rotated the image so that axis was horizontal. An axis-aligned bounding box was found for the image and its heigh and width were scaled to unit lenghts. To extract features we took evenly-spaced points from the top and bottom edges of the box and calculated the vertical distance from each point to the image. This process is illustrated by [FIGURE]. We used seven sample points along the top and bottom; experimental evaluation showed no signficant improvement with additional samples. In addition, we calculated the ratio of the width and height before scaling to get an idea of how elongated the shape was.
 
 
 
