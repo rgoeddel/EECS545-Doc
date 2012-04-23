@@ -51,59 +51,24 @@
 
 
 \begin{abstract}
-Interaction between robots and humans is a rapidly growing area of research.
-Of particular interest is the desire to interact with robots or agents using
-natural language. This gives humans a more natural and effective way of teaching,
-commanding, and interacting with robotic agents or computers. Our work is
-designed to process images and provide descriptions of objects that can then be
-used in interactions with humans. We use images from an RGB-D camera in order to
-classify properties of objects including size, shape, and color. These
-descriptions are then fed into a higher-level agent which handles the human
-interaction. We specifically use a simple I-Spy game to allow users to refer to
-objects using descriptions in natural language.
+When an agent is faced with uncertaintly it has two major courses of action: it can try and explore on its own to gain more knowledge or it can consult an expert. We have created a image recognition system that attempts to utitilize both sources of knowledge to improve its performance. Out system captures point-cloud data from an RGB-D camera and uses machine learning techniques to classify properties of objects including size, shape, and color. It is able to meausure the amount of uncertainty for a given property and manipulate the object using a robotic arm in order to reduce that uncertainty. It also incorporates direct feedback from the user to further improve its classification performance and requests more information when it misclassifies an object. Users can easily teach the system new classes of properties on the fly. We demonstrate our system through a simple I-Spy game using toy blocks of various shapes and colors as objects. 
 \end{abstract}
 
 
 \section{Introduction}
 %\xxx{Problem description and motivation. Why do you want to solve this
 %    problem? What's the impact if you can solve this problem?}
-Language is a powerful tool that is just coming into its own as the human
-interface for various systems. Apple's Siri is an excellent example of this,
-making interaction with one's phone intuitive, easy, and efficient. Robotic
-systems in AI can also benefit from greater understanding of language. Such
-knowledge could allow a human to command or teach a robot agent in a more natural
-way. Take, for example, a robotic arm system with knowledge of only several nouns
-and actions: cup, sink, grab/move object, and turning on/off the sink, and the
-spatial concept of in. Through language, the robot could then be taught the new
-action of ``filling a cup'', which means to put the cup in the sink and turn on
-the sink. Even though the robot has never seen anyone fill a cup before, now it
-should be able to do so itself. Furthermore, the agent could generalize the
-concept to new items, like a bowl. This is a powerful way for an agent to learn
-from a human, without requiring expert instructors.
+Agents that operate in environments that are partially observable or very noisy are often faced with large amounts of uncertainty. One option for the agent is to explore the environment to resolve some of that uncertainty. While this approach can be done autonomously without direct human involvement, there still may be fundamental limits to what information the agent is able to collect. A second option is for the agent to consult an expert to acquire missing knowledge, a technique known as active learning. This can present a large and rich source of knowledge but can be costly to acquire. Hybrid approaches enable an agent to explore the world on its own and ask an expert for knowledge only when it needs to. This hybridization leverages the strengths of each option and can lead to better performance. Of course, intregrating them introduces new challenges such as how to tell when knowledge is unattainable through exploration or what consitutes an important question. 
 
-Our long-term goal is to leverage machine learning techniques in order to train
-a system to know a small vocabulary of nouns, adjectives, and actions. As a proof
-of concept, we develop a system that can play the children's game ``I spy'' using
-a robotic arm for pointing at and interacting with objects and a Microsoft Kinect
-which acts as the ``eyes'' of the system, giving RGB-D data about the scene for
-classification. To play I Spy, a collection of objects is placed in the view
-of the camera and a person gives a description of one of the objects. The agent
-then determines which object is most likely to match the description, and points
-to it using the robot arm. If the agent is highly uncertain about the objects, it
-interacts with them using the arm in order to gain further information. If the
-agent guesses incorrectly, the human then shows them the correct answer, and
-the agent adjusts its beliefs about object descriptions to reflect its new
-knowledge.
+Our project involves one such attempt to utilize both sources of knowledge. Our system is tasked with identifying properties of various objects like color, shape, and size in order to play the children's game ``I-spy''. Unfortunately it is quite common for an object to be in a poor orientation and thus difficult for our system to classify. We use both recent history and information from our K-Nearst Neighbor classifier to determine when we are uncertain about an object. Instead of asking the user for help, the system first tries to get more information about the object by nudging it using a robotic arm. The goal is to change the orientation of the object in order to improve its classification performance. It will learn which classes are inherintly uncertain (such as rectangles) and adjust accordingly. We also will ask for feedback from the user when an object is misidentified to gain more training data. Our system is flexible enough to allow users to teach new classes of properties during its operation. 
 
 This work is being incorporated in a larger project which includes teaching the
-agent new concepts and actions as described above. Such a project relies on having
+agent new concepts and actions. Such a project relies on having
 symbolic information provided by our work through object segmentation and
 classification. The low level features provided by our system can be analyzed and
 combined in order to build new concepts such as object categories (like blocks
 and balls) or object properties (all bananas are yellow). Such reasoning and
 concept generalization is essential for agents that interact in novel situations.
-These capabilities could be used on service tasks or with non-robotic systems
-where a verbal interface offers improvements in efficiency, safety, etc.
 
 The challenges involved in playing I Spy include object detection, feature
 extraction, classification, robot arm manipulation, and active learning. We
@@ -318,7 +283,9 @@ or objects at new angles.  Additional testing can be done by training the
 system with new shapes and colors and observing how quickly and effectively it
 can learn and apply the new information.  Qualitatively it is easy to see
 whether the system is performing well.  However to do a less subjective,
-quantitative evaluation of our methodology, we used the leave-one-out-cross-validation(LOOCV) method on our collected training data.  This testing method mirrors the
+quantitative evaluation of our methodology, we used the
+leave-one-out-cross-validation(LOOCV) method on our collected training data. This testing
+method mirrors the
 scenario where a novel object is presented to this system.
 
 The results in Table~\ref{tbl:testresults} \xxx{todo} show LOOCV percentages
