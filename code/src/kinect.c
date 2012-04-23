@@ -44,6 +44,7 @@ freenect_device *f_dev;
 
 // LCM
 lcm_t *k_lcm;
+int skip = 0;
 
 void video_cb(freenect_device *dev, void *rgb, uint32_t ts)
 {
@@ -145,6 +146,8 @@ void *publcm(void *arg)
     ks.rgb;
     ks.depth;
 
+	int numSkip = 0;
+
     // XXX No clean way to quit, yet
     pthread_mutex_lock(&frame_lock);
     while (true) {
@@ -167,7 +170,10 @@ void *publcm(void *arg)
         got_rgb = 0;
         got_depth = 0;
         pthread_mutex_unlock(&frame_lock);
-        kinect_status_t_publish(k_lcm, "KINECT_STATUS", &ks);
+		if (numSkip++ >= skip) {
+			kinect_status_t_publish(k_lcm, "KINECT_STATUS", &ks);
+			numSkip = 0;
+		}
         pthread_mutex_lock(&frame_lock);
     }
     pthread_mutex_unlock(&frame_lock);
@@ -176,6 +182,10 @@ void *publcm(void *arg)
 // ====================================================
 int main(int argc, char **argv)
 {
+	// Take in optional fps argument
+	if (argc == 2)
+		skip = 30/atoi(argv[1]);
+
     // Init LCM
     printf("Initializing LCM...\n");
 

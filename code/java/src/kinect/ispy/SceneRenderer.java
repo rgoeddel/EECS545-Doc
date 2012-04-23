@@ -93,22 +93,22 @@ public class SceneRenderer extends VisLayer
 
     		double x = obj.pos[0];
     		double y = K_HEIGHT-obj.pos[1];
-//    		double theta = Math.atan2(y - ISpy.viewRegion.getMinY(), x - ISpy.viewRegion.getCenterX());
-//    		theta = MathUtil.mod2pi(arg0)
+//    		double theta = Math.atan2(obj.bbox.getCenterY() - ISpy.viewRegion.getCenterY(), obj.bbox.getCenterX() - ISpy.viewRegion.getCenterX());
+//    		//theta = MathUtil.mod2pi(arg0)
 //    		x = ISpy.viewRegion.getCenterX() + 200 * Math.cos(theta);
 //    		y = ISpy.viewRegion.getCenterY() - 200 * Math.sin(theta);
     		
-    		
+    
 
 
     		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(obj.getBoxColor(), 2));
     		VisChain vch2 = new VisChain(LinAlg.translate(x, y), rect);
     		
     		String labelString = "";
-    		labelString += String.format("<<monospaced,black>>%d\n", obj.id);
+    		//labelString += String.format("<<monospaced,black>>%d\n", obj.id);
     		labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getColor(), obj.getColorConfidence());
     		labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getShape(), obj.getShapeConfidence());
-    		//labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getSize(), obj.getSizeConfidence());
+    		labelString += String.format("<<monospaced,black>>%s:%.2f\n", obj.getSize(), obj.getSizeConfidence());
     		VzText text = new VzText(labelString);
             VisChain vch3 = new VisChain(LinAlg.translate(obj.bbox.getMaxX(), K_HEIGHT - obj.bbox.getMaxY()),
             		LinAlg.scale(1), text);
