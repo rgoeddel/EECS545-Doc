@@ -20,20 +20,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.*;
 
 /* To Do:
  *  - Add features for shape recognition to FeatureVec
  */
 enum ISpyMode {
-	NORMAL, ADD_COLOR, ADD_SHAPE, ADD_SIZE
+	STANDBY, ADD_COLOR, ADD_SHAPE, ADD_SIZE, SEARCHING, FEEDBACK, GET_COLOR, GET_SHAPE, GET_SIZE
 }
 
 public class ISpy extends JFrame implements LCMSubscriber {
@@ -72,7 +65,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private KNN shapeKNN;
 	private KNN sizeKNN;
 
-	private ISpyMode curMode = ISpyMode.NORMAL;
+	private ISpyMode curMode = ISpyMode.STANDBY;
 
 	public ISpy(DataAggregator da, Segment segmenter) {
 		super("ISpy");
@@ -91,6 +84,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		addColorButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				gotoStandbyMode();
 				curMode = ISpyMode.ADD_COLOR;
 				trainingBox.setTitle("Add Color Label");
 				trainingBox.clearText();
@@ -104,6 +98,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		addShapeButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				gotoStandbyMode();
 				curMode = ISpyMode.ADD_SHAPE;
 				trainingBox.setTitle("Add Shape Label");
 				trainingBox.clearText();
@@ -117,6 +112,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		addSizeButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				gotoStandbyMode();
 				curMode = ISpyMode.ADD_SIZE;
 				trainingBox.setTitle("Add Size Label");
 				trainingBox.clearText();
@@ -153,7 +149,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		inputField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				findObject(inputField.getText());
+				textEntered(inputField.getText());
 				inputField.setText("");
 			}
 		});
@@ -162,7 +158,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		trainingBox.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentHidden(ComponentEvent arg0) {
-				curMode = ISpyMode.NORMAL;
+				curMode = ISpyMode.STANDBY;
 			}
 		});
 
@@ -171,6 +167,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		objects = new HashMap<Integer, SpyObject>();
 
 		lcm.subscribe("KINECT_STATUS", this);
+		lcm.subscribe("ALLDONE", this);
 
 		colorKNN = new KNN(30, 6,
 				"/home/bolt/mlbolt/code/java/color_features.dat");
@@ -265,7 +262,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		for (int i = 0; i < 3; i++) {
 			command.dest[i] = center[i];
 		}
-		command.action = "POINT";
+		command.action = "SWEEP";
 		lcm.publish("ROBOT_COMMAND", command);
 		return;
 	}
@@ -280,15 +277,12 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		for (int i = 0; i < 3; i++) {
 			command.dest[i] = center[i];
 		}
-		command.action = "SWEEP";
+		command.action = "POINT";
 		lcm.publish("ROBOT_COMMAND", command);
 		return;
 	}
 
 	public void mouseClicked(double x, double y) {
-		if (curMode != ISpyMode.NORMAL) {
-			System.out.println("CLICKED");
-		}
 		for (SpyObject obj : objects.values()) {
 			if (obj.bbox.contains(x, y)) {
 				switch (curMode) {
@@ -300,7 +294,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 					synchronized (colorKNN) {
 						colorKNN.add(label, false);
 					}
-					obj.boxColor = Color.cyan;
+					obj.boxColor  = Color.cyan;
 					break;
 				case ADD_SHAPE:
 					label = String
@@ -324,6 +318,80 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			}
 		}
 	}
+	
+	public void textEntered(String text){
+		if(text.equals("")){
+			return;
+		}
+		switch(curMode){
+		case STANDBY:
+			findObject(inputField.getText());
+			curMode = ISpyMode.SEARCHING;
+			ispyLabel.setText("Searching for object");
+			break;
+		case SEARCHING:
+			if(text.toLowerCase().equals("stop") || text.toLowerCase().equals("quit") || text.toLowerCase().equals("x")){
+				gotoStandbyMode();
+			}
+			break;
+		case FEEDBACK:
+			if(text.toLowerCase().charAt(0) == 'y'){
+				System.out.println("Added new label for " + text);
+				// MODIFY: save training label
+				gotoStandbyMode();
+			} else if(text.toLowerCase().charAt(0) == 'n'){
+				ispyLabel.setText("What color is it? (Enter X to skip)");
+				curMode = ISpyMode.GET_COLOR;
+			} else if(text.toLowerCase().charAt(0) == 'x'){
+				gotoStandbyMode();
+			}
+			break;
+		case GET_COLOR:
+			if(!text.toLowerCase().equals("x")){
+				System.out.println("Added color label for " + text);
+				// MODIFY: Add color example
+			}
+			ispyLabel.setText("What shape is it? (Enter X to skip)");
+			curMode = ISpyMode.GET_SHAPE;
+			break;
+		case GET_SHAPE:
+			if(!text.toLowerCase().equals("x")){
+				System.out.println("Added shape label for " + text);
+				// MODIFY: Add shape example
+			}
+			ispyLabel.setText("What size is it? (Enter X to skip)");
+			curMode = ISpyMode.GET_SIZE;
+			break;
+		case GET_SIZE:
+			if(!text.toLowerCase().equals("x")){
+				System.out.println("Added size label for " + text);
+				// MODIFY: Add size example
+			}
+			gotoStandbyMode();
+			break;
+			
+		} 
+		
+		
+	}
+	
+	public void gotoStandbyMode(){
+		if(curMode == ISpyMode.SEARCHING){
+			robot_command_t command = new robot_command_t();
+			command.utime = TimeUtil.utime();
+			command.updateDest = false;
+			command.dest = new double[6];
+			command.action = "RESET";
+			lcm.publish("ROBOT_COMMAND", command);
+			
+			curMode = ISpyMode.STANDBY;
+		} else if(curMode == ISpyMode.FEEDBACK || curMode == ISpyMode.GET_COLOR 
+				|| curMode == ISpyMode.GET_SHAPE || curMode == ISpyMode.GET_SIZE){
+			// MODIFY: Stuff here to clear information
+		}
+		curMode = ISpyMode.STANDBY;
+		ispyLabel.setText("I spy something:");
+	}
 
 	/**
 	 * Upon recieving a message from the Kinect, translate each depth point into
@@ -331,17 +399,24 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	 **/
 	@Override
 	public void messageReceived(LCM lcm, String channel, LCMDataInputStream ins) {
-		try {
-			kinectData = new kinect_status_t(ins);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
+		if(channel.equals("ALLDONE")){
+			if(curMode == ISpyMode.SEARCHING){
+				curMode = ISpyMode.FEEDBACK;
+				ispyLabel.setText("Is this it? (y/n/x)");
+			}
+		} else if(channel.equals("KINECT_STATUS")){
+			try {
+				kinectData = new kinect_status_t(ins);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
+
+			extractPointCloudData();
+			updateObjects();
+
+			sceneRenderer.drawScene(kinectData, objects, da);
 		}
-
-		extractPointCloudData();
-		updateObjects();
-
-		sceneRenderer.drawScene(kinectData, objects, da);
 	}
 
 	private void extractPointCloudData() {
