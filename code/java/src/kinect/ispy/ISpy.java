@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
 import java.awt.image.*;
 
 /* To Do:
@@ -39,6 +40,11 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	static double initialUnionThresh = 0.5;
 	static double initialRansacThresh = .02;
 	static double initialRansacPercent = .1;
+	
+	static String colorDataFile = "/home/bolt/mlbolt/code/java/color_features.dat";
+	static String shapeDataFile = "/home/bolt/mlbolt/code/java/shape_features.dat";
+	static String sizeDataFile = "/home/bolt/mlbolt/code/java/size_features.dat";
+	
 
 	// Subset of the image used
 	public final static int[] viewBorders = new int[] { 75, 150, 620, 400 };
@@ -49,9 +55,12 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private SceneRenderer sceneRenderer;
 	private JLabel ispyLabel;
 	private JTextField inputField;
-	private JButton addColorButton;
-	private JButton addShapeButton;
-	private JButton addSizeButton;
+	private JMenuItem colorMenuItem;
+	private JMenuItem shapeMenuItem;
+	private JMenuItem sizeMenuItem;
+	private JMenuItem clearData;
+	private JMenuItem reloadData;
+	private JCheckBoxMenuItem filterDarkCB;
 	private TrainingBox trainingBox;
 
 	static LCM lcm = LCM.getSingleton();
@@ -66,6 +75,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private KNN sizeKNN;
 
 	private ISpyMode curMode = ISpyMode.STANDBY;
+	private boolean filterDark = true;
+	private double darkThreshold = .3;
 
 	public ISpy(DataAggregator da, Segment segmenter) {
 		super("ISpy");
@@ -73,15 +84,68 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
-
-		addColorButton = new JButton("Add Color");
-		gbc.fill = GridBagConstraints.BOTH;
-		gbc.weightx = .3;
-		gbc.weighty = .05;
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		this.add(addColorButton, gbc);
-		addColorButton.addActionListener(new ActionListener() {
+		
+		
+		JMenuBar menuBar = new JMenuBar();
+		
+		JMenu controlMenu = new JMenu("Control");
+		menuBar.add(controlMenu);
+		
+		filterDarkCB = new JCheckBoxMenuItem("Filter Dark Objects");
+		filterDarkCB.setState(true);
+		filterDarkCB.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				filterDark = filterDarkCB.getState();
+			}
+		});
+		controlMenu.add(filterDarkCB);
+		
+		clearData = new JMenuItem("Clear All Data");
+		clearData.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("CLEARED DATA");
+				synchronized(colorKNN){
+					colorKNN.clearData();
+				}
+				synchronized(shapeKNN){
+					shapeKNN.clearData();
+				}
+				synchronized(sizeKNN){
+					sizeKNN.clearData();
+				}
+			}
+		});
+		controlMenu.add(clearData);
+		
+		reloadData = new JMenuItem("Reload Data");
+		reloadData.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("RELOAD DATA");
+				synchronized(colorKNN){
+					colorKNN.clearData();
+					colorKNN.loadData(false);
+				}
+				synchronized(shapeKNN){
+					shapeKNN.clearData();
+					shapeKNN.loadData(true);
+				}
+				synchronized(sizeKNN){
+					sizeKNN.clearData();
+					sizeKNN.loadData(false);
+				}
+			}
+		});
+		controlMenu.add(reloadData);
+		
+		
+		JMenu labelsMenu = new JMenu("Add Labels");
+		menuBar.add(labelsMenu);
+		
+		colorMenuItem = new JMenuItem("Color");
+		colorMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				gotoStandbyMode();
@@ -91,11 +155,10 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				trainingBox.setVisible(true);
 			}
 		});
+		labelsMenu.add(colorMenuItem);
 
-		addShapeButton = new JButton("Add Shape");
-		gbc.gridx = 1;
-		this.add(addShapeButton, gbc);
-		addShapeButton.addActionListener(new ActionListener() {
+		shapeMenuItem = new JMenuItem("Shape");
+		shapeMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				gotoStandbyMode();
@@ -105,11 +168,10 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				trainingBox.setVisible(true);
 			}
 		});
-		
-		addSizeButton = new JButton("Add Size");
-		gbc.gridx = 2;
-		this.add(addSizeButton, gbc);
-		addSizeButton.addActionListener(new ActionListener() {
+		labelsMenu.add(shapeMenuItem);
+
+		sizeMenuItem = new JMenuItem("Size");
+		sizeMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				gotoStandbyMode();
@@ -119,15 +181,19 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				trainingBox.setVisible(true);
 			}
 		});
+		labelsMenu.add(sizeMenuItem);
+		
+		this.setJMenuBar(menuBar);
+		
 
 		VisWorld visWorld = new VisWorld();
 		sceneRenderer = new SceneRenderer(visWorld, this);
 		gbc.fill = GridBagConstraints.BOTH;
 		gbc.gridwidth = 3;
-		gbc.weighty = .95;
+		gbc.weighty = 1;
 		gbc.weightx = 1;
 		gbc.gridx = 0;
-		gbc.gridy = 1;
+		gbc.gridy = 0;
 		this.add(sceneRenderer.getCanvas(), gbc);
 
 		ispyLabel = new JLabel("I spy something");
@@ -136,7 +202,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		gbc.weighty = .05;
 		gbc.weightx = .3;
 		gbc.gridx = 0;
-		gbc.gridy = 2;
+		gbc.gridy = 1;
 		gbc.insets = new Insets(20, 20, 10, 20);
 		this.add(ispyLabel, gbc);
 
@@ -169,11 +235,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		lcm.subscribe("KINECT_STATUS", this);
 		lcm.subscribe("ALLDONE", this);
 
-		colorKNN = new KNN(30, 6,
-				"/home/bolt/mlbolt/code/java/color_features.dat");
-		shapeKNN = new KNN(10, 15,
-				"/home/bolt/mlbolt/code/java/shape_features.dat");
-		sizeKNN = new KNN(5, 2, "/home/bolt/mlbolt/code/java/size_features.dat");
+		colorKNN = new KNN(30, 6, colorDataFile);
+		shapeKNN = new KNN(10, 15,shapeDataFile);
+		sizeKNN = new KNN(5, 2, sizeDataFile);
 		colorKNN.loadData(false);
 		shapeKNN.loadData(true);
 		sizeKNN.loadData(false);
@@ -400,6 +464,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	@Override
 	public void messageReceived(LCM lcm, String channel, LCMDataInputStream ins) {
 		if(channel.equals("ALLDONE")){
+			System.out.println("I just got a message");
 			if(curMode == ISpyMode.SEARCHING){
 				curMode = ISpyMode.FEEDBACK;
 				ispyLabel.setText("Is this it? (y/n/x)");
@@ -468,8 +533,13 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				size = sizeKNN.classify(obj.sizeFeatures);
 			}
 
-			if (color.getLabel().equals("black")) {
-				continue;
+			if (filterDark) {
+				String[] params = obj.colorFeatures.substring(1).split(" ");
+				if(Double.parseDouble(params[0]) < darkThreshold && 
+						Double.parseDouble(params[1]) < darkThreshold &&
+						Double.parseDouble(params[2]) < darkThreshold){
+					continue;
+				}
 			}
 
 			int id = obj.repID;
