@@ -9,7 +9,6 @@
 \usepackage[small]{caption}
 \usepackage{subfig}
 \usepackage{multirow}
-
 \usepackage{color}
 
 
@@ -29,14 +28,13 @@
 \maketitle
 
 
-
 \begin{abstract}
 Interaction between robots and humans is a rapidly growing area of research.
 Of particular interest is the desire to interact with robots or agents using
 natural language. This gives humans a more natural and effective way of teaching,
 commanding, and interacting with robotic agents or computers. Our work is
 designed to process images and provide descriptions of objects that can then be
-used in interactions with humans. We use images from an RGB-D camera in order to
+used in interactions with humans. We use images from an RGBD camera in order to
 classify properties of objects including size, shape, and color. These
 descriptions are then fed into a higher-level agent which handles the human
 interaction. We specifically use a simple I-Spy game to allow users to refer to
@@ -49,7 +47,7 @@ objects using descriptions in natural language.
 %    problem? What's the impact if you can solve this problem?}
 Language is a powerful tool that is just coming into its own as the human
 interface for various systems. Apple's Siri is an excellent example of this,
-making interaction with your phone intuitive, easy, and efficient. Robotic
+making interaction with one's phone intuitive, easy, and efficient. Robotic
 systems in AI can also benefit from greater understanding of language. Such
 knowledge could allow a human to command or teach a robot agent in a more natural
 way. Take, for example, a robotic arm system with knowledge of only several nouns
@@ -61,26 +59,33 @@ should be able to do so itself. Furthermore, the agent could generalize the
 concept to new items, like a bowl. This is a powerful way for an agent to learn
 from a human, without requiring expert instructors.
 
-Our goal is to leverage machine learning techniques in order to train a system
-to know a small vocabulary of nouns, adjectives, and actions. As a proof of
-concept, we want to be able to play the children's game ``I spy'' with a robotic
-arm. The arm's ``eyes'' will be a Microsoft Kinect (or, with some small
-probability, a stereo camera rig) capable of returning RGB-D data for
-classification. A collection of objects will be placed in the view of the camera,
-and a person will give a description of one of the objects. The agent will then
-select the object that matches that description using the robot arm.
+Our long-term goal is to leverage machine learning techniques in order to train
+a system to know a small vocabulary of nouns, adjectives, and actions. As a proof
+of concept, we develop a system that can play the children's game ``I spy'' using
+a robotic arm for pointing at and interacting with objects and a Microsoft Kinect
+which acts as the ``eyes'' of the system, giving RGBD data about the scene for
+classification. To play I Spy, a collection of objects is placed in the view
+of the camera and a person gives a description of one of the objects. The agent
+then determines which object is most likely to match the description, and points
+to it using the robot arm. If the agent is highly uncertain about the objects, it
+interacts with them using the arm in order to gain further information. If the
+agent guesses incorrectly, the human then shows them the correct answer, and
+the agent adjusts its beliefs about object descriptions to reflect its new
+knowledge.
 
-This work is planned to be incorporated into a larger project which includes
-teaching the agent new concepts and actions as described above. Such a project
-relies on having symbolic information provided by our work through object
-segmentation and classification. The low level features provided by our system
-can be analyzed and combined in order to build new concepts like object
-categories (like blocks and balls) or object properties (all bananas are yellow).
-Such reasoning and concept generalization is essential for agents that interact
-in novel situations. These capabilities could be used on service tasks or with
-non-robotic systems where a verbal interface offers improvements in efficiency,
-safety, etc.
+This work is being incorporated in a larger project which includes teaching the
+agent new concepts and actions as described above. Such a project relies on having
+symbolic information provided by our work through object segmentation and
+classification. The low level features provided by our system can be analyzed and
+combined in order to build new concepts such as object categories (like blocks
+and balls) or object properties (all bananas are yellow). Such reasoning and
+concept generalization is essential for agents that interact in novel situations.
+These capabilities could be used on service tasks or with non-robotic systems
+where a verbal interface offers improvements in efficiency, safety, etc.
 
+The challenges involved in playing I Spy include object detection, feature
+extraction, classification, robot arm manipulation, and active learning. We
+discuss these further in Section 3.
 
 \section{Related Work}
 %\xxx{What are existing methods? What are the state-of-the-art methods for this
@@ -94,7 +99,7 @@ classifying objects into generic groups by type~\cite{huber2004parts}. For examp
 we might be interested in identifying vehicles as bikes, motorcycles, trucks,
 cars, etc. Work by~\cite{nilsback2006visual} and~\cite{gehler2009feature}, among
 others, has shown that powerful classifiers may be constructed through boosting
-or similar across simple feature-specific classifiers such as color, shape, etc.
+or similar simple feature-specific classifiers such as color, shape, etc.
 
 Recent popularization of sensors that combine both image and depth information
 like the Microsoft Kinect inexpensively provide richer sensory information. The
@@ -108,25 +113,38 @@ objects~\cite{marton2010hierarchical, lai2011sparse}.
 
 A different approach to this problem is learning words that describe different
 areas of the feature space, which can then be combined to describe classes of
-objects. Research in this area focuses on learning simple, physically observable,
-words with the intent of using these simple descriptors to learn more complex
-nouns and relationships. Of particular popularity is an approach focused on
-learning colors and shapes of small objects using sensory data
-~\cite{zambuto2010visually, roy2002learning}. Additional approaches focus on
+objects. Research in this area focuses on learning to map physically observable
+qualities to simple words with the intent of using these simple descriptors to
+learn more complex nouns and relationships. Of particular popularity is an
+approach focused on learning colors and shapes of small objects using sensory
+data~\cite{zambuto2010visually, roy2002learning}. Additional approaches focus on
 learning entities in the environment through interaction with
 them~\cite{gold2009robotic}. These approaches all focus on interaction with
 physical objects to discover qualities about them.
 
 Although the types of words learned in these works is similar, the approaches and
 end-goals vary. Semantic clustering~\cite{zambuto2010visually}, decision trees
-~\cite{gold2009robotic}, bag of word models~\cite{roy2002learning} are all used
-in the learning algorithms. This prior work focuses mostly on visual
+~\cite{gold2009robotic}, and bag of word models~\cite{roy2002learning} are all
+used in the learning algorithms. This prior work focuses mostly on visual
 classification and the corresponding vocabulary.
 
-Though our work will not extend dramatically on this concept, our long term
-trajectory will focus more on the complex action space, previously less explored.
+Though our work does not extend dramatically on this concept, our long term
+trajectory focuses more on the complex action space, previously less explored.
 This project lays the groundwork for developing an action-space, both for
 learning said actions as well as learning objects upon which to act.
+
+During this work we explored several options for extracting features from
+objects before settling on the method described in this paper. We experimented
+with ORB, a rotation invariant feature extractor similar to SIFT and SURF
+~\cite{rublee2011orb}. Additionally we tested several feature detectors from
+OpenCV, including their square detector~\cite{opencv_library}. We also explored
+using RANSAC to discover simple shape types (such as planes, curves, and spheres),
+in order to determine the number of faces and edges each object has. This work
+was based off the RANSAC algorithms of Schnabel et
+al~\cite{schnabel2007efficient}. Although these and other feature detectors are
+frequently used in object recognition and learning tasks, we ultimately chose to
+use our own PCA-based method which resulted in more accurate guesses from the
+agent than the other methods.
 
 \section{Methodology}
 %\xxx{How are you going to solve this problem? Why should the proposed method
@@ -218,13 +236,6 @@ large number of training samples of many different objects, so we collected a
 training dataset of footage of the foam blocks at numerous positions and angles throughout the play area which were then segmented and labeled with relevant 
 descriptors.
 
-\begin{figure}
-\centering
-\caption{Our distribution of real-world color data in hue and saturation
-    dimensions. Point colors correspond with the ground truth color labeling,
-    so true red examples are shown as red +s.}
-\label{fig:colordata}
-\end{figure}
 
 \begin{figure}[h!]
 \centering

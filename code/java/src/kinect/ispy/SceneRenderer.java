@@ -17,6 +17,7 @@ import java.util.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.image.*;
 
 /* To Do:
@@ -87,8 +88,8 @@ public class SceneRenderer extends VisLayer
 //    		AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 //    		img = op.filter(img, null);
 //    		
-    		//VisChain vch = new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT-obj.bbox.getMaxY()), new VzImage(img));
-    		//worldBuffer.addBack(vch);
+//    		VisChain vch = new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT-obj.bbox.getMaxY()), new VzImage(img));
+//    		worldBuffer.addBack(vch);
 
     		double x = obj.pos[0];
     		double y = K_HEIGHT-obj.pos[1];
