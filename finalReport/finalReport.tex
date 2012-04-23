@@ -156,6 +156,15 @@ agent than the other methods.
 %    novel method.}
 
 \subsection{Object Detection}
+\xxx{This section is definitely not done yet}
+In each image the ground plane is removed, using RANSAC to discover the dominant
+plane in the image, isolating most of the objects in the scene. Further
+segmentation is performed to try to discover definitive object boundaries. From
+these segmentations we extract a feature vector for each object.
+
+For object identification we will do a similar process to segment each object in
+the camera's image. That object's position in 3D space will be determined using
+both the pixel coordinate and the depth value.
 
 \subsection{Feature Extraction}
 
@@ -179,8 +188,18 @@ from each point to the image. This process is illustrated by [FIGURE]. We used s
 sample points along the top and bottom; experimental evaluation showed no signficant
 improvement with additional samples. In addition, we calculated the ratio of the width
 and height before scaling to get an idea of how elongated the shape was.
+\xxx{Can we include some equations here in addition to the qualitative description
+of the process?}
 
 \subsection{Classification}
+We use supervised learning to generate a description of each object in the ``play
+area'' using training data we collected to predict descriptions of new objects.
+
+We gathered our own training data by collecting hundreds of RGBD frames of objects
+of each color, size, and shape in varying positions. Each object is manually
+labeled with descriptors that include color, shape, and size, and these labels
+were saved with their corresponding feature vectors.
+
 Initially we used SVM classification to validate our method, but we have since
 moved to a K-nearest neighbor approach.  With the K-nearest neighbor algorithm
 it is easy to add another example to the training, without recreating the
@@ -217,38 +236,6 @@ is very high.
 \subsection{Robot Arm Manipulation}
 
 \subsection{Active Learning}
-
-Our approach will use supervised learning techniques to generate a description
-of each object. First, we will gather our training data by collecting a number
-of RGB-D images from the camera featuring various types and positions of objects.
-Each image will be run through a segmentation process to isolate every object in
-the scene. Each object will be manually given a label describing its color,
-shape, and size. From these segmentations we will extract a useful feature vector
-for each attribute. One of the main challenges for good object classification
-will be designing a diverse and robust feature space to recognize the object
-characteristics we are interested in. Color presents easy features such as RGB
-and HSV descriptions. Volume computations and bounding box dimensions based on
-relations to the other objects in the scene can give us scale information
-necessary for estimating relative size. Shape is a more complex matter,
-especially given the noise seen in the Kinect data. We plan on exploring
-spherical harmonics, edge/corner features, and features based on projected
-models of missing data (for example, symmetry) to correctly identify shapes.
-Once the features are extracted, we need to use a machine learning algorithm to
-perform the classification. We decided to use the liblinear SVM ~\cite{LIBLINEAR}
-because it is widely used, powerful, reliable, and performs well for
-classification tasks. We are specifically using multiclass approach because we
-have attributes like color which can take on several discrete values.
-
-For object identification we will do a similar process to segment each object in
-the camera's image. That object's position in 3D space will be determined using
-both the pixel coordinate and the depth value. The features will then be
-extracted and run through our SVM's using the models created with the training
-data. This will give us a bag of words description for each object in the scene.
-This description, along with the position, will be given as input to a Soar
-agent. Soar is a cognitive architecture that will be responsible for the
-high-level reasoning and language processing. Our Soar agent will interpret the
-commands given by the users, determine which object is being described, and give
-the appropriate commands to the robotic arm.
 
 
 \xxx{equations}
