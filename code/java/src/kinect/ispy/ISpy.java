@@ -311,19 +311,19 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				//todo assume found object was last referenced?
 				//adjust threshold on all changed attributes
 				
-				if (!lastReferencedColor.equals(obj.getColor()))
+				if ((!lastReferencedColor.equals(obj.getColor())) && labels.contains(obj.getColor()))
 				{
 				    colorKNN.adjustThreshold(
 					lastReferencedColor, 1);
 				    colorThresholds = colorKNN.getThresholds();
 				}
-				if (!lastReferencedShape.equals(obj.getShape()))
+				if ((!lastReferencedShape.equals(obj.getShape())) && labels.contains(obj.getShape()))
 				{
 				    shapeKNN.adjustThreshold(
 					lastReferencedShape, 1);
 				    shapeThresholds = shapeKNN.getThresholds();
 				}
-				if (!lastReferencedSize.equals(obj.getSize()))
+				if ((!lastReferencedSize.equals(obj.getSize())) && labels.contains(obj.getSize()))
 				{
 				    sizeKNN.adjustThreshold(
 					lastReferencedSize, 1);
@@ -539,14 +539,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		
 		if ((lastReferenced = consider.poll()) != null) {
 		    // manipulate objects
-		    lastReferencedColor ="";
-		    lastReferencedShape ="";
-		    lastReferencedSize = "";
-		    if (labels.contains(lastReferenced.getColor()))
+		    
 			lastReferencedColor = lastReferenced.getColor();
-		    if (labels.contains(lastReferenced.getShape()))
 			lastReferencedShape = lastReferenced.getShape();
-		    if (labels.contains(lastReferenced.getSize()))
 			lastReferencedSize = lastReferenced.getSize();
 		    
 		    sweepObject(lastReferenced);

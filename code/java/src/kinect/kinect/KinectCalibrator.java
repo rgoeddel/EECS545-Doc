@@ -1,3 +1,4 @@
+
 package kinect.kinect;
 
 import april.vis.*;
@@ -49,6 +50,7 @@ class KinectCalibrator // implements LCMSubscriber
     kinect_status_t ks = null;
 
     public KinectCalibrator()
+    
     {
     	// Calibration variables
         calibFilename = "kinect.calib";
@@ -159,6 +161,7 @@ class KinectCalibrator // implements LCMSubscriber
     		
     		redrawImage();
     		
+    		
             return false;
         }
     }
@@ -169,6 +172,7 @@ class KinectCalibrator // implements LCMSubscriber
     
     /** Writes the kinect calibration information into the file **/
     public void createCalibFile(String filename){
+    	
     	if(xLocation == null || originLocation == null || yLocation == null){
     		System.out.println("!!! kinect.calib not saved - needs the origin, x, and y specified !!!");
     		return;
@@ -278,6 +282,7 @@ class KinectCalibrator // implements LCMSubscriber
         if(originLocation != null){
             VzCircle circle = new VzCircle(4, new VzLines.Style(Color.red, 2));
             VisChain vch = new VisChain(LinAlg.translate(originLocation), circle);
+        
             visBuffer.addBack(vch);
         }
         if(xLocation != null){
