@@ -14,7 +14,12 @@ import kinect.classify.FeatureExtractor.FeatureType;
 import java.io.*;
 import javax.swing.*;
 
-import java.awt.*;
+
+import java.awt.Rectangle;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Color;
+import java.awt.Insets;
 import java.util.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -73,6 +78,16 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private KNN colorKNN;
 	private KNN shapeKNN;
 	private KNN sizeKNN;
+    //confidence thresholds
+    ArrayList<ConfidenceLabel> shapeThresholds;
+    ArrayList<ConfidenceLabel> colorThresholds;
+    ArrayList<ConfidenceLabel> sizeThresholds;
+    
+    // trained labels
+    List<String> shapeLabels;
+    List<String> colorLabels;
+    List<String> sizeLabels;
+    
     //TODO better way than this?
     private Queue<SpyObject> consider;
     SpyObject lastReferenced;
@@ -80,6 +95,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
     String lastReferencedColor;
     String lastReferencedSize;
     String lastText;
+    boolean adjustDown;
     
 	private ISpyMode curMode = ISpyMode.STANDBY;
 	private boolean filterDark = true;
@@ -113,14 +129,22 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("CLEARED DATA");
+						
+		
 				synchronized(colorKNN){
 					colorKNN.clearData();
+					colorThresholds = colorKNN.getThresholds();
+					colorLabels = colorKNN.getListofLabels();
 				}
 				synchronized(shapeKNN){
 					shapeKNN.clearData();
+					shapeThresholds = shapeKNN.getThresholds();
+					shapeLabels = shapeKNN.getListofLabels();
 				}
 				synchronized(sizeKNN){
 					sizeKNN.clearData();
+					sizeThresholds = sizeKNN.getThresholds();
+					sizeLabels = sizeKNN.getListofLabels();
 				}
 			}
 		});
@@ -131,17 +155,24 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("RELOAD DATA");
+				
 				synchronized(colorKNN){
 					colorKNN.clearData();
 					colorKNN.loadData(false);
+					colorThresholds = colorKNN.getThresholds();
+					colorLabels = colorKNN.getListofLabels();
 				}
 				synchronized(shapeKNN){
 					shapeKNN.clearData();
 					shapeKNN.loadData(true);
+					shapeThresholds = shapeKNN.getThresholds();
+					shapeLabels = shapeKNN.getListofLabels();
 				}
 				synchronized(sizeKNN){
 					sizeKNN.clearData();
 					sizeKNN.loadData(false);
+					sizeThresholds = sizeKNN.getThresholds();
+					sizeLabels = sizeKNN.getListofLabels();
 				}
 			}
 		});
@@ -248,7 +279,14 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		colorKNN.loadData(false);
 		shapeKNN.loadData(true);
 		sizeKNN.loadData(false);
-
+		colorThresholds = colorKNN.getThresholds();
+		shapeThresholds = shapeKNN.getThresholds();
+		sizeThresholds = sizeKNN.getThresholds();
+		
+		colorLabels = colorKNN.getListofLabels();
+		sizeLabels = sizeKNN.getListofLabels();
+		shapeLabels = shapeKNN.getListofLabels();
+		
 		this.setVisible(true);
 	}
 
@@ -272,30 +310,52 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			    {
 				//todo assume found object was last referenced?
 				//adjust threshold on all changed attributes
-				if (!lastReferencedColor.equals(obj.getColor()))
+				
+				if ((!lastReferencedColor.equals(obj.getColor())) && labels.contains(obj.getColor()))
 				{
 				    colorKNN.adjustThreshold(
 					lastReferencedColor, 1);
+				    colorThresholds = colorKNN.getThresholds();
 				}
-				if (!lastReferencedShape.equals(obj.getShape()))
+				if ((!lastReferencedShape.equals(obj.getShape())) && labels.contains(obj.getShape()))
 				{
 				    shapeKNN.adjustThreshold(
 					lastReferencedShape, 1);
+				    shapeThresholds = shapeKNN.getThresholds();
 				}
-				if (!lastReferencedSize.equals(obj.getSize()))
+				if ((!lastReferencedSize.equals(obj.getSize())) && labels.contains(obj.getSize()))
 				{
 				    sizeKNN.adjustThreshold(
 					lastReferencedSize, 1);
+				    sizeThresholds = sizeKNN.getThresholds();
 				}
-
+				lastReferenced = null;
+				consider.clear();
+				adjustDown = false;
 			    }
+			    if (curMode != ISpyMode.MANIPULATING)
+			    {
+				adjustDown = true;
+				lastReferencedColor ="";
+				lastReferencedShape ="";
+				lastReferencedSize = "";
+				
+				if (labels.contains(obj.getColor()))
+				    lastReferencedColor = obj.getColor();
+				if (labels.contains(obj.getShape()))
+				    lastReferencedShape = obj.getShape();
+				if (labels.contains(obj.getSize()))
+				    lastReferencedSize = obj.getSize();
+			    }
+				
 			    pointToObject(obj);
 			    return ISpyMode.SEARCHING; 
 			}
 		}
 		System.out.println("NO INITIAL MATCH!!");
 		
-                //if not already in the middle of manipulation
+                //if not already in the middle of manipulation find objects to
+		// consider otherwise look at next object to consider
 		if (curMode != ISpyMode.MANIPULATING)
 		{
 		    // No match found:create list of objects to consider
@@ -310,19 +370,159 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		    {
 			if (obj.matchesBestShape(labels))
 			{
-			    double wrongconf = obj.wrongColorConf();
-			    if (wrongconf >= 100)
-				continue;
+			    double wrongconf = 0.0;
+			    boolean colorLabeled = false;
+			    boolean sizeLabeled = false;
+			    for (String alabel : labels)
+			    {
+				if (colorLabels.contains(alabel))
+				{
+				    colorLabeled = true;
+				}
+				else if (sizeLabels.contains(alabel))
+				{
+				    sizeLabeled = true;
+				}
+			    }
+			    			    
+			    if (obj.matchesBestColor(labels))
+			    {
+				wrongconf += -1.0;
+			    }
+			    else if (colorLabeled)
+			    {
+				double conf;
+				conf = obj.wrongColorConf();
+				//if confident about wrong label continue
+				if (conf > 1)
+				{
+				    continue;
+				}
+				wrongconf += conf;
+			    }
+
+			    if (obj.matchesBestSize(labels))
+			    {
+				wrongconf += -1.0;
+			    }
+			    else if (sizeLabeled)
+			    {
+				double conf;
+				conf = obj.wrongSizeConf();
+				//if confident about wrong label continue
+				if (conf > 1)
+				{
+				    continue;
+				}
+				wrongconf += conf;
+			    }
+			    
 			    considerCalc.add(obj);
 			    considerConf.add(wrongconf);
 			    considerConfSortHack.add(wrongconf);
 			}
 			else if (obj.matchesBestColor(labels))
 			{
+			    double wrongconf = 0.0;
+			    boolean shapeLabeled = false;
+			    boolean sizeLabeled = false;
+			    for (String alabel : labels)
+			    {
+				if (shapeLabels.contains(alabel))
+				{
+				    shapeLabeled = true;
+				}
+				else if (sizeLabels.contains(alabel))
+				{
+				    sizeLabeled = true;
+				}
+			    }
+			    			    
+			    if (obj.matchesBestShape(labels))
+			    {
+				wrongconf += -1.0;
+			    }
+			    else if (shapeLabeled)
+			    {
+				double conf;
+				conf = obj.wrongShapeConf();
+				//if confident about wrong label continue
+				if (conf > 1)
+				{
+				    continue;
+				}
+				wrongconf += conf;
+			    }
+
+			    if (obj.matchesBestSize(labels))
+			    {
+				wrongconf += -1.0;
+			    }
+			    else if (sizeLabeled)
+			    {
+				double conf;
+				conf = obj.wrongSizeConf();
+				//if confident about wrong label continue
+				if (conf > 1)
+				{
+				    continue;
+				}
+				wrongconf += conf;
+			    }
 			    
-			    double wrongconf = obj.wrongShapeConf();
-			    if (wrongconf >= 100)
-				continue;
+			    considerCalc.add(obj);
+			    considerConf.add(wrongconf);
+			    considerConfSortHack.add(wrongconf);
+			}
+			else if (obj.matchesBestSize(labels))
+			{
+			    double wrongconf = 0.0;
+			    boolean colorLabeled = false;
+			    boolean shapeLabeled = false;
+			    for (String alabel : labels)
+			    {
+				if (colorLabels.contains(alabel))
+				{
+				    colorLabeled = true;
+				}
+				else if (shapeLabels.contains(alabel))
+				{
+				    shapeLabeled = true;
+				}
+			    }
+			    			    
+			    if (obj.matchesBestColor(labels))
+			    {
+				wrongconf += -1.0;
+			    }
+			    else if (colorLabeled)
+			    {
+				double conf;
+				conf = obj.wrongColorConf();
+				//if confident about wrong label continue
+				if (conf > 1)
+				{
+				    continue;
+				}
+				wrongconf += conf;
+			    }
+
+			    if (obj.matchesBestShape(labels))
+			    {
+				wrongconf += -1.0;
+			    }
+			    else if (shapeLabeled)
+			    {
+				double conf;
+				conf = obj.wrongShapeConf();
+				//if confident about wrong label continue
+				if (conf > 1)
+				{
+				    continue;
+				}
+				wrongconf += conf;
+			    }
+			    
 			    considerCalc.add(obj);
 			    considerConf.add(wrongconf);
 			    considerConfSortHack.add(wrongconf);
@@ -339,9 +539,10 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		
 		if ((lastReferenced = consider.poll()) != null) {
 		    // manipulate objects
-		    lastReferencedColor = lastReferenced.getColor();
-		    lastReferencedShape = lastReferenced.getShape();
-		    lastReferencedSize = lastReferenced.getSize();
+		    
+			lastReferencedColor = lastReferenced.getColor();
+			lastReferencedShape = lastReferenced.getShape();
+			lastReferencedSize = lastReferenced.getSize();
 		    
 		    sweepObject(lastReferenced);
 		    System.out.print("SWEEP the ");
@@ -384,42 +585,55 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		return;
 	}
 
-	public void mouseClicked(double x, double y) {
-		for (SpyObject obj : objects.values()) {
-			if (obj.bbox.contains(x, y)) {
-				switch (curMode) {
-				case ADD_COLOR:
-					String label = String
-							.format("%s {%s}", obj.lastObject.colorFeatures,
-									trainingBox.getText());
-					System.out.println(label);
-					synchronized (colorKNN) {
-						colorKNN.add(label, false);
-					}
-					obj.boxColor  = Color.cyan;
-					break;
-				case ADD_SHAPE:
-					label = String
-							.format("%s {%s}", obj.lastObject.shapeFeatures,
-									trainingBox.getText());
-					synchronized (shapeKNN) {
-						shapeKNN.add(label, true);
-					}
-					obj.boxColor = Color.cyan;
-					break;
-				case ADD_SIZE:
-					label = String.format("%s {%s}", obj.lastObject.sizeFeatures,
-							trainingBox.getText());
-					synchronized (sizeKNN) {
-						sizeKNN.add(label, true);
-						}
-						obj.boxColor = Color.cyan;
-					break;
-				}
-				break;
-			}
+    public void mouseClicked(double x, double y) {
+	for (SpyObject obj : objects.values()) {
+	    if (obj.bbox.contains(x, y)) {
+		switch (curMode) {
+		case ADD_COLOR:
+		    String label = String
+			.format("%s {%s}", obj.lastObject.colorFeatures,
+				trainingBox.getText());
+		    System.out.println(label);
+		    synchronized (colorKNN) {
+			colorKNN.add(label, false);
+		    }
+		    obj.boxColor  = Color.cyan;
+		    break;
+		case ADD_SHAPE:
+		    label = String
+			.format("%s {%s}", obj.lastObject.shapeFeatures,
+				trainingBox.getText());
+		    synchronized (shapeKNN) {
+			shapeKNN.add(label, true);
+		    }
+		    obj.boxColor = Color.cyan;
+		    break;
+		case ADD_SIZE:
+		    label = String.format("%s {%s}", 
+					  obj.lastObject.sizeFeatures,
+					  trainingBox.getText());
+		    synchronized (sizeKNN) {
+			sizeKNN.add(label, true);
+		    }
+		    obj.boxColor = Color.cyan;
+		    break;
 		}
+		break;
+	    }
 	}
+	synchronized (colorKNN) {
+	    colorLabels = colorKNN.getListofLabels();
+	    colorThresholds = colorKNN.getThresholds();
+	}
+	synchronized (shapeKNN) {
+	    shapeLabels = shapeKNN.getListofLabels();
+	    shapeThresholds = shapeKNN.getThresholds();
+	}
+	synchronized (sizeKNN) {
+	    sizeLabels = sizeKNN.getListofLabels();
+	    sizeThresholds = sizeKNN.getThresholds();
+	}
+    }
 	
 	public void textEntered(String text){
 		if(text.equals("")){
@@ -452,6 +666,28 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		case FEEDBACK:
 			if(text.toLowerCase().charAt(0) == 'y'){
 				System.out.println("Added new label for " + text);
+				if (adjustDown)
+				{
+				    if (!lastReferencedSize.equals(""))
+				    {
+					sizeKNN.adjustThreshold(
+					    lastReferencedSize, -1);
+					sizeThresholds=sizeKNN.getThresholds();
+				    }
+				    if (!lastReferencedShape.equals(""))
+				    {
+					shapeKNN.adjustThreshold(
+					    lastReferencedShape, -1);
+					shapeThresholds=shapeKNN.getThresholds();	
+				    }
+				    if (!lastReferencedColor.equals(""))
+				    {
+					colorKNN.adjustThreshold(
+					    lastReferencedColor, -1);
+					colorThresholds=colorKNN.getThresholds();	
+				    }
+				    adjustDown = false;
+				}
 				// MODIFY: save training label
 				gotoStandbyMode();
 			} else if(text.toLowerCase().charAt(0) == 'n'){
@@ -513,6 +749,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		    lastReferenced = null;
 		    consider.clear();
 		}
+		lastReferenced = null;
+		adjustDown = false;
 		curMode = ISpyMode.STANDBY;
 		ispyLabel.setText("I spy something:");
 	}
@@ -579,7 +817,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		for (Integer id : objects.keySet()) {
 			objsToRemove.add(id);
 		}
-
+		//update thresholds
+		
 		for (ObjectInfo obj : da.objects.values()) {
 			Rectangle projBBox = obj.getProjectedBBox();
 			double[] pos = new double[] { projBBox.getCenterX(),
@@ -589,10 +828,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			obj.shapeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SHAPE);
 			obj.sizeFeatures = FeatureExtractor.getFeatureString(obj, FeatureType.SIZE);
 			ConfidenceLabel color, shape, size;
-			ArrayList<ConfidenceLabel> shapeThresholds;
+			
 			synchronized (colorKNN) {
 				color = colorKNN.classify(obj.colorFeatures);
-				shapeThresholds = shapeKNN.getThresholds();
 			}
 			synchronized (shapeKNN) {
 				shape = shapeKNN.classify(obj.shapeFeatures);
@@ -619,9 +857,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 				spyObject = new SpyObject(id);
 				objects.put(id, spyObject);
 			}
-			spyObject.updateColorConfidence(color);
+			spyObject.updateColorConfidence(color, colorThresholds);
 			spyObject.updateShapeConfidence(shape, shapeThresholds);
-			spyObject.updateSizeConfidence(size);
+			spyObject.updateSizeConfidence(size, sizeThresholds);
 			spyObject.pos = pos;
 			spyObject.bbox = projBBox;
 			spyObject.lastObject = obj;

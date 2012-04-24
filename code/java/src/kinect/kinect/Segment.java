@@ -186,8 +186,18 @@ public class Segment
                 da.currentPoints.set(i, new double[4]);
             if(belowPlane(p, floorPlane))
                 da.currentPoints.set(i, new double[4]);
-        }
+            }
         return true;
+    }
+
+    private boolean almostBlack(int color)
+    {
+        Color c = new Color(color);
+        int distFromZero = c.getRed() + c.getBlue() + c.getGreen();
+
+        if(distFromZero < 30)
+            return true;
+        return false;
     }
 
     /** Check if a given poinjt is on the other side of the ground plane as
