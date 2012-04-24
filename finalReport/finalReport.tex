@@ -183,20 +183,23 @@ in order to determine the number of faces and edges each object has. This work
 was based off the RANSAC algorithms of Schnabel et
 al~\cite{schnabel2007efficient}. Although these and other feature detectors are
 frequently used in object recognition and learning tasks, we ultimately chose to
-use our own PCA-based method which resulted in more accurate guesses from the
-agent than the other methods. First we
-projected the point-cloud back onto the image plane. Next we transformed the image
-into a canonical representation. To do this we applied Principal Component Analysis to
-find the axis the points were most spread out along, and rotated the image so that
-axis was horizontal. An axis-aligned bounding box was found for the image and its
-height and width were scaled to unit lengths. To extract features we took evenly-spaced
+use our own Principal Component Analysis (PCA)-based method which resulted in more accurate guesses from the
+agent than the other methods. 
+
+To extract edge features we apply PCA in order to find the axis the points were most spread out along. 
+For $N$ pixels we compute the mean pixel $\mu = \frac{1}{N}\displaystyle\sum_{i=1}^{N}x_i$. Then we find the covariance matrix $\Sigma = \frac{1}{N} BB^T$ where $B$ is an $N\times 2$ matrix with the $i$th column equal to $x_i - \mu$. The primay axis becomes the eigenvector with the largest eigenvalue. We then tranform the image into a canonical representation by finding a bounding box for the image aligned with the axes and rotating and scaling it to a unit box. To extract features we took evenly-spaced
 points from the top and bottom edges of the box and calculated the vertical distance
-from each point to the image. This process is illustrated by [FIGURE]. We used seven
+from each point to the image. This process is illustrated by \subref{fig:pca}. We used seven
 sample points along the top and bottom; experimental evaluation showed no significant
 improvement with additional samples. In addition, we calculated the ratio of the width
 and height before scaling to get an idea of how elongated the shape was.
-\xxx{Can we include some equations here in addition to the qualitative description
-of the process?}
+
+\begin{figure}[h!]
+\centering
+    \includegraphics[width=1.0\textwidth]{figures/PCA_example.png}
+\caption{This figure illustrates using PCA to extract shape features. First the principal component is found (A), then the image is rotated and scaled accordingly (B, C). Finally, points are sampled along the top and bottom and for each the vertical distance to the image is recorded (D).}
+    \label{fig:pca}
+\end{figure}
 
 \subsection{Classification}
 Initially we used SVM classification to validate our method, but we have since
@@ -283,19 +286,19 @@ descriptors.
     \includegraphics[height=1.6in]{figures/colorplot_noorange.eps}
     \label{fig:colordata}
 }
-\caption{Real world data is extracted from toy foam blocks. The blocks
+\caption{}
+\label{fig:objects}
+\end{figure}
+
+
+Real world data is extracted from toy foam blocks. The blocks
     themselves can be seen in \subref{fig:blocks}. Using a segmentation
     algorithm, we extract the blocks from the Kinect data \subref{fig:images}
     and generate feature vectors for each object.
     Finally, we hand label the data for features such as color and shape for
     classification training. In \subref{fig:colordata}, we see the actual
     distribution of our training samples in the hue and saturation
-    dimensions.}
-\label{fig:objects}
-\end{figure}
-
-
-
+    dimensions.
 
 
 Testing our system requires direct interaction and presentation of new objects
