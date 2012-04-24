@@ -70,54 +70,9 @@ discuss these further in Section 3.
 %\xxx{What are existing methods? What are the state-of-the-art methods for this
 %    problem? How is your approach different from the related work?}
 
-Object classification is a problem that appears throughout a variety of
-applications, ranging from law enforcement to manufacturing. While historic
-efforts have focused on the recognition problem, that is, finding a known object
-in a scene, more recent work has emphasized the more general problem of
-classifying objects into generic groups by type~\cite{huber2004parts}. For example,
-we might be interested in identifying vehicles as bikes, motorcycles, trucks,
-cars, etc. Work by~\cite{nilsback2006visual} and~\cite{gehler2009feature}, among
-others, has shown that powerful classifiers may be constructed through boosting
-or similar simple feature-specific classifiers such as color, shape, etc.
+Our work spans a number of domains, with aspects similar to projects in image recognition, robotics, instruction, and active learning. There is a rich history of work in object recognition within computer vision, and some more recent efforts have focused on generalizing objects into classes like cars, bikes, or trucks ~\cite{huber2004parts}. Other work has focused on constructing more powerful classifiers built upon detecting aspects like color and shape from the image ~\cite{nilsback2006visual} ~\cite{gehler2009feature}. Recent popularization of sensors that combine both image and depth information like the Microsoft Kinect can provide richer sensory information to aid in vision tasks. Depth can make the determination of an object's underlying geometry much easier, leading to better identification ~\cite{marton2010hierarchical}. Other work has successfully incorporated such RGB-D cameras with object recognition in indoor domains featuring common household objects ~\cite{marton2010hierarchical, lai2011sparse}.
 
-Recent popularization of sensors that combine both image and depth information
-like the Microsoft Kinect inexpensively provide richer sensory information. The
-addition of depth can help disambiguate situations that would be very difficult
-with a normal camera image alone. Depth can make the determination of an object’s
-underlying geometry much easier, leading to better identification
-~\cite{marton2010hierarchical}.
-Previous work has successfully incorporated such cameras (often called RGB-D
-cameras) with object recognition in indoors domains featuring common household
-objects~\cite{marton2010hierarchical, lai2011sparse}.
-
-
-
-A different approach to this problem is learning words that describe different
-areas of the feature space, which can then be combined to describe classes of
-objects. Research in this area focuses on learning to map physically observable
-qualities to simple words with the intent of using these simple descriptors to
-learn more complex nouns and relationships. Of particular popularity is an
-approach focused on learning colors and shapes of small objects using sensory
-data~\cite{zambuto2010visually, roy2002learning}. Additional approaches focus on
-learning entities in the environment through interaction with
-them~\cite{gold2009robotic}. These approaches all focus on interaction with
-physical objects to discover qualities about them.
-
-Although the types of words learned in these works is similar, the approaches and
-end-goals vary. Semantic clustering~\cite{zambuto2010visually}, decision trees
-~\cite{gold2009robotic}, and bag of word models~\cite{roy2002learning} are all
-used in the learning algorithms. This prior work focuses mostly on visual
-classification and the corresponding vocabulary.
-
-Though our work does not extend dramatically on this concept, our long term
-trajectory focuses more on the complex action space, previously less explored.
-This project lays the groundwork for developing an action-space, both for
-learning said actions as well as learning objects upon which to act.
-Additionally, we explore a novel way of extracting additional information from
-objects. We are unaware of previous work that uses interaction with objects to
-see them from new angles and thus obtain additional information to make guesses
-about object descriptions more confident.
-
+Our work combines both interacting with the world and using interaction to obtain more information. Most previous work focuses on one of the two sources. Some researchers have used robotic manipulation in order to discover information about an object like geometry, grasping points, and kinematics. Li and Kleeman created a system that nudged objects in order to improve its segmentation ~\cite{li2008autonomous}. Katz and Brock used a robotic arm to manipulate an object in order to obtain a kinematic model ~\cite{katz2008manipulating}. These systems do not integrate interaction from a user. One system used interaction in an environment similar to ours, but only used the arm for pointing, not manipulating ~\cite{skocaj2007system}. The novelty of our project comes in utilizing both exploration and interaction to learn about the world. We believe that both sources have different strengths and that combining them can lead to improved learning abilities. 
 
 \section{Methodology}
 %\xxx{How are you going to solve this problem? Why should the proposed method
