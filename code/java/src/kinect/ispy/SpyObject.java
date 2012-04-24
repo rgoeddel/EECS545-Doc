@@ -10,7 +10,7 @@ import java.util.Collections;
 
 import kinect.kinect.ObjectInfo;
 
-public class SpyObject implements Comparable<SpyObject>{
+public class SpyObject {
     public double[] pos;
     public Rectangle bbox;
     
@@ -20,6 +20,7 @@ public class SpyObject implements Comparable<SpyObject>{
     public Queue<ConfidenceLabel> shapeConLabels;
     public Queue<ConfidenceLabel> colorConLabels;
     public Queue<ConfidenceLabel> sizeConLabels;
+    
     double shapeConfidence;
     double colorConfidence;
     double sizeConfidence;
@@ -28,10 +29,7 @@ public class SpyObject implements Comparable<SpyObject>{
     String bestShape;
     String bestSize;
     
-    String secondBestColor;
-    String secondBestShape;
-    String secondBestSize;
-    
+    //keep track of thresholds for best labels
     double shapeThreshold;
     double colorThreshold;
     double sizeThreshold;
@@ -50,8 +48,6 @@ public class SpyObject implements Comparable<SpyObject>{
 	this.bestShape = "unknown";
 	this.bestSize = "unknown";
 	
-	this.secondBestColor = "";
-	this.secondBestShape = "";
 	
 	this.sizeThreshold = 0.5;
 	this.shapeThreshold = 0.5;
@@ -125,7 +121,6 @@ public class SpyObject implements Comparable<SpyObject>{
 	    }
 	    if (cnt > max)
 	    {
-		max2 = max;
 		max = cnt;
 	    }
 	    sum+= c.getConfidence();
@@ -136,12 +131,7 @@ public class SpyObject implements Comparable<SpyObject>{
 	{
 	    bestColor = bestS.get(index);
 	}
-	//second best
-	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
-	{
-	    secondBestColor = bestS.get(index);
-	}
-
+	//get threshold for this new best label
 	for (ConfidenceLabel thresh : confidenceThresholds)
 	{
 	    if (bestColor.equals(thresh.getLabel()))
@@ -167,7 +157,7 @@ public class SpyObject implements Comparable<SpyObject>{
 	ArrayList<String> bestS = new ArrayList<String>();
 	ArrayList<Integer> bestCount = new ArrayList<Integer>();
 	int max = 0;
-	int max2 = 0;
+	
 	int index;
 	for (ConfidenceLabel c : sizeConLabels)
 	{
@@ -187,7 +177,6 @@ public class SpyObject implements Comparable<SpyObject>{
 	    }
 	    if (cnt > max)
 	    {
-		max2 = max;
 		max = cnt;
 	    }
 	    sum+= c.getConfidence();
@@ -198,13 +187,7 @@ public class SpyObject implements Comparable<SpyObject>{
 	{
 	    bestSize = bestS.get(index);
 	}
-	//second best
-	
-	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
-	{
-	    secondBestSize = bestS.get(index);
-	}
-	
+	//get threshold for this new best label
 	for (ConfidenceLabel thresh : confidenceThresholds)
 	{
 	    if (bestSize.equals(thresh.getLabel()))
@@ -217,7 +200,8 @@ public class SpyObject implements Comparable<SpyObject>{
 	sizeConfidence = sum/(double)count * (double)max/(double)count; 
 	return sizeConfidence;
     }
-
+    
+    
     public double updateShapeConfidence(
 	ConfidenceLabel cl, 
 	ArrayList<ConfidenceLabel> confidenceThresholds)
@@ -230,7 +214,7 @@ public class SpyObject implements Comparable<SpyObject>{
 	ArrayList<String> bestS = new ArrayList<String>();
 	ArrayList<Integer> bestCount = new ArrayList<Integer>();
 	int max = 0;
-	int max2 = 0;
+	
 	int index;
 	for (ConfidenceLabel c : shapeConLabels)
 	{
@@ -250,7 +234,6 @@ public class SpyObject implements Comparable<SpyObject>{
 	    }
 	    if (cnt > max)
 	    {
-		max2 = max;
 		max = cnt;
 	    }
 	    sum+= c.getConfidence();
@@ -261,12 +244,7 @@ public class SpyObject implements Comparable<SpyObject>{
 	{
 	    bestShape = bestS.get(index);
 	}
-	//second best
-	if ((max2 > 0) && ((index = bestCount.indexOf(max2)) >= 0))
-	{
-	    secondBestShape = bestS.get(index);
-	}
-	
+	//get threshold for this new best label
 	for (ConfidenceLabel thresh : confidenceThresholds)
 	{
 	    if (bestShape.equals(thresh.getLabel()))
@@ -279,58 +257,28 @@ public class SpyObject implements Comparable<SpyObject>{
 	return shapeConfidence;
     }
     
-    public boolean matchesOneAndSecondBest(ArrayList<String> labels, int numbest)
-    {
-	int cntbest = 0;
-	for(String label : labels){
-	    if (bestColor.equals(label)) {
-		cntbest++;
-		continue;
-	    } else if (bestShape.equals(label)) {
-		cntbest++;
-		continue;
-	    } else if (secondBestColor.equals(label)) {
-		continue;
-	    } else if (secondBestShape.equals(label)) {
-		continue;
-	    } 
-	    return false;
-	}
-	if (cntbest >= numbest)
-	    return true;
-	return false;
-    }
-    
-    
-    public double wrongShapeConf()
+    public double shapeConfidenceThresholdDif()
     {
     	System.out.println(bestShape + " comparing thresh:" + 
 			   this.shapeThreshold + " and conf:" + 
 			   this.shapeConfidence);
-	if (this.shapeThreshold < this.shapeConfidence)
-	    return 100.0;
 	return this.shapeConfidence - this.shapeThreshold;
     }
     
-    public double wrongColorConf()
+    
+    public double colorConfidenceThresholdDif()
     {
 	System.out.println(bestColor + " comparing thresh:" + 
 			   this.colorThreshold + " and conf:" + 
 			   this.colorConfidence);
-
-	if (this.colorThreshold < this.colorConfidence)
-	    return 100.0;
 	return this.colorConfidence - this.colorThreshold;
     }
     
-    public double wrongSizeConf()
+    public double sizeConfidenceThresholdDif()
     {
 	System.out.println(bestSize + " comparing thresh:" + 
 			   this.sizeThreshold + " and conf:" + 
 			   this.sizeConfidence);
-	if (this.sizeThreshold < this.sizeConfidence)
-	    return 100.0;
-		
 	return this.sizeConfidence - this.sizeThreshold;
     }
     
@@ -378,19 +326,5 @@ public class SpyObject implements Comparable<SpyObject>{
 	    return false;
 	}
 	return true;
-    }
-    
-    @Override
-	public int compareTo(SpyObject obj)
-    {
-	double diff = (this.colorConfidence + this.shapeConfidence - this.shapeThreshold) - 
-	    (obj.colorConfidence + obj.shapeConfidence - obj.shapeThreshold);
-	    
-	if (diff < 0)
-	    return (-1);
-	else if (diff > 0)
-	    return (1);
-	else
-	    return 0;
     }
 }
