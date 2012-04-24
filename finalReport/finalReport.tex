@@ -19,8 +19,6 @@
 %-- Prior Work on nudging (Everyone)
 %-- Methodology
 %    -- Info about Kinect (Rob)
-%    -- Object Detection and Tracking (Lauren)
-%    -- Classification- talk about features to start (James)
 %    -- arm manipulation (Rob)
 %    -- Active Learning
 %    -- multiclass clustering in KNN, adding new classes is easy (James)
@@ -170,25 +168,25 @@ In order to play I Spy, the agent must be able to point at objects matching the
 provided description as well as to nudge objects with low confidence in their
 descriptions in order to see them from a new angle and gather new information
 about them. In order for the agent to do this, it is necessary to have localized
-positions for individual objects in the scene. Motivated by changing the confidence
-thresholds for trustworthiness of descriptors, objects are tracked over time.
+positions for individual objects in the scene. Additionally, tracking objects
+between frames allows allows confidence levels to change over time.
 
 The RANSAC algorithm~\cite{fischler1981random} is used to discover the dominant
 plane in each image, isolating most of the objects in the scene. Further
 segmentation is performed to try to discover definitive object boundaries. This
 segmentation considers both the change in color and change in depth of neighboring
-pixels. Each pixel begins as its own segment, and the segments are iteratively
-combined with neighboring segments if the difference in color or the distance
-between them is less than a given threshold. From these segmentations we extract
-a feature vector for each object.
+pixels.
+%Each pixel begins as its own segment, and the segments are iteratively
+%combined with neighboring segments if the difference in color or the distance
+%between them is less than a given threshold.
+From these segmentations we extract a feature vector for each object.
 
 In order to adjust the confidence thresholds to determine which shapes are more
-certain (discussed below), it is necessary to track an object over time. In order
-to do this, the object must be tracked over time. This can be challenging, as the
-physical object may change location over time or may be occluded by the robot arm
-or another object. As each new frame appears, the segmented objects in it are
-compared to the segmented objects of the most recent frame. They are matched to
-an object from the previous frame if there exists an object with a similar mean
+certain (discussed below), it is necessary to track an object over time. This can
+be challenging, as the physical object may change location over time or may be
+occluded by the robot arm or another object. As each new frame appears, the
+segmented objects in it are compared to the segmented objects of the most recent
+frame. They're matched matched if there exists an object with a similar mean
 color near the same physical location. Any object that does not have a match from
 the most recent frame is compared to objects from a history of frames. In this case,
 the objects is matched to a prior object that is nearly the same color which
@@ -239,33 +237,51 @@ moved to a K-nearest neighbor approach.  With the K-nearest neighbor algorithm
 it is easy to add another example to the training, without recreating the
 entire training model as was done with SVM classification.  Additionally we no
 longer rely on third party software, namely liblinear ~\cite{LIBLINEAR} to do
-classification.  Using our implementation of a K-nearest neighbor
+classification. Using our implementation of a K-nearest neighbor
 classification we also reported a confidence metric for each label based on the
 percentage of neighbors with a given label.
 
 \subsection{Confidence}
 One of the difficulties with reasoning about real objects is that the world is
 partially observable. Objects can have a dramatically different appearance at
-different orientations.  Naturally when given such an object, a human may move
+different orientations. Naturally when given such an object, a human may move
 their head around to gain more information and confidence as to what the object is.
 Our system has a fixed vision angle, but it is possible for it to
 manipulate objects to gain information on objects whose appearance has high
-orientation dependency.  For this purpose a confidence threshold system was
+orientation dependency. For this purpose a confidence threshold system was
 developed to learn what objects may have high uncertainty, and therefor would
-be good candidate for manipulation.  When the system is queried for an object
+be good candidate for manipulation. When the system is queried for an object
 that it cannot currently see, it should manipulate an uncertain object with the
 highest probability of actually being the queried object.
 
-All attributes are given the same default confidence threshold.  When an object
-is correctly labeled and verified by the user, the thresholds for those labels
-is decreased.  When an object manipulation correctly reveals that it was
-previously mislabeled the associated label thresholds are increased.  To
-determine the likelihood of a mislabel, the confidence of a label, calculated
-from the classification system, is compared to the threshold for that shape.
-If the confidence exceeds the threshold then it is reported as unlikely to be a
-mislabel.  For example in our system the rectangle label is commonly misplaced
-on objects presented head on, so the learned threshold confidence for rectangle
-is very high.
+All attributes are given the same default confidence threshold and adjusted
+using user feedback. To determine the likelihood of a mislabel, the confidence
+of a label, calculated from the classification system, is compared to the
+confidence threshold for that shape, color, or size. If the confidence exceeds
+the threshold then it is reported as unlikely to be a mislabel.  For example in
+our system the rectangle label is commonly misplaced on objects presented head
+on, so the learned threshold confidence for rectangle is very high.
+
+If an object exists that the agent believes fits the description provided by the
+user, the agent points to it regardless of the confidence in the accuracy of the
+description or the corresponding confidence thresholds. As a result, when the
+agent correctly identifies an object and the confidence is lower than the
+threshold for the given descriptions, the thresholds can be lowered to reflect
+the correctness of the lower confidence. Conversely, the thresholds are increased
+when the agent selects an incorrect object or when it cannot find the correct
+object. In the first case, the thresholds associated with the incorrectly guessed
+object are increased so they are less likely to be chosen incorrectly in the
+future. In the second case,
+Similar effects result from nudging an object and determining the correct label.
+
+The thresholds are increased or decreased using the following formula:
+$$\mathrm{Thresh_{t}} = \mathrm{Thresh_{t-1}}  \lambda^tdirection(t)$$
+\[direction(t) = \left\{ \begin{array}{ll}
+         1 & \mbox{if threshold should increase};\\
+         -1 & \mbox{if threshold should decrease}.\end{array} \right. \]
+where $t=$mathrm{number of times the threshold has changed.
+\meh{My additions are okay, James should read over this and adjust to reflect
+the actual code.}
 
 \subsection{Robot Arm Manipulation}
 
