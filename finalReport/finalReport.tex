@@ -52,7 +52,7 @@ When an agent is faced with uncertaintly it has two major courses of action: it 
 %    problem? What's the impact if you can solve this problem?}
 Agents that operate in environments that are partially observable or very noisy are often faced with large amounts of uncertainty. One option for the agent is to explore the environment to resolve some of that uncertainty. While this approach can be done autonomously without direct human involvement, there still may be fundamental limits to what information the agent is able to collect. A second option is for the agent to consult an expert to acquire missing knowledge, a technique known as active learning. This can present a large and rich source of knowledge but can be costly to acquire. Hybrid approaches enable an agent to explore the world on its own and ask an expert for knowledge only when it needs to. This hybridization leverages the strengths of each option and can lead to better performance. Of course, intregrating them introduces new challenges such as how to tell when knowledge is unattainable through exploration or what consitutes an important question.
 
-Our project involves one such attempt to utilize both sources of knowledge. Our system is tasked with identifying properties of various objects like color, shape, and size in order to play the children's game ``I-spy''. Unfortunately it is quite common for an object to be in a poor orientation and thus difficult for our system to classify. We use both recent history and information from our K-Nearst Neighbor (KNN) classifier to determine when we are uncertain about an object. Instead of asking the user for help, the system first tries to get more information about the object by nudging it using a robotic arm. The goal is to change the orientation of the object in order to improve its classification performance. It will learn which classes are inherintly uncertain (such as rectangles) and adjust accordingly. We also will ask for feedback from the user when an object is misidentified to gain more training data. Our system is flexible enough to allow users to teach new classes of properties during its operation. 
+Our project involves one such attempt to utilize both sources of knowledge. Our system is tasked with identifying properties of various objects like color, shape, and size in order to play the children's game ``I-spy''. Unfortunately it is quite common for an object to be in a poor orientation and thus difficult for our system to classify. We use both recent history and information from our K-Nearst Neighbor (KNN) classifier to determine when we are uncertain about an object. Instead of asking the user for help, the system first tries to get more information about the object by nudging it using a robotic arm. The goal is to change the orientation of the object in order to improve its classification performance. It will learn which classes are inherintly uncertain (such as rectangles) and adjust accordingly. We also will ask for feedback from the user when an object is misidentified to gain more training data. Our system is flexible enough to allow users to teach new classes of properties during its operation.
 
 This work is being incorporated in a larger project which includes teaching the
 agent new concepts and actions. Such a project relies on having
@@ -143,8 +143,8 @@ in order to determine the number of faces and edges each object has. This work
 was based off the RANSAC algorithms of Schnabel et
 al~\cite{schnabel2007efficient}. Although these and other feature detectors are
 frequently used in object recognition and learning tasks, we ultimately chose to
-use our own Principal Component Analysis (PCA)-based method which resulted in more accurate guesses from the
-agent than the other methods.
+use our own Principal Component Analysis (PCA)-based method which resulted in
+more accurate guesses from the agent than the other methods.
 
 To extract edge features we apply PCA in order to find the axis the points were most spread out along.
 For $N$ pixels we compute the mean pixel $\mu = \frac{1}{N}\displaystyle\sum_{i=1}^{N}x_i$. Then we find the covariance matrix $\Sigma = \frac{1}{N} BB^T$ where $B$ is an $N\times 2$ matrix with the $i$th column equal to $x_i - \mu$. The primay axis becomes the eigenvector with the largest eigenvalue. We then tranform the image into a canonical representation by finding a bounding box for the image aligned with the axes and rotating and scaling it to a unit box. To extract features we took evenly-spaced
@@ -152,7 +152,7 @@ points from the top and bottom edges of the box and calculated the vertical dist
 from each point to the image. This process is illustrated by \subref{fig:pca}. We use seven
 sample points along the top and bottom; experimental evaluation showed no significant
 improvement with additional samples. In addition, we calculate the ratio of the width
-and height before scaling to get an idea of how elongated the shape was. From each image we generated a total of four shape feature vectors after flipping the image vertically and horizontally. This allows us to more quicly learn a shape across different orientations. 
+and height before scaling to get an idea of how elongated the shape was. From each image we generated a total of four shape feature vectors after flipping the image vertically and horizontally. This allows us to more quicly learn a shape across different orientations.
 
 \begin{figure}[h!]
 \centering
@@ -330,13 +330,13 @@ system with new shapes and colors and observing how quickly and effectively it
 can learn and apply the new information.  Qualitatively it is easy to see
 whether the system is performing well.  However to do a less subjective,
 quantitative evaluation of our methodology, we used the
-leave-one-out-cross-validation(LOOCV) method on our collected training data. This testing
-method mirrors the
-scenario where a novel object is presented to this system.
+leave-one-out-cross-validation(LOOCV) method on our collected training data. This
+testing method mirrors the scenario where a novel object is presented to this
+system.
 
 The results in Table~\ref{tbl:testresults} \xxx{todo} show LOOCV percentages
-for the shape, color and size.  Unsurprisingly it has more difficulty with shape
-, which varies greatly by angle and position, and size, which is a more
+for the shape, color and size.  Unsurprisingly it has more difficulty with shape,
+which varies greatly by angle and position, and size, which is a more
 subjective attribute. It has particular problems with shapes that are presented
 head on, which tend to resemble rectangles.  This is the primary motivation for
 developing a confidence threshold learning mechanism, which allows the system
@@ -363,12 +363,28 @@ This work is part of a larger project, Broad Operational Language Translation
 funded by DARPA. The goal of BOLT is to create a machine that can handle
 situated interactive instruction with learned objects and actions. Our work has
 focus on the needed feature learning and object classification that the BOLT
-system will use. In the near future future we intend to use the robotic arm to
-pick up objects to look at them from different angles and place them in different
-positions in the play area.
+system will use.
+
+The short term goals of this continued work involve further manipulation of the
+objects such as picking them up in order to view them from different angles and
+place them in different positions in the play area. Additionally we will be
+interfacing our work with the SOAR archtecture. We had initially planned to
+integrate SOAR in this project, but found that it decided it did not contribute
+to the immediate goals of the project.
+
 \section{Conclusion}
 %\xxx{Summary of your progress and your final expected goal (what do you expect
 %    to achieve or demonstrate for the final project?)}
+In order to play I Spy, an agent must be able to correctly identify labels
+associated with objects in its envronment. This requires identifiying objects
+and their salient features, using prior knowledge to map features to labels, and
+learning from mistakes in order to perform better in the future. We create an
+agent that is capable of doing all of this, using a robotic arm to interact with
+objects, a confidence threshold based system to dictate interaction choices, and
+an interface that that allows it to actively learn from the user it is playing
+with. The resulting system is the beginning of a more complex agent that can
+use interaction with both users and its environment to gain a better understanding
+of objects, labels, and semantics.
 
 
 \bibliographystyle{abbrv}
