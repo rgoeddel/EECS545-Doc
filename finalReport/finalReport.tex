@@ -254,58 +254,63 @@ for size, $k=5$. The most popular historical label is reported along with its
 confidence, which is calculated as a product of the frequency of that label
 and the average confidence of all labels in the window.
 
-\subsection{Confidence Thresholds and Object manipulation}
-One of the difficulties with reasoning about real objects in the world is partially observability. Objects can have a dramatically different appearance at
-different orientations. Naturally when given such an object, a human may move
+\subsection{Confidence Thresholds and Object Manipulation}
+One of the difficulties with reasoning about real objects in the world is
+partial observability. Objects can have dramatically different appearances
+at different orientations. Naturally when given such an object, a human may move
 his or her head around to gain more information and confidence as to what the object
 is.  Similarly, when holding an unfamiliar object, a person may move it around
 to further study it.
 
-Our system has a fixed vision angle, but can
+Our system has a fixed viewpoint, but can
 manipulate objects to gain information on those whose appearance has high
-orientation dependency. For this purpose, a confidence threshold system was
-developed to learn what objects may have high uncertainty, and therefore would
+orientation dependency. For this purpose, we adopt a confidence threshold system
+to learn which objects have high uncertainty, and therefore are
 be good candidates for manipulation. When the system is queried for an object
 that it cannot currently see, it should manipulate an uncertain object with the
-highest probability of actually being the queried object.
+highest probability of being the queried object.
 
-All attributes are given the same default confidence threshold and adjusted
-using user feedback. We attempt to estimate $P(label_{actual}(obj) \neq x |
+All labels are given the same default confidence threshold, and then the
+threshold adjusted based on user feedback.
+We attempt to estimate $P(label_{actual}(obj) \neq x |
                                        label_{observed}(obj) = x)$,
 which is the likelihood of a mislabel given the observed label $x$. For
-example, the rectangle label is commonly misapplied to objects presented
-head on. Thus our system learns a confidence threshold for rectangle is
+example, the ``rectangle'' label is commonly misapplied to objects presented
+head on. Thus our system learns that the confidence threshold for rectangle is
 very high, meaning that $P(shape_{actual}(obj) \neq
                          rectangle|shape_{observed}(obj) = rectangle)$
 is very high. When the system it asked to identify an object by a given
-description it first tries to find an object that matches and points to
-it regardless of the confidence in the accuracy of the labels or the
+description it first tries to find an exact match and points to
+it regardless of the confidence of the labels or the
 corresponding confidence thresholds. As a result, when the agent
 correctly identifies an object and the confidence is lower than the
-threshold for the given labels, those thresholds are lowered to reflect
-the correctness of the lower confidence. If there are no objects that
-match, it examines the labels in the same category to see if any object
-might be mislabeled. For each label it compares the confidence obtained
-from the KNN to that label's confidence threshold. If the confidence is
-lower, it will attempt to nudge that object in the hopes that the label
-is wrong. If multiple objects could be mislabeled it orders the search
-based on the difference between the confidences and the thresholds. When
-no objects are found matching the user description the thresholds are
-increased. In this case the agent prompts the user to identify the
-correct object. The thresholds for the reported labels should be
-increased, so that in the future the system will be more likely to
-attempt to manipulate objects with these labels and relvative
-confidences.
+threshold for the given label, the threshold for that label is lowered.
+Intuitively, this is because the threshold was higher than needed for proper
+identification.
 
-The thresholds are increased or decreased using the following formula:
-$$\mathrm{Thresh_{t}} = \mathrm{Thresh_{t-1}}  \lambda^tdirection(t)$$
-\[direction(t) = \left\{ \begin{array}{ll}
+If there are no objects that match exactly, the system examines partial
+matches (i.e. matches with at least one correct label). For each incorrect label, it compares the
+label confidence to that label's confidence threshold. If the confidence is
+lower, it will attempt to nudge that object in the hopes that the label
+is wrong. If multiple objects might be mislabeled it orders the search
+based on the difference between the confidences and the thresholds. If, even after
+manipulation, no objects are found matching the user description, the user is
+prompted to identify the correct object. The thresholds for the incorrect
+labels are then increased so that in the future, the system will be more
+likely to nudge them.
+
+\xxx{Justify min/max}
+The thresholds are adjusted by a amount which decays with the number of
+threshold updates. Additionally, thresholds are clamped between a minimum of
+0.1 and a maximum of 0.95. Updates are calculated using the following formula:
+$$\mathrm{Thresh_{t}} = \mathrm{Thresh_{t-1}} + \lambda^t C change$$
+\[change = \left\{ \begin{array}{ll}
          1 & \mbox{if threshold should increase};\\
          -1 & \mbox{if threshold should decrease}.\end{array} \right. \]
-where $t=$mathrm{number of times the threshold has changed.
-\meh{My additions are okay, James should read over this and adjust to reflect
-the actual code.I looked at it- still needs some review and equation explanation}
+where $t= \mathrm{number~of~threshold~updates}$ and C is a parameter. Through
+experimentation, these values were tuned to $\lambda = 0.8$ and $C = 0.3$.
 
+\meh{WE WERE HERE}
 \subsection{Robot Arm Manipulation}
 Our system is integrated with a robotic arm. The arm was loaned to us by Prof.
 Edwin Olson and was developed for use in his undergraduate class. The arm
@@ -331,7 +336,7 @@ incorrect object or when it cannot find the specified object. The labels the
 user provides in response to the agent are added as training examples into the
 KNN algorithm, as are all correct guesses that the user verifies.
 
-The system is capable of begining with no knowledge and, through playing games
+The system is capable of beginning with no knowledge and, through playing games
 with people and requesting feedback about whether its guesses are correct or
 incorrect, learn to distinguish shapes, colors, and sizes.
 
