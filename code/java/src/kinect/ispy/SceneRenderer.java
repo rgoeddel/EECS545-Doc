@@ -133,18 +133,19 @@ public class SceneRenderer extends VisLayer
       VisWorld.Buffer worldBuffer = this.world.getBuffer("displayImage");
       
     	BufferedImage background = getKinectImage(kinectData);
-    	for(int y= (int)ISpy.viewRegion.getMinY(); y<ISpy.viewRegion.getMaxY(); y++){
-        for(int x=(int)ISpy.viewRegion.getMinX(); x<ISpy.viewRegion.getMaxX(); x++){
-            int i = y*kinect_status_t.WIDTH + x;
-            int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
-                    (kinectData.depth[2*i+0]&0xff);
-            double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], kinectData);
-            double[] pixel = KUtils.getPixel(pKinect);
-    				Color c =  new Color((int)pKinect[3]);
-    				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
-    				background.setRGB((int)pixel[0], (int)pixel[1], rc.getRGB());
-        }
-    }
+		double[] pt = new double[2];
+		for(int y = (int)ISpy.viewRegion.getMinY(); y < ISpy.viewRegion.getMaxY(); y++){
+			for(int x = (int)ISpy.viewRegion.getMinX(); x < ISpy.viewRegion.getMaxX(); x++){
+	            int i = y*kinect_status_t.WIDTH + x;
+	            int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
+	                    (kinectData.depth[2*i+0]&0xff);
+	            double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], kinectData);
+	            double[] pixel = KUtils.getPixel(pKinect);
+	    				Color c =  new Color((int)pKinect[3]);
+	    				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
+	    				background.setRGB((int)pixel[0], (int)pixel[1], rc.getRGB());
+	        }
+	    }
       worldBuffer.addBack(new VzImage(background, VzImage.FLIP));
       worldBuffer.setDrawOrder(-10);
       worldBuffer.swap();

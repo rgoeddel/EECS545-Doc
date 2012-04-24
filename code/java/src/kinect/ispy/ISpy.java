@@ -52,7 +52,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	
 
 	// Subset of the image used
-	public final static int[] viewBorders = new int[] { 75, 150, 620, 400 };
+	public final static int[] viewBorders = new int[] {0, 150, 640, 440 };
 	public final static Rectangle viewRegion = new Rectangle(viewBorders[0],
 			viewBorders[1], viewBorders[2] - viewBorders[0], viewBorders[3]
 					- viewBorders[1]);
@@ -617,6 +617,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 		    }
 		    obj.boxColor = Color.cyan;
 		    break;
+		    
 		}
 		break;
 	    }
@@ -793,9 +794,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	private void extractPointCloudData() {
 		da.currentPoints = new ArrayList<double[]>();
 		da.coloredPoints = new ArrayList<double[]>();
-
-		for (int y = (int) viewRegion.getMinY(); y < viewRegion.getMaxY(); y++) {
-			for (int x = (int) viewRegion.getMinX(); x < viewRegion.getMaxX(); x++) {
+		
+		for(int y = (int)viewRegion.getMinY(); y < viewRegion.getMaxY(); y++){
+			for(int x = (int)viewRegion.getMinX(); x < viewRegion.getMaxX(); x++){
 				int i = y * kinect_status_t.WIDTH + x;
 				int d = ((kinectData.depth[2 * i + 1] & 0xff) << 8)
 						| (kinectData.depth[2 * i + 0] & 0xff);
