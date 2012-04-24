@@ -18,18 +18,10 @@
 %    -- Confidence and uncertainty
 %-- Prior Work on nudging (Everyone)
 %-- Methodology
-%    -- Info about Kinect (Rob)
-%    -- Object Detection and Tracking (Lauren)
-%    -- Classification- talk about features to start (James)
-%    -- arm manipulation (Rob)
-%    -- Active Learning
-%    -- multiclass clustering in KNN, adding new classes is easy (James)
 %    -- more thoroughly explain nudging selection process (James)
 %-- Evaluation
 %    -- paragraph explaining scenario
 %    -- training set size (James)
-%-- Future work section
-%    -- Expand on BOLT
 %-- Conclusion
 
 
@@ -51,59 +43,24 @@
 
 
 \begin{abstract}
-Interaction between robots and humans is a rapidly growing area of research.
-Of particular interest is the desire to interact with robots or agents using
-natural language. This gives humans a more natural and effective way of teaching,
-commanding, and interacting with robotic agents or computers. Our work is
-designed to process images and provide descriptions of objects that can then be
-used in interactions with humans. We use images from an RGB-D camera in order to
-classify properties of objects including size, shape, and color. These
-descriptions are then fed into a higher-level agent which handles the human
-interaction. We specifically use a simple I-Spy game to allow users to refer to
-objects using descriptions in natural language.
+When an agent is faced with uncertaintly it has two major courses of action: it can try and explore on its own to gain more knowledge or it can consult an expert. We have created a image recognition system that attempts to utitilize both sources of knowledge to improve its performance. Out system captures point-cloud data from an RGB-D camera and uses machine learning techniques to classify properties of objects including size, shape, and color. It is able to meausure the amount of uncertainty for a given property and manipulate the object using a robotic arm in order to reduce that uncertainty. It also incorporates direct feedback from the user to further improve its classification performance and requests more information when it misclassifies an object. Users can easily teach the system new classes of properties on the fly. We demonstrate our system through a simple I-Spy game using toy blocks of various shapes and colors as objects.
 \end{abstract}
 
 
 \section{Introduction}
 %\xxx{Problem description and motivation. Why do you want to solve this
 %    problem? What's the impact if you can solve this problem?}
-Language is a powerful tool that is just coming into its own as the human
-interface for various systems. Apple's Siri is an excellent example of this,
-making interaction with one's phone intuitive, easy, and efficient. Robotic
-systems in AI can also benefit from greater understanding of language. Such
-knowledge could allow a human to command or teach a robot agent in a more natural
-way. Take, for example, a robotic arm system with knowledge of only several nouns
-and actions: cup, sink, grab/move object, and turning on/off the sink, and the
-spatial concept of in. Through language, the robot could then be taught the new
-action of ``filling a cup'', which means to put the cup in the sink and turn on
-the sink. Even though the robot has never seen anyone fill a cup before, now it
-should be able to do so itself. Furthermore, the agent could generalize the
-concept to new items, like a bowl. This is a powerful way for an agent to learn
-from a human, without requiring expert instructors.
+Agents that operate in environments that are partially observable or very noisy are often faced with large amounts of uncertainty. One option for the agent is to explore the environment to resolve some of that uncertainty. While this approach can be done autonomously without direct human involvement, there still may be fundamental limits to what information the agent is able to collect. A second option is for the agent to consult an expert to acquire missing knowledge, a technique known as active learning. This can present a large and rich source of knowledge but can be costly to acquire. Hybrid approaches enable an agent to explore the world on its own and ask an expert for knowledge only when it needs to. This hybridization leverages the strengths of each option and can lead to better performance. Of course, intregrating them introduces new challenges such as how to tell when knowledge is unattainable through exploration or what consitutes an important question.
 
-Our long-term goal is to leverage machine learning techniques in order to train
-a system to know a small vocabulary of nouns, adjectives, and actions. As a proof
-of concept, we develop a system that can play the children's game ``I spy'' using
-a robotic arm for pointing at and interacting with objects and a Microsoft Kinect
-which acts as the ``eyes'' of the system, giving RGB-D data about the scene for
-classification. To play I Spy, a collection of objects is placed in the view
-of the camera and a person gives a description of one of the objects. The agent
-then determines which object is most likely to match the description, and points
-to it using the robot arm. If the agent is highly uncertain about the objects, it
-interacts with them using the arm in order to gain further information. If the
-agent guesses incorrectly, the human then shows them the correct answer, and
-the agent adjusts its beliefs about object descriptions to reflect its new
-knowledge.
+Our project involves one such attempt to utilize both sources of knowledge. Our system is tasked with identifying properties of various objects like color, shape, and size in order to play the children's game ``I-spy''. Unfortunately it is quite common for an object to be in a poor orientation and thus difficult for our system to classify. We use both recent history and information from our K-Nearst Neighbor (KNN) classifier to determine when we are uncertain about an object. Instead of asking the user for help, the system first tries to get more information about the object by nudging it using a robotic arm. The goal is to change the orientation of the object in order to improve its classification performance. It will learn which classes are inherintly uncertain (such as rectangles) and adjust accordingly. We also will ask for feedback from the user when an object is misidentified to gain more training data. Our system is flexible enough to allow users to teach new classes of properties during its operation. 
 
 This work is being incorporated in a larger project which includes teaching the
-agent new concepts and actions as described above. Such a project relies on having
+agent new concepts and actions. Such a project relies on having
 symbolic information provided by our work through object segmentation and
 classification. The low level features provided by our system can be analyzed and
 combined in order to build new concepts such as object categories (like blocks
 and balls) or object properties (all bananas are yellow). Such reasoning and
 concept generalization is essential for agents that interact in novel situations.
-These capabilities could be used on service tasks or with non-robotic systems
-where a verbal interface offers improvements in efficiency, safety, etc.
 
 The challenges involved in playing I Spy include object detection, feature
 extraction, classification, robot arm manipulation, and active learning. We
@@ -132,6 +89,8 @@ underlying geometry much easier, leading to better identification
 Previous work has successfully incorporated such cameras (often called RGB-D
 cameras) with object recognition in indoors domains featuring common household
 objects~\cite{marton2010hierarchical, lai2011sparse}.
+
+
 
 A different approach to this problem is learning words that describe different
 areas of the feature space, which can then be combined to describe classes of
@@ -165,36 +124,47 @@ about object descriptions more confident.
 %    work? Provide technical details of your approach if you are proposing a
 %    novel method.}
 
+\subsection{Point Cloud Acquisition}
+Our work is intended to work with any colored 3D point cloud data. The
+Microsoft Kinect is a simple and cost effective platform for acquiring
+this data. We interface with the Kinect using the OpenKinect
+library~\cite{OpenKinect}. The Kinect broadcasts LCM~\cite{huang2010} messages
+containing orientation and frame information for other software to process.
+
+Aligning color and depth data from the Kinect requires not only
+calibrating the individual color and IR cameras, but also cross calibrating
+the two. To do this, we explored several existing toolkits, eventually
+using on RGBDemo~\cite{rgbdemo}. This kit automatically performs all of the
+necessary calibrations, returning alignment parameters as well as terms for a
+radial distortion model.
+
 \subsection{Object Detection and Tracking}
 In order to play I Spy, the agent must be able to point at objects matching the
 provided description as well as to nudge objects with low confidence in their
 descriptions in order to see them from a new angle and gather new information
 about them. In order for the agent to do this, it is necessary to have localized
-positions for individual objects in the scene. Motivated by changing the confidence
-thresholds for trustworthiness of descriptors, objects are tracked over time.
+positions for individual objects in the scene. Additionally, tracking objects
+between frames allows allows confidence levels to change over time.
 
 The RANSAC algorithm~\cite{fischler1981random} is used to discover the dominant
 plane in each image, isolating most of the objects in the scene. Further
 segmentation is performed to try to discover definitive object boundaries. This
 segmentation considers both the change in color and change in depth of neighboring
-pixels. Each pixel begins as its own segment, and the segments are iteratively
-combined with neighboring segments if the difference in color or the distance
-between them is less than a given threshold. From these segmentations we extract
-a feature vector for each object.
+pixels.
+%Each pixel begins as its own segment, and the segments are iteratively
+%combined with neighboring segments if the difference in color or the distance
+%between them is less than a given threshold.
+From these segmentations we extract a feature vector for each object.
 
 In order to adjust the confidence thresholds to determine which shapes are more
-certain (discussed below), it is necessary to track an object over time. In order
-to do this, the object must be tracked over time. This can be challenging, as the
-physical object may change location over time or may be occluded by the robot arm
-or another object. As each new frame appears, the segmented objects in it are
-compared to the segmented objects of the most recent frame. They are matched to
-an object from the previous frame if there exists an object with a similar mean
-color near the same physical location. Any object that does not have a match from
-the most recent frame is compared to objects from a history of frames. In this case,
-the objects is matched to a prior object that is nearly the same color which
-is closest to the current location of the object. This allows previously occluded
-objects to be matched with their prior selves, and nudged objects to locate where
-they were nudged from.
+certain (discussed below), it is necessary to track an object over time. This can
+be challenging, as the physical object may change location over time or may be
+occluded by the robot arm or another object. As each new frame appears, the
+segmented objects in it are compared to prior segmented objects, beginning with
+those of the most recent frame and continuing on to past frames if no matches are
+found in the most recent. An object is matched to a prior object if the difference
+in their mean color is small. The object is matched to the physically closest object
+with a small enough difference in mean color that has not already been matched.
 
 \subsection{Feature Extraction}
 
@@ -218,61 +188,121 @@ in order to determine the number of faces and edges each object has. This work
 was based off the RANSAC algorithms of Schnabel et
 al~\cite{schnabel2007efficient}. Although these and other feature detectors are
 frequently used in object recognition and learning tasks, we ultimately chose to
-use our own PCA-based method which resulted in more accurate guesses from the
-agent than the other methods. First we
-projected the point-cloud back onto the image plane. Next we transformed the image
-into a canonical representation. To do this we applied Principal Component Analysis to
-find the axis the points were most spread out along, and rotated the image so that
-axis was horizontal. An axis-aligned bounding box was found for the image and its
-height and width were scaled to unit lengths. To extract features we took evenly-spaced
+use our own Principal Component Analysis (PCA)-based method which resulted in more accurate guesses from the
+agent than the other methods.
+
+To extract edge features we apply PCA in order to find the axis the points were most spread out along.
+For $N$ pixels we compute the mean pixel $\mu = \frac{1}{N}\displaystyle\sum_{i=1}^{N}x_i$. Then we find the covariance matrix $\Sigma = \frac{1}{N} BB^T$ where $B$ is an $N\times 2$ matrix with the $i$th column equal to $x_i - \mu$. The primay axis becomes the eigenvector with the largest eigenvalue. We then tranform the image into a canonical representation by finding a bounding box for the image aligned with the axes and rotating and scaling it to a unit box. To extract features we took evenly-spaced
 points from the top and bottom edges of the box and calculated the vertical distance
-from each point to the image. This process is illustrated by [FIGURE]. We used seven
+from each point to the image. This process is illustrated by \subref{fig:pca}. We use seven
 sample points along the top and bottom; experimental evaluation showed no significant
-improvement with additional samples. In addition, we calculated the ratio of the width
-and height before scaling to get an idea of how elongated the shape was.
-\xxx{Can we include some equations here in addition to the qualitative description
-of the process?}
+improvement with additional samples. In addition, we calculate the ratio of the width
+and height before scaling to get an idea of how elongated the shape was. From each image we generated a total of four shape feature vectors after flipping the image vertically and horizontally. This allows us to more quicly learn a shape across different orientations. 
+
+\begin{figure}[h!]
+\centering
+    \includegraphics[width=1.0\textwidth]{figures/PCA_example.png}
+    \caption{This figure illustrates using PCA to extract shape features. First the principal component is found (A), then the image is rotated and scaled accordingly (B, C). Finally, points are sampled along the top and bottom and for each the vertical distance to the image is recorded (D).}
+    \label{fig:pca}
+\end{figure}
 
 \subsection{Classification}
 Initially we used SVM classification to validate our method, but we have since
-moved to a K-nearest neighbor approach.  With the K-nearest neighbor algorithm
+moved to a K-nearest neighbor approach.  With the KNN algorithm
 it is easy to add another example to the training, without recreating the
 entire training model as was done with SVM classification.  Additionally we no
 longer rely on third party software, namely liblinear ~\cite{LIBLINEAR} to do
-classification.  Using our implementation of a K-nearest neighbor
-classification we also reported a confidence metric for each label based on the
-percentage of neighbors with a given label.
+classification. KNN is also well suited for multiclass classification, removing
+the need to do a one-vs-all (OVA) approach with multiple SVMs.  Adding a new
+class to the KNN classifier is also easier can be done dynamically. Using our
+implementation of a K-nearest neighbor
+classification we also reported a confidence metric for each label.
 
-\subsection{Confidence}
+The confidence of a label is determined by calculating the percentage of K
+nearest neighbors with that label.  The vision system experiences enough noise
+to cause high variation in the classification, particularly when the
+confidence is low.  To deal with this noise and stabilize the reported labels,
+our system keeps track of the last 10 classifications.  The most popular label
+is reported, with the confidence reported as the average confidence scaled by
+the percentage of that label out of the ten.
+
+
+\subsection{Confidence Thresholds and Object manipulation}
 One of the difficulties with reasoning about real objects is that the world is
 partially observable. Objects can have a dramatically different appearance at
-different orientations.  Naturally when given such an object, a human may move
-their head around to gain more information and confidence as to what the object is.
+different orientations. Naturally when given such an object, a human may move
+their head around to gain more information and confidence as to what the object
+is.  Similarly, when holding an unfamiliar object, a person may move it around
+to further study it.
+
 Our system has a fixed vision angle, but it is possible for it to
 manipulate objects to gain information on objects whose appearance has high
-orientation dependency.  For this purpose a confidence threshold system was
+orientation dependency. For this purpose a confidence threshold system was
 developed to learn what objects may have high uncertainty, and therefor would
-be good candidate for manipulation.  When the system is queried for an object
+be good candidates for manipulation. When the system is queried for an object
 that it cannot currently see, it should manipulate an uncertain object with the
 highest probability of actually being the queried object.
 
-All attributes are given the same default confidence threshold.  When an object
-is correctly labeled and verified by the user, the thresholds for those labels
-is decreased.  When an object manipulation correctly reveals that it was
-previously mislabeled the associated label thresholds are increased.  To
-determine the likelihood of a mislabel, the confidence of a label, calculated
-from the classification system, is compared to the threshold for that shape.
-If the confidence exceeds the threshold then it is reported as unlikely to be a
-mislabel.  For example in our system the rectangle label is commonly misplaced
-on objects presented head on, so the learned threshold confidence for rectangle
-is very high.
+All attributes are given the same default confidence threshold and adjusted
+using user feedback. To determine the likelihood of a mislabel, the \xxx{eq?}p(Classification!=x|label=x), the confidence
+of a label, from KNN as explained above, is compared to the
+confidence threshold for that shape, color, or size.  Additionally to deal with noise in the system, the last If the confidence exceeds
+the threshold then it is reported as unlikely to be a mislabel.  For example in
+our system the rectangle label is commonly misplaced on objects presented head
+on, so the learned threshold confidence for rectangle is very high, meaning that \xxx{eq?}P(Shape!=rectangle|label=rectangle) is very high.
+
+When a user gives descriptions that do not match any of the current labeling,
+the system uses the confidences and confident thresholds to determine which
+objects to manipulate to gain further information and potentially find a match.  For example when given the description ``red triangle'' the system may try to
+manipulate a red rectangle, which matches the color and has a lower rectangle
+confidence than the rectangle confidence threshold.  The difference between the confidence and the confidence threshold of a give label allows the system to
+create an order of objects to consider for manipulation.
+
+If an object exists that the agent believes fits the description provided by the
+user, the agent points to it regardless of the confidence in the accuracy of the labels or the corresponding confidence thresholds. As a result, when the
+agent correctly identifies an object and the confidence is lower than the
+threshold for the given labels, the thresholds of those labels are lowered to
+reflect the correctness of the lower confidence. Conversely, the thresholds are increased
+when it cannot find an object matching the user descriptions.  In this case the agent prompts the user to identify the correct object. The thresholds for the reported labels should be increased, so that in the future the system will be more likely to attempt to manipulate objects with these labels and relvative confidences.
+
+The thresholds are increased or decreased using the following formula:
+$$\mathrm{Thresh_{t}} = \mathrm{Thresh_{t-1}}  \lambda^tdirection(t)$$
+\[direction(t) = \left\{ \begin{array}{ll}
+         1 & \mbox{if threshold should increase};\\
+         -1 & \mbox{if threshold should decrease}.\end{array} \right. \]
+where $t=$mathrm{number of times the threshold has changed.
+\meh{My additions are okay, James should read over this and adjust to reflect
+the actual code.I looked at it- still needs some review and equation explanation}
 
 \subsection{Robot Arm Manipulation}
+Our system is integrated with a robotic arm. The arm was loaned to us by Prof.
+Edwin Olson and was developed for use in his undergraduate class. The arm
+geometry is simple, allowing the use of closed form inverse kinematics solvers
+for various positions.
+
+Because the Kinect is not statically located with respect to the robotic arm,
+we perform an initial manual calibration so we may align the Kinect coordinate
+frame with that of the arm. All coordinates are transformed such that the arm
+is centered at the origin facing down the x-axis at its default position. We
+may command the arm to ``point'' or ``sweep'' at an object, prompting the arm
+to execute a corresponding scripted action at the object location. Pointing is
+self-explanatory. Sweeping causes the arm to execute a nudging action,
+swinging the arm through the object at an angle to encourage rotation.
 
 \subsection{Active Learning}
+Active learning is the process with which an agent continues to adjust its
+understanding of its environment by querying the user to gain information.
+The I Spy agent utilizes the knowledge of the users playing the game with it
+to continuously learn labels and improve its confidence about labels it has
+already learned. The agent requests information from users when it makes an
+incorrect object or when it cannot find the specified object. The labels the
+user provides in response to the agent are added as training examples into the
+KNN algorithm, as are all correct guesses that the user verifies.
 
+The system is capable of begining with no knowledge and, through playing games
+with people and requesting feedback about whether its guesses are correct or
+incorrect, learn to distinguish shapes, colors, and sizes.
 
-\xxx{equations}
 \section{Experimental Results}
 
 \subsection{Data Collection and Training}
@@ -290,7 +320,6 @@ shape.
 Additionally we collected
 more familiar objects to test our classifier on, demonstrating the ability of
 the system to abstract general shapes to real world objects.
-
 
 Our system, seen in figure \meh{screenshot}, segments objects found in the
 predefined play area and labels them with the most confident shape, size, and
@@ -330,7 +359,14 @@ descriptors.
 \end{figure}
 
 
-
+Real world data is extracted from toy foam blocks. The blocks
+    themselves can be seen in \subref{fig:blocks}. Using a segmentation
+    algorithm, we extract the blocks from the Kinect data \subref{fig:images}
+    and generate feature vectors for each object.
+    Finally, we hand label the data for features such as color and shape for
+    classification training. In \subref{fig:colordata}, we see the actual
+    distribution of our training samples in the hue and saturation
+    dimensions.
 
 
 Testing our system requires direct interaction and presentation of new objects
@@ -338,7 +374,9 @@ or objects at new angles.  Additional testing can be done by training the
 system with new shapes and colors and observing how quickly and effectively it
 can learn and apply the new information.  Qualitatively it is easy to see
 whether the system is performing well.  However to do a less subjective,
-quantitative evaluation of our methodology, we used the leave-one-out-cross-validation(LOOCV) method on our collected training data.  This testing method mirrors the
+quantitative evaluation of our methodology, we used the
+leave-one-out-cross-validation(LOOCV) method on our collected training data. This testing
+method mirrors the
 scenario where a novel object is presented to this system.
 
 The results in Table~\ref{tbl:testresults} \xxx{todo} show LOOCV percentages
@@ -364,14 +402,21 @@ to determine which labels are inherently uninformative.
 \label{tbl:testresults}
 \end{table}
 
-
-
+\section{Future Work}
+This work is part of a larger project, Broad Operational Language Translation
+(BOLT), is a joint undertaking by John Laird, Edwin Olson, and SoarTech and is
+funded by DARPA. The goal of BOLT is to create a machine that can handle
+situated interactive instruction with learned objects and actions. Our work has
+focus on the needed feature learning and object classification that the BOLT
+system will use. In the near future future we intend to use the robotic arm to
+pick up objects to look at them from different angles and place them in different
+positions in the play area.
 \section{Conclusion}
 %\xxx{Summary of your progress and your final expected goal (what do you expect
 %    to achieve or demonstrate for the final project?)}
 
 
-\bibliographystyle{plain}
+\bibliographystyle{abbrv}
 \bibliography{literature}
 
 \end{document}
