@@ -165,6 +165,20 @@ about object descriptions more confident.
 %    work? Provide technical details of your approach if you are proposing a
 %    novel method.}
 
+\subsection{Point Cloud Acquisition}
+Our work is intended to work with any colored 3D point cloud data. The
+Microsoft Kinect is a simple and cost effective platform for acquiring
+this data. We interface with the Kinect using the OpenKinect
+library~\cite{OpenKinect}. The Kinect broadcasts LCM~\cite{huang2010} messages
+containing orientation and frame information for other software to process.
+
+Aligning color and depth data from the Kinect requires not only
+calibrating the individual color and IR cameras, but also cross calibrating
+the two. To do this, we explored several existing toolkits, eventually
+using on RGBDemo~\cite{rgbdemo}. This kit automatically performs all of the
+necessary calibrations, returning alignment parameters as well as terms for a
+radial distortion model.
+
 \subsection{Object Detection}
 \xxx{This section is definitely not done yet}
 In each image the ground plane is removed, using RANSAC to discover the dominant
@@ -248,9 +262,21 @@ on objects presented head on, so the learned threshold confidence for rectangle
 is very high.
 
 \subsection{Robot Arm Manipulation}
+Our system is integrated with a robotic arm. The arm was loaned to us by Prof.
+Edwin Olson and was developed for use in his undergraduate class. The arm
+geometry is simple, allowing the use of closed form inverse kinematics solvers
+for various positions.
+
+Because the Kinect is not statically located with respect to the robotic arm,
+we perform an initial manual calibration so we may align the Kinect coordinate
+frame with that of the arm. All coordinates are transformed such that the arm
+is centered at the origin facing down the x-axis at its default position. We
+may command the arm to ``point'' or ``sweep'' at an object, prompting the arm
+to execute a corresponding scripted action at the object location. Pointing is
+self-explanatory. Sweeping causes the arm to execute a nudging action,
+swinging the arm through the object at an angle to encourage rotation.
 
 \subsection{Active Learning}
-
 
 \xxx{equations}
 \section{Experimental Results}
@@ -269,7 +295,7 @@ shape.
 \end{inparaenum}
 Additionally we collected
 more familiar objects to test our classifier on, demonstrating the ability of
-the system to abstract general shapes to real world objects. 
+the system to abstract general shapes to real world objects.
 
 
 Our system, seen in figure \meh{screenshot}, segments objects found in the
