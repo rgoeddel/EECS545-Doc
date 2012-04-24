@@ -19,7 +19,6 @@
 %    -- paragraph explaining scenario
 
 
-
 % The xxx tag is intended to denote urgent text that needs addressing.
 % The meh tag is intended to highlight text that needs some loving or which
 % we're not sure should make primetime
@@ -66,7 +65,7 @@ discuss these further in Section 3.
 
 Our work spans a number of domains, with aspects similar to projects in image recognition, robotics, instruction, and active learning. There is a rich history of work in object recognition within computer vision, and some more recent efforts have focused on generalizing objects into classes like cars, bikes, or trucks ~\cite{huber2004parts}. Other work has focused on constructing more powerful classifiers built upon detecting aspects like color and shape from the image ~\cite{nilsback2006visual} ~\cite{gehler2009feature}. Recent popularization of sensors that combine both image and depth information like the Microsoft Kinect can provide richer sensory information to aid in vision tasks. Depth can make the determination of an object's underlying geometry much easier, leading to better identification ~\cite{marton2010hierarchical}. Other work has successfully incorporated such RGB-D cameras with object recognition in indoor domains featuring common household objects ~\cite{marton2010hierarchical, lai2011sparse}.
 
-Our work combines both interacting with the world and using interaction to obtain more information. Most previous work focuses on one of the two sources. Some researchers have used robotic manipulation in order to discover information about an object like geometry, grasping points, and kinematics. Li and Kleeman created a system that nudged objects in order to improve its segmentation ~\cite{li2008autonomous}. Katz and Brock used a robotic arm to manipulate an object in order to obtain a kinematic model ~\cite{katz2008manipulating}. These systems do not integrate interaction from a user. Other systems do use human instruction to learn about the world, and several of those use robots and simple toy objects to learn about colors, shapes, and spatial relations. One system involved an environment very similar to ours, but only used the robotic arm for pointing, not manipulating ~\cite{skocaj2007system}. Another involved teaching a robot with foam blocks, but only used the robot to pick up an object once it recognized it ~\cite{zambuto2010visually}. The novelty of our project comes in utilizing both exploration through manipulating physical objects and human instruction to learn about the world. We believe that both sources have different strengths and that combining them can lead to improved learning abilities. 
+Our work combines both interacting with the world and using interaction to obtain more information. Most previous work focuses on one of the two sources. Some researchers have used robotic manipulation in order to discover information about an object like geometry, grasping points, and kinematics. Li and Kleeman created a system that nudged objects in order to improve its segmentation ~\cite{li2008autonomous}. Katz and Brock used a robotic arm to manipulate an object in order to obtain a kinematic model ~\cite{katz2008manipulating}. These systems do not integrate interaction from a user. Other systems do use human instruction to learn about the world, and several of those use robots and simple toy objects to learn about colors, shapes, and spatial relations. One system involved an environment very similar to ours, but only used the robotic arm for pointing, not manipulating ~\cite{skocaj2007system}. Another involved teaching a robot with foam blocks, but only used the robot to pick up an object once it recognized it ~\cite{zambuto2010visually}. The novelty of our project comes in utilizing both exploration through manipulating physical objects and human instruction to learn about the world. We believe that both sources have different strengths and that combining them can lead to improved learning abilities.
 
 \section{Methodology}
 %\xxx{How are you going to solve this problem? Why should the proposed method
@@ -237,7 +236,7 @@ incorrect, learn to distinguish shapes, colors, and sizes.
 We acquired a large variety of children's foam blocks in many shapes, sizes,
 and colors to act as our objects for classification. A small subset of the
 blocks can be seen in Figure~\ref{fig:blocks}. The foam of the blocks is an
-ideal material to work with as it 
+ideal material to work with as it
 \begin{inparaenum}[(1)]
 \item has a smooth, matte finish,
 \item comes in a variety of distinct colors, and
@@ -257,7 +256,7 @@ positions and orientations.  This method is not efficient for generating a
 large number of training samples of many different objects, so we collected a
 training dataset of footage of the foam blocks at numerous positions and angles
 throughout the play area which were then segmented and labeled with relevant
-descriptors.  Our training data consisted of 1812 shape examples, 1889 color exmaples, and \meh{number} size examples; 
+descriptors.  Our training data consisted of 1812 shape examples, 1889 color exmaples, and \meh{number} size examples;
 
 
 \begin{figure}[h!]
