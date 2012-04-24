@@ -28,7 +28,7 @@ public class ObjectInfo{
     public double uppermost;
     public double lowermost;
     public  BufferedImage image = null;
-    
+    public boolean matched;
     public Rectangle projBBox = null;
 
     public String colorFeatures;
@@ -53,7 +53,7 @@ public class ObjectInfo{
         this.rightmost = point[0];
         this.uppermost = point[1];
         this.lowermost = point[1];
-
+        this.matched = false;
         sumPoints = new double[]{point[0], point[1], point[2]};
         Color c = new Color((int) point[3]);
         sumColor = new int[]{c.getRed(), c.getBlue(), c.getGreen()};
@@ -110,10 +110,10 @@ public class ObjectInfo{
         object. The most similar one will be the object that has the closest
         center and with a mean color that is within a threshold of this object.**/
     // XXX - probably want to take complete feature vector into account, not only colors
-    public int mostSimilar(HashMap<Integer, ObjectInfo> objects)
+    public int mostSimilar(HashMap<Integer, ObjectInfo> objects, HashMap<Integer, Integer> alreadyAssigned)
     {
         int best = -1;
-        double minDist = 100000;
+        double minDist = .1;
         double minColorDist = 30;
 
         Collection c = objects.values();
@@ -121,7 +121,10 @@ public class ObjectInfo{
             ObjectInfo obj2 = (ObjectInfo)itr.next();
             double centerDist = LinAlg.distance(getCenter(), obj2.getCenter());
             double colorDist = LinAlg.distance(avgColor(), obj2.avgColor());
-            if (centerDist < minDist && colorDist < minColorDist){
+            boolean okay = true;
+            if(alreadyAssigned != null)
+            	if(alreadyAssigned.containsKey(obj2.ufsID)) okay = false;
+            if (okay && centerDist < minDist && colorDist < minColorDist){
                 minDist = centerDist;
                 best = obj2.ufsID;
             }

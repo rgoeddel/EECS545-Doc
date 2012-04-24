@@ -1,18 +1,10 @@
 package kinect.kinect;
 
-import april.vis.*;
 import april.jmat.*;
-import april.jmat.geom.*;
 import april.util.UnionFindSimple;
 
-import lcm.lcm.*;
-
-import java.io.*;
-import java.nio.*;
-import javax.swing.*;
 import java.awt.*;
 import java.util.*;
-import java.awt.image.*;
 
 
 public class Segment
@@ -151,12 +143,18 @@ public class Segment
             Collection cNew = da.objects.values();
             for(Iterator itr = cNew.iterator(); itr.hasNext(); ){
                 ObjectInfo obj = (ObjectInfo)itr.next();
-                int mostSim = obj.mostSimilar(da.prevObjects);
+                int mostSim = obj.mostSimilar(da.prevObjects, null);
                 if(mostSim != -1){
-                    int newID = da.prevObjects.get(mostSim).repID;
-                    int newColor = da.prevObjects.get(mostSim).color;
-                    obj.equateObject(newID, newColor);
-                    da.prevObjects.remove(mostSim);
+                	double[] locOld = da.prevObjects.get(mostSim).getCenter();
+                	double[] locNew = obj.getCenter();
+                	double dist = LinAlg.distance(locOld, locNew);
+                	if(dist < .03){
+                		int newID = da.prevObjects.get(mostSim).repID;
+                		int newColor = da.prevObjects.get(mostSim).color;
+                		obj.equateObject(newID,newColor);
+                		obj.matched = true;
+                		da.prevObjects.remove(mostSim);
+                	}
                 }
                 for(double[] p : obj.points){
                     da.coloredPoints.add(new double[]{p[0], p[1], p[2], obj.color});

@@ -40,71 +40,77 @@ public class DataAggregator{
 
     public void newFrame()
     {
-        HashMap<Integer,ObjectInfo> newObjects = objects;
+        if(history.size() > 0 && objects.size() > prevObjects.size()){
 
-        if(history.size() > 0){
-            int newSize = newObjects.size();
-            int oldSize = history.get(history.size()-1).size();
+        	boolean foundMatches = false;
+        	int step = 2;
+//          	      ArrayList<Integer> noMatch = inOneButNotOther(newObjects, last);
+                	
+        	// Debugging simplification
+        	ArrayList<Integer> noMatch = new ArrayList<Integer>();
+        	HashMap<Integer, Integer> alreadyAssigned = new HashMap<Integer,Integer>();
+        	Set<Integer> setN = objects.keySet();
+        	for(Integer i : setN){
+        		if (objects.get(i).matched == true)
+        			alreadyAssigned.put(i,i);
+        		else noMatch.add(i);
+        	}
+                
+        	//System.out.println("GAINED "+noMatch.size()+" OBJECTS");
+        	while(!foundMatches && step < history.size()){
+        		HashMap<Integer,ObjectInfo> old = history.get(history.size()-step);
+        		boolean[] matched = new boolean[noMatch.size()];
 
-            if(newObjects.size() < history.get(history.size()-1).size()){
-                HashMap<Integer,ObjectInfo> last = history.get(history.size()-1);
-            }
-            else if(newObjects.size() > history.get(history.size()-1).size()){
-                boolean foundMatches = false;
-                int step = 2;
-                HashMap<Integer,ObjectInfo> last = history.get(history.size()-1);
-                ArrayList<Integer> noMatch = inOneButNotOther(newObjects, last);
-                //System.out.println("GAINED "+noMatch.size()+" OBJECTS");
-                while(!foundMatches && step < history.size()){
-                    HashMap<Integer,ObjectInfo> old = history.get(history.size()-step);
-                    boolean[] matched = new boolean[noMatch.size()];
+        		// For each unmatched object, try to find a similar object
+        		// from this scene
+        		for(int i=0; i<noMatch.size(); i++){
+        			ObjectInfo oi = objects.get(noMatch.get(i));
+        			int mostSim = oi.mostSimilar(old, alreadyAssigned);
 
-                    // For each unmatched object, try to find a similar object
-                    // from this scene
-                    for(int i=0; i<noMatch.size(); i++){
-                        ObjectInfo oi = newObjects.get(noMatch.get(i));
-                        int mostSim = oi.mostSimilar(old);
-
-                        // Check whether another object has the same ID
-                        Collection<ObjectInfo> c = newObjects.values();
-                        boolean alreadyRepresented = false;
-                        if(mostSim >= 0){
-                            int mostSimID = old.get(mostSim).repID;
-                            for(ObjectInfo obj : c)
-                                if(obj.repID == mostSimID) alreadyRepresented = true;
-                        }
-
-                        // Give object ID and coloring of most similar object
-                        if (mostSim >= 0 && !alreadyRepresented){
-                            int newID = old.get(mostSim).repID;
-                            int newColor = old.get(mostSim).color;
-                            oi.equateObject(newID, newColor);
-                            for(double[] p : oi.points){
-                                coloredPoints.add(new double[]{p[0], p[1], p[2], oi.color});
-                            }
-                            matched[i] = true;
-                            //System.out.println("Found a match "+newID+" for "+i);
-                        }
-                    }
-                    // Remove ones that were matched
-                    for(int i=matched.length-1; i>-1; i--)
-                        if(matched[i]) noMatch.remove(i);
-                    foundMatches = (noMatch.size() == 0);
-                    step ++;
-                }
-            }
+        			// Check whether another object has the same ID
+        			/*Collection<ObjectInfo> c = objects.values();
+        			boolean alreadyRepresented = false;
+        			if(mostSim >= 0){
+        				int mostSimID = old.get(mostSim).repID;
+        				for(ObjectInfo obj : c)
+        					if(obj.repID == mostSimID) alreadyRepresented = true;
+        			}*/
+        		
+        		
+        			// Give object ID and coloring of most similar object
+        			if (mostSim >= 0 && !alreadyAssigned.containsKey(i)){
+        				int newID = old.get(mostSim).repID;
+        				int newColor = old.get(mostSim).color;
+        				oi.equateObject(newID, newColor);
+        				oi.matched = true;
+        				alreadyAssigned.put(newID, newID);
+        				for(double[] p : oi.points){
+        					coloredPoints.add(new double[]{p[0], p[1], p[2], oi.color});
+        				}
+        				matched[i] = true;
+        			
+        			//System.out.println("Found a match "+newID+" for "+i);
+        			}
+        		}
+        		// Remove ones that were matched
+        		for(int i=matched.length-1; i>-1; i--)
+        			if(matched[i]) noMatch.remove(i);
+        		foundMatches = (noMatch.size() == 0);
+        		step ++;
+        	}
         }
-
-        // Add new frame to history (create new HashMap)
-        HashMap<Integer, ObjectInfo> forHistory = new HashMap<Integer, ObjectInfo>();
-        Set<Integer> set = objects.keySet();
-        for(Integer i : set)
-            forHistory.put(i, objects.get(i));
-        history.add(forHistory);
-        // If history is too long, remove the oldest
-        if(history.size() > MAX_HISTORY){
-            history.remove(0);
-        }
+	
+	    // Add new frame to history (create new HashMap)
+	    HashMap<Integer, ObjectInfo> forHistory = new HashMap<Integer, ObjectInfo>();
+	    Set<Integer> set = objects.keySet();
+	    for(Integer i : set)
+	        forHistory.put(i, objects.get(i));
+	    history.add(forHistory);
+	    // If history is too long, remove the oldest
+	    if(history.size() > MAX_HISTORY){
+	        history.remove(0);
+	    }
+		    
     }
 
 

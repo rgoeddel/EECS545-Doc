@@ -85,6 +85,12 @@ public class SceneRenderer extends VisLayer
     	
     	double theta = 0;
     	for(SpyObject obj : objects.values()){
+    		VzImage img = new VzImage(obj.lastObject.getImage());
+    		buffer.addBack(new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT - obj.bbox.getMinY()), LinAlg.scale(1, -1, 1), img));
+    		
+    		
+    		
+    		
     		double x, y;
     		theta = Math.atan2(obj.bbox.getCenterY() - ISpy.viewRegion.getCenterY(), obj.bbox.getCenterX() - ISpy.viewRegion.getCenterX());
     		double vert = (Math.sin(theta) == 0) ? Double.MAX_VALUE : height / Math.abs(Math.sin(theta));
@@ -98,8 +104,9 @@ public class SceneRenderer extends VisLayer
     		}
     		
     		String labelString = "";
-    		//labelString += String.format("<<monospaced,black>>%d\n", obj.id);
+    		
     		String tf="<<monospaced,white,dropshadow=false>>";
+    		labelString += String.format("%s%d\n", tf, obj.id);
     		labelString += String.format("%s%s:%.2f\n", tf, obj.getColor(), obj.getColorConfidence());
     		labelString += String.format("%s%s:%.2f\n", tf, obj.getShape(), obj.getShapeConfidence());
     		labelString += String.format("%s%s:%.2f\n", tf, obj.getSize(), obj.getSizeConfidence());
@@ -126,6 +133,9 @@ public class SceneRenderer extends VisLayer
     		line.add(objPos);
     		line.add(new double[]{bestX,K_HEIGHT-bestY});
     		buffer.addBack(new VzLines(line, VzLines.LINES,new VzLines.Style(Color.WHITE, 3)));
+    		
+    		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(Color.WHITE, 3));
+    		buffer.addBack(new VisChain(LinAlg.translate(obj.bbox.getCenterX(), K_HEIGHT - obj.bbox.getCenterY()), rect));
     	}
     }
     
@@ -133,18 +143,19 @@ public class SceneRenderer extends VisLayer
       VisWorld.Buffer worldBuffer = this.world.getBuffer("displayImage");
       
     	BufferedImage background = getKinectImage(kinectData);
-    	for(int y= (int)ISpy.viewRegion.getMinY(); y<ISpy.viewRegion.getMaxY(); y++){
-        for(int x=(int)ISpy.viewRegion.getMinX(); x<ISpy.viewRegion.getMaxX(); x++){
-            int i = y*kinect_status_t.WIDTH + x;
-            int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
-                    (kinectData.depth[2*i+0]&0xff);
-            double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], kinectData);
-            double[] pixel = KUtils.getPixel(pKinect);
-    				Color c =  new Color((int)pKinect[3]);
-    				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
-    				background.setRGB((int)pixel[0], (int)pixel[1], rc.getRGB());
-        }
-    }
+		double[] pt = new double[2];
+		for(int y = (int)ISpy.viewRegion.getMinY(); y < ISpy.viewRegion.getMaxY(); y++){
+			for(int x = (int)ISpy.viewRegion.getMinX(); x < ISpy.viewRegion.getMaxX(); x++){
+	            int i = y*kinect_status_t.WIDTH + x;
+	            int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
+	                    (kinectData.depth[2*i+0]&0xff);
+	            double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], kinectData);
+	            double[] pixel = KUtils.getPixel(pKinect);
+	    				Color c =  new Color((int)pKinect[3]);
+	    				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
+	    				background.setRGB((int)pixel[0], (int)pixel[1], rc.getRGB());
+	        }
+	    }
       worldBuffer.addBack(new VzImage(background, VzImage.FLIP));
       worldBuffer.setDrawOrder(-10);
       worldBuffer.swap();

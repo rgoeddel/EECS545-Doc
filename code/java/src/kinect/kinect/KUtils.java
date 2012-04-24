@@ -60,7 +60,7 @@ public class KUtils
     	double[] wc = LinAlg.matrixAB(pt, kinectToWorldXForm);
     	return new double[]{wc[0], wc[1], wc[2]};
     }
-
+    
 /*
     static double fx_d = 1 / 5.9421434211923247e+02;
     static double fy_d = 1 / 5.9104053696870778e+02;

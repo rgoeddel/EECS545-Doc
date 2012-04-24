@@ -51,12 +51,13 @@ public class ISpy extends JFrame implements LCMSubscriber {
     static String sizeDataFile = "/home/bolt/mlbolt/code/java/size_features.dat";
 	
 
-    // Subset of the image used
-    public final static int[] viewBorders = new int[] { 75, 150, 620, 400 };
-    public final static Rectangle viewRegion = new Rectangle(
-	viewBorders[0],
-	viewBorders[1], 
-	viewBorders[2] - viewBorders[0], viewBorders[3] - viewBorders[1]);
+    
+    public final static int[] viewBorders = new int[] {0, 150, 640, 440 };
+    public final static Rectangle viewRegion = 
+	new Rectangle(viewBorders[0],
+		      viewBorders[1], viewBorders[2] - viewBorders[0], 
+		      viewBorders[3] - viewBorders[1]);
+    
 
     private SceneRenderer sceneRenderer;
     private JLabel ispyLabel;
@@ -79,6 +80,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
     private KNN colorKNN;
     private KNN shapeKNN;
     private KNN sizeKNN;
+
     //confidence thresholds
     ArrayList<ConfidenceLabel> shapeThresholds;
     ArrayList<ConfidenceLabel> colorThresholds;
@@ -358,6 +360,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	// consider otherwise look at next object to consider
 	if (curMode != ISpyMode.MANIPULATING)
 	{
+		System.out.println("first search");
 	    // No match found:create list of objects to consider
 	    ArrayList<SpyObject> considerCalc = 
 		new ArrayList<SpyObject>();
@@ -411,6 +414,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			conf = obj.sizeConfidenceThresholdDif();
 			//if confident about wrong label continue
 			if (conf > 0)
+				
 			{
 			    continue;
 			}
@@ -463,7 +467,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			double conf;
 			conf = obj.sizeConfidenceThresholdDif();
 			//if confident about wrong label continue
-			if (conf > 1)
+			if (conf > 0)
 			{
 			    continue;
 			}
@@ -500,7 +504,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			double conf;
 			conf = obj.colorConfidenceThresholdDif();
 			//if confident about wrong label continue
-			if (conf > 1)
+			if (conf > 0)
 			{
 			    continue;
 			}
@@ -516,7 +520,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			double conf;
 			conf = obj.shapeConfidenceThresholdDif();
 			//if confident about wrong label continue
-			if (conf > 1)
+			if (conf > 0)
 			{
 			    continue;
 			}
@@ -533,13 +537,17 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	    Collections.sort(considerConfSortHack);
 	    for (Double d : considerConfSortHack)
 	    {
+	    		System.out.print(considerConf.indexOf(d) + " with id ");
+	    		SpyObject so = considerCalc.get(considerConf.indexOf(d));
+	    		System.out.println(so.id);
 		consider.add(considerCalc.get(considerConf.indexOf(d)));
 	    }
 	}
-		
+	//System.out.println("size: " + consider.size());
 	if (consider != null && ((lastReferenced = consider.poll()) != null)) {
 	    // manipulate objects
-		    
+		System.out.println("just removed id " + lastReferenced.id);
+		//System.out.println("aftersize: " + consider.size());	    
 	    lastReferencedColor = lastReferenced.getColor();
 	    lastReferencedShape = lastReferenced.getShape();
 	    lastReferencedSize = lastReferenced.getSize();
@@ -560,8 +568,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	command.utime = TimeUtil.utime();
 	command.updateDest = true;
 	command.dest = new double[6];
-	double[] center = KUtils
-	    .getWorldCoordinates(obj.lastObject.getCenter());
+	System.out.println("SWEEPING lastobject id " + obj.lastObject.repID);
+	double[] center = KUtils.getWorldCoordinates(obj.lastObject.getCenter());
 	for (int i = 0; i < 3; i++) {
 	    command.dest[i] = center[i];
 	}
@@ -575,8 +583,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	command.utime = TimeUtil.utime();
 	command.updateDest = true;
 	command.dest = new double[6];
-	double[] center = KUtils
-	    .getWorldCoordinates(obj.lastObject.getCenter());
+	double[] center = KUtils.getWorldCoordinates(obj.lastObject.getCenter());
 	for (int i = 0; i < 3; i++) {
 	    command.dest[i] = center[i];
 	}
@@ -637,7 +644,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			    //add to training and adjust threshold
 			    synchronized (colorKNN) {				
 				colorKNN.add(data, false);
-				colorKNN.updateThreshold(alabel, 1);
+				if (!alabel.equals(obj.getColor()))
+					colorKNN.updateThreshold(obj.getColor(), 1);
 			    }
 			}
 			else if (shapeLabels.contains(alabel))
@@ -648,7 +656,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			    //add to training and adjust threshold
 			    synchronized (shapeKNN) {				
 				shapeKNN.add(data, true);
-				shapeKNN.updateThreshold(alabel, 1);
+				if (!alabel.equals(obj.getShape()))
+					shapeKNN.updateThreshold(obj.getShape(), 1);
 			    }
 			}
 			else if (sizeLabels.contains(alabel))
@@ -659,7 +668,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
 			    //add to training and adjust threshold
 			    synchronized (sizeKNN) {				
 				sizeKNN.add(data, false);
-				sizeKNN.updateThreshold(alabel, 1);
+				if (!alabel.equals(obj.getSize()))
+					sizeKNN.updateThreshold(obj.getSize(), 1);
 			    }
 			}
 		    }		    
@@ -835,6 +845,7 @@ public class ISpy extends JFrame implements LCMSubscriber {
 	    sceneRenderer.drawScene(kinectData, objects, da);
 	}
     }
+
 
     private void extractPointCloudData() {
 	da.currentPoints = new ArrayList<double[]>();
