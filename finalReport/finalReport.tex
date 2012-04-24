@@ -58,7 +58,7 @@ When an agent is faced with uncertaintly it has two major courses of action: it 
 %    problem? What's the impact if you can solve this problem?}
 Agents that operate in environments that are partially observable or very noisy are often faced with large amounts of uncertainty. One option for the agent is to explore the environment to resolve some of that uncertainty. While this approach can be done autonomously without direct human involvement, there still may be fundamental limits to what information the agent is able to collect. A second option is for the agent to consult an expert to acquire missing knowledge, a technique known as active learning. This can present a large and rich source of knowledge but can be costly to acquire. Hybrid approaches enable an agent to explore the world on its own and ask an expert for knowledge only when it needs to. This hybridization leverages the strengths of each option and can lead to better performance. Of course, intregrating them introduces new challenges such as how to tell when knowledge is unattainable through exploration or what consitutes an important question. 
 
-Our project involves one such attempt to utilize both sources of knowledge. Our system is tasked with identifying properties of various objects like color, shape, and size in order to play the children's game ``I-spy''. Unfortunately it is quite common for an object to be in a poor orientation and thus difficult for our system to classify. We use both recent history and information from our K-Nearst Neighbor classifier to determine when we are uncertain about an object. Instead of asking the user for help, the system first tries to get more information about the object by nudging it using a robotic arm. The goal is to change the orientation of the object in order to improve its classification performance. It will learn which classes are inherintly uncertain (such as rectangles) and adjust accordingly. We also will ask for feedback from the user when an object is misidentified to gain more training data. Our system is flexible enough to allow users to teach new classes of properties during its operation. 
+Our project involves one such attempt to utilize both sources of knowledge. Our system is tasked with identifying properties of various objects like color, shape, and size in order to play the children's game ``I-spy''. Unfortunately it is quite common for an object to be in a poor orientation and thus difficult for our system to classify. We use both recent history and information from our K-Nearst Neighbor (KNN) classifier to determine when we are uncertain about an object. Instead of asking the user for help, the system first tries to get more information about the object by nudging it using a robotic arm. The goal is to change the orientation of the object in order to improve its classification performance. It will learn which classes are inherintly uncertain (such as rectangles) and adjust accordingly. We also will ask for feedback from the user when an object is misidentified to gain more training data. Our system is flexible enough to allow users to teach new classes of properties during its operation. 
 
 This work is being incorporated in a larger project which includes teaching the
 agent new concepts and actions. Such a project relies on having
@@ -95,6 +95,8 @@ underlying geometry much easier, leading to better identification
 Previous work has successfully incorporated such cameras (often called RGB-D
 cameras) with object recognition in indoors domains featuring common household
 objects~\cite{marton2010hierarchical, lai2011sparse}.
+
+
 
 A different approach to this problem is learning words that describe different
 areas of the feature space, which can then be combined to describe classes of
@@ -201,10 +203,10 @@ agent than the other methods.
 To extract edge features we apply PCA in order to find the axis the points were most spread out along. 
 For $N$ pixels we compute the mean pixel $\mu = \frac{1}{N}\displaystyle\sum_{i=1}^{N}x_i$. Then we find the covariance matrix $\Sigma = \frac{1}{N} BB^T$ where $B$ is an $N\times 2$ matrix with the $i$th column equal to $x_i - \mu$. The primay axis becomes the eigenvector with the largest eigenvalue. We then tranform the image into a canonical representation by finding a bounding box for the image aligned with the axes and rotating and scaling it to a unit box. To extract features we took evenly-spaced
 points from the top and bottom edges of the box and calculated the vertical distance
-from each point to the image. This process is illustrated by \subref{fig:pca}. We used seven
+from each point to the image. This process is illustrated by \subref{fig:pca}. We use seven
 sample points along the top and bottom; experimental evaluation showed no significant
-improvement with additional samples. In addition, we calculated the ratio of the width
-and height before scaling to get an idea of how elongated the shape was.
+improvement with additional samples. In addition, we calculate the ratio of the width
+and height before scaling to get an idea of how elongated the shape was. From each image we generated a total of four shape feature vectors after flipping the image vertically and horizontally. This allows us to more quicly learn a shape across different orientations. 
 
 \begin{figure}[h!]
 \centering
