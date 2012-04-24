@@ -130,23 +130,43 @@ about object descriptions more confident.
 %    work? Provide technical details of your approach if you are proposing a
 %    novel method.}
 
-\subsection{Object Detection}
-\xxx{This section is definitely not done yet}
-In each image the ground plane is removed, using RANSAC to discover the dominant
-plane in the image, isolating most of the objects in the scene. Further
-segmentation is performed to try to discover definitive object boundaries. From
-these segmentations we extract a feature vector for each object.
+\subsection{Object Detection and Tracking}
+In order to play I Spy, the agent must be able to point at objects matching the
+provided description as well as to nudge objects with low confidence in their
+descriptions in order to see them from a new angle and gather new information
+about them. In order for the agent to do this, it is necessary to have localized
+positions for individual objects in the scene. Motivated by changing the confidence
+thresholds for trustworthiness of descriptors, objects are tracked over time.
 
-For object identification we will do a similar process to segment each object in
-the camera's image. That object's position in 3D space will be determined using
-both the pixel coordinate and the depth value.
+The RANSAC algorithm~\cite{fischler1981random} is used to discover the dominant
+plane in each image, isolating most of the objects in the scene. Further
+segmentation is performed to try to discover definitive object boundaries. This
+segmentation considers both the change in color and change in depth of neighboring
+pixels. Each pixel begins as its own segment, and the segments are iteratively
+combined with neighboring segments if the difference in color or the distance
+between them is less than a given threshold. From these segmentations we extract
+a feature vector for each object.
+
+In order to adjust the confidence thresholds to determine which shapes are more
+certain (discussed below), it is necessary to track an object over time. In order
+to do this, the object must be tracked over time. This can be challenging, as the
+physical object may change location over time or may be occluded by the robot arm
+or another object. As each new frame appears, the segmented objects in it are
+compared to the segmented objects of the most recent frame. They are matched to
+an object from the previous frame if there exists an object with a similar mean
+color near the same physical location. Any object that does not have a match from
+the most recent frame is compared to objects from a history of frames. In this case,
+the objects is matched to a prior object that is nearly the same color which
+is closest to the current location of the object. This allows previously occluded
+objects to be matched with their prior selves, and nudged objects to locate where
+they were nudged from.
 
 \subsection{Feature Extraction}
 
 Once an object was segmented we extracted relevant features in order to classify
 color, size, and shape. We considered objects that were of a single color, therefore
 average red, green, blue, hue, saturation, and value levels across the pixels were
-used as a six-dimensional feature vector. For size we calcuated the diagonal of the 3D
+used as a six-dimensional feature vector. For size we calculated the diagonal of the 3D
 axis-aligned bounding box and used that as one of our features. The second feature was
 the average distance of the points from the centroid. Having the point-cloud data from
 the Kinect allowed us to compute those features more accurately in three-dimensions
@@ -169,10 +189,10 @@ projected the point-cloud back onto the image plane. Next we transformed the ima
 into a canonical representation. To do this we applied Principal Component Analysis to
 find the axis the points were most spread out along, and rotated the image so that
 axis was horizontal. An axis-aligned bounding box was found for the image and its
-heigh and width were scaled to unit lenghts. To extract features we took evenly-spaced
+height and width were scaled to unit lengths. To extract features we took evenly-spaced
 points from the top and bottom edges of the box and calculated the vertical distance
 from each point to the image. This process is illustrated by [FIGURE]. We used seven
-sample points along the top and bottom; experimental evaluation showed no signficant
+sample points along the top and bottom; experimental evaluation showed no significant
 improvement with additional samples. In addition, we calculated the ratio of the width
 and height before scaling to get an idea of how elongated the shape was.
 \xxx{Can we include some equations here in addition to the qualitative description
@@ -234,7 +254,7 @@ shape.
 \end{inparaenum}
 Additionally we collected
 more familiar objects to test our classifier on, demonstrating the ability of
-the system to abstract general shapes to real world objects. 
+the system to abstract general shapes to real world objects.
 
 
 Our system, seen in figure \meh{screenshot}, segments objects found in the

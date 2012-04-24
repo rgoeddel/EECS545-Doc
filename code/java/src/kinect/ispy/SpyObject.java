@@ -34,6 +34,8 @@ public class SpyObject implements Comparable<SpyObject>{
     
     double shapeThreshold;
     double colorThreshold;
+    double sizeThreshold;
+    
     public Color boxColor = Color.white;
     
     public SpyObject(int id)
@@ -47,47 +49,53 @@ public class SpyObject implements Comparable<SpyObject>{
 	this.bestColor = "unknown";
 	this.bestShape = "unknown";
 	this.bestSize = "unknown";
+	
 	this.secondBestColor = "";
 	this.secondBestShape = "";
+	
+	this.sizeThreshold = 0.5;
 	this.shapeThreshold = 0.5;
-	this.colorThreshold = 0.3;
+	this.colorThreshold = 0.5;
+	
 	this.id = id;
     }
     
-	public String getColor()
-	    {
-		return bestColor;
-	    }
-	public String getSize()
-	    {
-		return bestSize;
-	    }
-	
-	public String getShape()
-	    {
-		return bestShape;
+    public String getColor()
+    {
+	return bestColor;
+    }
+    public String getSize()
+    {
+	return bestSize;
     }
 	
-	public double getColorConfidence(){
-		return colorConfidence;
-	}
-	public double getSizeConfidence(){
-		return sizeConfidence;
-	}
+    public String getShape()
+    {
+	return bestShape;
+    }
+	
+    public double getColorConfidence(){
+	return colorConfidence;
+    }
+    public double getSizeConfidence(){
+	return sizeConfidence;
+    }
 
-	public double getShapeConfidence(){
-		return shapeConfidence;
-	}
+    public double getShapeConfidence(){
+	return shapeConfidence;
+    }
 	
-	public Color getBoxColor(){
-		// Add 5 to each color channel up to the max of 255
-		boxColor = new Color(boxColor.getRed() < 245 ? boxColor.getRed() + 10 : 255,
-				boxColor.getGreen() < 245 ? boxColor.getGreen() + 10 : 255,
-				boxColor.getBlue() < 245 ? boxColor.getBlue() + 10 : 255);
-		return boxColor;				
-	}
+    public Color getBoxColor(){
+	// Add 5 to each color channel up to the max of 255
+	boxColor = new Color(boxColor.getRed() < 245 ? boxColor.getRed() + 10 : 255,
+			     boxColor.getGreen() < 245 ? boxColor.getGreen() + 10 : 255,
+			     boxColor.getBlue() < 245 ? boxColor.getBlue() + 10 : 255);
+	return boxColor;				
+    }
 	
-    public double updateColorConfidence(ConfidenceLabel cl)
+    public double updateColorConfidence(
+	ConfidenceLabel cl,
+	ArrayList<ConfidenceLabel> confidenceThresholds)
     {
 	colorConLabels.offer(cl);
 	if (colorConLabels.size() > 10)
@@ -133,11 +141,23 @@ public class SpyObject implements Comparable<SpyObject>{
 	{
 	    secondBestColor = bestS.get(index);
 	}
+
+	for (ConfidenceLabel thresh : confidenceThresholds)
+	{
+	    if (bestColor.equals(thresh.getLabel()))
+	    {
+		colorThreshold = thresh.getConfidence();
+		break;
+	    }
+	}
+	
 	colorConfidence = sum/(double)count * (double)max/(double)count; 
 	return colorConfidence;
     }
 
-    public double updateSizeConfidence(ConfidenceLabel cl)
+    public double updateSizeConfidence(
+	ConfidenceLabel cl, 
+	ArrayList<ConfidenceLabel> confidenceThresholds)
     {
 	sizeConLabels.offer(cl);
 	if (sizeConLabels.size() > 10)
@@ -185,11 +205,21 @@ public class SpyObject implements Comparable<SpyObject>{
 	    secondBestSize = bestS.get(index);
 	}
 	
+	for (ConfidenceLabel thresh : confidenceThresholds)
+	{
+	    if (bestSize.equals(thresh.getLabel()))
+	    {
+		sizeThreshold = thresh.getConfidence();
+		break;
+	    }
+	}
+	
 	sizeConfidence = sum/(double)count * (double)max/(double)count; 
 	return sizeConfidence;
     }
 
-    public double updateShapeConfidence(ConfidenceLabel cl, 
+    public double updateShapeConfidence(
+	ConfidenceLabel cl, 
 	ArrayList<ConfidenceLabel> confidenceThresholds)
     {
 	shapeConLabels.offer(cl);
@@ -271,30 +301,37 @@ public class SpyObject implements Comparable<SpyObject>{
 	return false;
     }
     
-    //TODO terrible temporary hack
-    /*
-    public boolean isShape(String label)
-    {
-    	return (label.equals("blue") ||
-    			label.equals("red") ||
-    			label.equals("yellow") ||
-    			label.equals("green") ||
-    			label.equals("purple") ||
-    			label.equals("orange"));
-    }
-    */
     
     public double wrongShapeConf()
     {
+    	System.out.println(bestShape + " comparing thresh:" + 
+			   this.shapeThreshold + " and conf:" + 
+			   this.shapeConfidence);
 	if (this.shapeThreshold < this.shapeConfidence)
 	    return 100.0;
 	return this.shapeConfidence - this.shapeThreshold;
     }
+    
     public double wrongColorConf()
     {
-	if (this.shapeThreshold < this.shapeConfidence)
+	System.out.println(bestColor + " comparing thresh:" + 
+			   this.colorThreshold + " and conf:" + 
+			   this.colorConfidence);
+
+	if (this.colorThreshold < this.colorConfidence)
 	    return 100.0;
 	return this.colorConfidence - this.colorThreshold;
+    }
+    
+    public double wrongSizeConf()
+    {
+	System.out.println(bestSize + " comparing thresh:" + 
+			   this.sizeThreshold + " and conf:" + 
+			   this.sizeConfidence);
+	if (this.sizeThreshold < this.sizeConfidence)
+	    return 100.0;
+		
+	return this.sizeConfidence - this.sizeThreshold;
     }
     
     public boolean matchesBestColor(ArrayList<String> labels)
@@ -317,6 +354,17 @@ public class SpyObject implements Comparable<SpyObject>{
 	}
 	return false;
     }
+    
+    public boolean matchesBestSize(ArrayList<String> labels)
+    {	
+	for(String label : labels)
+	{
+	    if(bestSize.equals(label)){
+		return true;
+	    } 
+	}
+	return false;
+    }
 
     public boolean matches(ArrayList<String> labels){
 	for(String label : labels){
@@ -333,7 +381,7 @@ public class SpyObject implements Comparable<SpyObject>{
     }
     
     @Override
-    public int compareTo(SpyObject obj)
+	public int compareTo(SpyObject obj)
     {
 	double diff = (this.colorConfidence + this.shapeConfidence - this.shapeThreshold) - 
 	    (obj.colorConfidence + obj.shapeConfidence - obj.shapeThreshold);

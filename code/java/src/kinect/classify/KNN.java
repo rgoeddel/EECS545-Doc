@@ -90,7 +90,7 @@ public class KNN {
 	int dim;
 
 	// constants
-	final double thresholdDefault = 0.60;
+	final double thresholdDefault = 0.95;
 	final double maxThresholdDefault = 0.95;
 	final double minThresholdDefault = 0.10;
 
@@ -252,15 +252,16 @@ public class KNN {
 		}
 		if ((index = labels.indexOf(label)) >= 0) {
 			double threshold = thresholds.get(index);
-
+			System.out.print("Changing " + label + " threshold from " + threshold + " to ");
 			if (direction > 0)
 				threshold = threshold
-						+ Math.pow(maxThresholdDefault - threshold, 2);
+						+ Math.pow(maxThresholdDefault - threshold, 5);
 			else
 				threshold = threshold
-						- Math.pow(threshold - minThresholdDefault, 2);
+						- Math.pow(threshold - minThresholdDefault, 5);
 			// System.out.println(threshold);
 			thresholds.set(index, threshold);
+			System.out.println(threshold);
 		} else {
 			System.out.println("ERROR: label not found)");
 		}
