@@ -310,10 +310,10 @@ prompted to identify the correct object. The thresholds for the incorrect
 labels are then increased so that in the future, the system will be more
 likely to nudge them.
 
-\xxx{Justify min/max}
 The thresholds are adjusted by a amount which decays with the number of
 threshold updates. Additionally, thresholds are clamped between a minimum of
-0.1 and a maximum of 0.95. Updates are calculated using the following formula:
+0.1 and a maximum of 0.95. By bounding the range of values we ensure that we are neither completely confident nor completely unconfident in our labeling. 
+Updates are calculated using the following formula:
 $$\mathrm{Thresh_{t}} = \mathrm{Thresh_{t-1}} + \lambda^t C change$$
 \[change = \left\{ \begin{array}{ll}
          1 & \mbox{if threshold should increase};\\
@@ -372,13 +372,7 @@ our object, a small sample of which are shown in Fig.~\ref{fig:images}. From
 these point clouds, we are able to extract features such as the HS features
 pictured in Fig.~\ref{fig:colordata}.
 
-\begin{figure}[h!]
-\centering
-    \includegraphics[width=.75\textwidth]{figures/screenshot.png}
-    \caption{The main interface for the system. For each object the best labels and associated confidences are displayed.}
-    \label{fig:screenshot}
-\end{figure}
-\section{Experimental Results}
+
 
 Our system, seen in figure \ref{fig:screenshot}, segments objects found in a
 predefined play area and labels them with the most confident shape, size, and
@@ -405,14 +399,7 @@ examples, and 1807 size examples;
     \includegraphics[height=1.6in]{figures/colorplot_noorange.eps}
     \label{fig:colordata}
 }
-\caption{Real world data is extracted from toy foam blocks. The blocks
-    themselves can be seen in \subref{fig:blocks}. Using a segmentation
-    algorithm, we extract the blocks from the Kinect data \subref{fig:images}
-    and generate feature vectors for each object.
-    Finally, we hand label the data for features such as color and shape for
-    classification training. In \subref{fig:colordata}, we see the actual
-    distribution of our training samples in the hue and saturation
-    dimensions.}
+\caption{}
 \label{fig:objects}
 \end{figure}
 
@@ -442,21 +429,33 @@ allows the system to determine which labels are inherently less informative.
         \hline
         Shape         & Accuracy (\%) & Color   & Accuracy (\%) & Size &Accuracy (\%) \\ \hline \hline
         Triangle      & 95.07                & Red     & 100.00               & Small   & 87.97               \\ \hline
-        T-shape       & 96.18                & Blue    & 100.00               & Medium  & 91.81               \\ \hline
-        L-shape       & 96.48                & Green   & 98.88                & Large   & 81.70               \\ \hline
-        Rectangle     & 90.54                & Yellow  & 100.00               & Overall & 86.11               \\ \hline
+        T-shape       & 96.18                & Blue    & 100.00               & Medium  &   81.70             \\ \hline
+        L-shape       & 96.48                & Green   & 98.88                & Large   & 91.81               \\ \hline
+        Rectangle     & 90.54                & Yellow  & 100.00               & ~  &   ~             \\ \hline
         Arch          & 93.86                & Orange  & 100.00               & ~       & ~                   \\ \hline
         Cylinder      & 90.94                & Purple  & 99.44                & ~       & ~                   \\ \hline
-        Half-cylinder & 67.50                & Overall & 99.73                & ~       & ~                   \\ \hline
-        Square        & 68.21                & ~       & ~                    & ~       & ~                   \\ \hline
-        Overall       & 90.45                & ~       & ~                    & ~       & ~                   \\
+        Half-cylinder & 67.50                & ~        & ~                     & ~       & ~                   \\ \hline
+        Square        & 68.21                & ~       & ~                      & ~       & ~                   \\ \hline
+        Overall       & 90.45                & Overall       & 99.73         & Overall      & 86.11                   \\
         \hline
     \end{tabular}
     \caption{Results of LOOCV on nearly 2000 training examples for color, shape, and size.}
 	\label{tbl:testresults}
 \end{table}
 
+\begin{figure}[h!]
+\centering
+    \includegraphics[width=.75\textwidth]{figures/screenshot.png}
+    \caption{The main interface for the system. For each object the best labels and associated confidences are displayed. The setup shown is used in the scenario presented in Sec~\ref{sec:scenario}}
+    \label{fig:screenshot}
+\end{figure}
+\section{Experimental Results}
+
 \subsection{Example Scenario}
+\label{sec:scenario}
+As an example demonstration we setup the environment as shown in Fig.~\ref{fig:screenshot}. All confidence thresholds were set to the default values of .95. We first told the system that we spied an medium, l-shaped block. Because the system could see an object matching that exact description it immediately pointed to it and asked for feedback. We responded by giving a positive confirmation. The system then added the object as a trianing example for the labels medium and l-shaped. In addition, because the threshold for medium was above the confidence value, the system lowered its threshold. 
+
+We then told the system that we spied a green arch. The system did not perceieve an arch because it was oriented with the concave surface obscured from the camera, and thus looked like a rectangle. The system saw two green objects. The t-shaped block had a confidence higher than the threshold and so was not considered. The green object labeled as a rectangle has a confidence lower than the threshold for rectangles, so the system swept the block and knocked it on its side. It could therefore classify the object correctly as an arch and so pointed to it and again asked for feedback and the user responded in kind.
 
 \section{Future Work}
 \label{sec:future-work}
