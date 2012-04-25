@@ -36,17 +36,17 @@
 
 
 \begin{abstract}
-When an agent is faced with uncertainty it has two major courses of action: it
+When an agent is faced with uncertainty it can take two main courses of action: it
 can explore on its own to gain more knowledge or it can consult an expert. We
-have created an image recognition system that utilizes both sources of
-knowledge to improve its performance. Our system captures point-cloud data
+have created an object recognition system that utilizes both sources of
+knowledge to improve its performance. Our system captures point cloud data
 from an RGB-D camera and uses machine learning techniques to extract features
 and classify properties of objects including size, shape, and color. It is
 able to measure the amount of uncertainty for a given property and manipulate
 the object using a robotic arm in order to reduce that uncertainty. It also
 incorporates direct feedback from the user to further improve its
 classification performance and requests more information when it misclassifies
-an object. Users can easily teach the system new property labels on the fly.
+an object. Users can teach the system new property labels on the fly.
 We demonstrate our system through a simple I-Spy game with toy blocks of
 various shapes and colors.
 \end{abstract}
@@ -58,9 +58,9 @@ various shapes and colors.
 Agents that operate in environments that are partially observable or very
 noisy are often faced with large amounts of uncertainty. One option for the
 agent is to explore the environment to resolve some of that uncertainty. While
-this approach can be done autonomously without direct human involvement, there
+this approach can be done autonomously, there
 still may be fundamental limits to what information the agent is able to
-collect. A second option is for the agent to consult an expert to acquire
+collect on its own. A second option is for the agent to consult an expert to acquire
 missing knowledge, a technique known as active learning. This can present a
 large and rich source of knowledge, but can be costly to acquire. Hybrid
 approaches enable an agent to explore the world on its own and ask an expert
@@ -70,14 +70,15 @@ strengths of each option and can lead to better performance. Of course,
           knowledge is unattainable through exploration or what constitutes an
           important question.
 
-Our project involves one such attempt to utilize both sources of knowledge.
+Our project to utilizes both sources of knowledge.
 Our system is tasked with identifying properties of various objects like
 color, shape, and size in order to play the children's game ``I spy''.
-Unfortunately it is quite common for an object to be in a poor orientation and
+Unfortunately, objects are commonly positioned in poor orientations with
+respect to our vision system and are
 thus difficult for our system to classify. We use both recent history and
-information from our K-Nearest Neighbor (KNN) classifier to determine when we
+information from a K-Nearest Neighbor (KNN) classifier to determine when we
 are uncertain about an object. Instead of asking the user for help, the system
-first tries to get more information about the object by nudging it using a
+first tries to gain more information about the object by nudging it using a
 robotic arm. The goal is to change the orientation of the object in order to
 improve its classification performance. It will learn which classes are
 inherently uncertain (such as rectangles) and adjust accordingly. The system also
@@ -186,7 +187,7 @@ point cloud representations of each objects.
 
 In order to adjust the confidence thresholds to determine which shapes are more
 certain (discussed below), it is necessary to track an object over time. This can
-be challenging, as the physical object may change location over time and may be
+be challenging as the physical object may change location over time and may be
 occluded by the robot arm or another object. As each new frame appears, the
 segmented objects in it are compared to segmented objects from prior frames.
 We begin with the most recent frame and examine past frames if no matches were
@@ -197,23 +198,24 @@ through a combination of physical and temporal proximity.
 \subsection{Feature Extraction}
 Once an object is segmented, we extract relevant features in order to classify
 color, size, and shape. We limit our system to objects that were of a single color,
-and thus use average RGB and HSV values across the pixels to construct a
+and use average RGB and HSV values across the pixels to construct a
 six-dimensional color feature vector. Size is evaluated on two features: the
 diagonal of the 3D, axis-aligned bounding box and the average distance of
 points from the centroid.
 
 Correctly classifying shapes requires more complicated features.
 We explored several options for extracting features from
-objects before settling on the method described in this below. We experimented
+objects before settling on the method described below. We experimented
 with ORB, a rotationally invariant feature extractor similar to SIFT and
 SURF~\cite{rublee2011orb}. Additionally we tested several feature detectors
 from OpenCV, including a square detector~\cite{opencv_library}. We also explored
 using RANSAC to discover simple shape types (such as planes, curves, and spheres),
 in order to determine the number of faces and edges each object has. This work
 was based off the RANSAC algorithms of Schnabel et al~\cite{schnabel2007efficient}.
-Although these and other feature detectors are
-frequently used in object recognition and learning tasks, we ultimately chose to
-use our own Principal Component Analysis (PCA)-based method.
+Although these and other feature detectors are frequently used in object recognition
+and learning tasks, we found that their classifications generally not well
+suited to describing our shapes. Thus, we ultimately chose to use a Principal Component Analysis
+(PCA)-based method of our own devising.
 
 To extract shape features, we apply PCA in order to find the axis with the
 greatest variance in point distribution. We first project the points onto the
@@ -228,10 +230,10 @@ points from the top and bottom edges of the box and calculate the vertical dista
 from each point to the image. This process is illustrated by Fig.~\ref{fig:pca}. We use seven
 sample points along the top and bottom; experimental evaluation showed no significant
 improvement with additional samples. In addition, we calculate the ratio of the width
-and height before scaling to estimate how elongated the shape is. From
-each image we generate a total of four shape feature vectors by flipping
-the image vertically and horizontally. This allows us to more quickly learn a
-shape across different orientations.
+and height before scaling to estimate how elongated the shape is. For
+training, we generate a total of four shape feature vectors from the supplied
+image of the object by flipping the image vertically and horizontally. This allows
+us to more quickly learn a shape across different orientations.
 
 \begin{figure}[h!]
 \centering
@@ -246,30 +248,31 @@ shape across different orientations.
 
 \subsection{Classification}
 Initially we used SVM classification to validate our method, but we have since
-moved to a K-Nearest Neighbor approach.  With the KNN algorithm
+moved to a K-Nearest Neighbor approach. With the KNN algorithm
 it is easy to add another example to the training set without recreating the
 entire training model as is done with SVM classification. Additionally, this
 eliminates the need for a third-party SVM implementation. KNN is also well
 suited for multi-class classification, removing
 the need to do a one-vs-all (OVA) approach with multiple SVMs. Adding a new
 class to the KNN classifier is also more straightforward and can be done dynamically. Using our
-implementation of KNN classification we also able to report a confidence metric for each label.
+implementation of KNN classification, we are also able to easily construct and
+report a confidence metric for each label.
 
 The confidence of a label is determined by calculating the percentage of
 neighbors with that label. The vision system experiences enough noise
-to cause high variation in the classification, particularly when the
-confidence is low.  To deal with this noise and to stabilize the reported labels,
-our system keeps track of a window of the last 10 classifications; 15 for shape, which is
-more noisy. Based on experimental tuning, for color and shape, $k=10$, while
-for size, $k=5$. The most popular historical label is reported along with its
+to cause high variation in classification, particularly when the
+confidence is low. To deal with this noise and to stabilize the reported labels,
+our system keeps track of a moving window of the last 10 classifications; 15 for shape, which is
+the most noisy. Based on experimental tuning, for color and shape we set $k=10$, while
+for size we set $k=5$. The most popular historical label is reported along with its
 confidence, which is calculated as a product of the frequency of that label
 and the average confidence of all labels in the window.
 
 \subsection{Confidence Thresholds and Object Manipulation}
 One of the difficulties with reasoning about real objects in the world is
 partial observability. Objects can have dramatically different appearances
-at different orientations. Naturally when given such an object, a human may move
-his or her head around to gain more information and confidence as to what the object
+at different orientations. Naturally, when given such an object, a human may move
+his or her head around to gain more information and thus confidence as to what the object
 is.  Similarly, when holding an unfamiliar object, a person may move it around
 to further study it.
 
@@ -278,7 +281,7 @@ manipulate objects to gain information on those whose appearance has high
 orientation dependency. For this purpose, we adopt a confidence threshold system
 to learn which objects have high uncertainty, and therefore are
 be good candidates for manipulation. When the system is queried for an object
-that it cannot currently see, it should manipulate an uncertain object with the
+that it cannot currently see, it manipulates the uncertain object with the
 highest probability of being the queried object.
 
 All labels are given the same default confidence threshold, and then the
@@ -327,7 +330,7 @@ Edwin Olson. The arm geometry is simple, allowing the use of closed form inverse
 kinematics solvers for various positions.
 
 Because the Kinect is not statically located with respect to the robotic arm,
-we perform an initial calibration so to align the Kinect coordinate
+we perform an initial calibration so as to align the Kinect coordinate
 frame with that of the arm. All coordinates are transformed such that the arm
 is centered at the origin facing down the x-axis. We
 may command the arm to ``point at'' or ``sweep'' an object, prompting the arm
@@ -338,16 +341,16 @@ swinging the arm through the object at an angle to encourage rotation.
 \subsection{Active Learning}
 Active learning is the process in which an agent continues to adjust its
 understanding of its environment by querying the user to gain information.
-The system utilizes the knowledge of the users playing the game
+Our system utilizes the knowledge of the users playing the game
 to learn new labels and improve its confidence about known labels. The agent
 requests information from users when it incorrectly identifies an
 incorrect object or when it cannot find the specified object. The labels the
 user provides in response to the agent are added as training examples into the
-KNN algorithm, as are all correct guesses that the user verifies.
+KNN algorithm, as are all correct guesses verified by the user.
 
 The system is capable of beginning with no knowledge and, through playing games
 with people and requesting feedback about whether its guesses are correct or
-incorrect, the system learns to distinguish shapes, colors, and sizes. The
+incorrect, learns to distinguish shapes, colors, and sizes. The
 user may also choose to enter a ``training'' mode in which they provide
 explicit examples of labels. This method allows user teach the system new labels.
 
@@ -380,7 +383,7 @@ pictured in Fig.~\ref{fig:colordata}.
 \end{figure}
 \section{Experimental Results}
 
-Our system, seen in figure \ref{fig:screenshot}, segments objects found in a
+Our system, seen in Fig.~\ref{fig:screenshot}, segments objects found in a
 predefined play area and labels them with the most confident shape, size, and
 color.  Additionally the user can train new shapes, colors, and sizes by simply
 clicking on an object and supplying the relevant label. This method is not
@@ -389,7 +392,7 @@ large number of training samples of many different objects, so we collected a
 training dataset of footage of the foam blocks at numerous positions and angles
 which were segmented and hand labeled with relevant
 descriptors. Our training data consists of 1857 shape examples, 1845 color
-examples, and 1807 size examples;
+examples, and 1807 size examples.
 
 \begin{figure}[h!]
 \centering
@@ -432,7 +435,7 @@ which varies greatly based on orientation. Size, which is a more subjective
 property of the object, also presents some difficulty. This can be largely
 attributed to disagreement amongst the hand labels contributed by different
 labelers. We observed that the system has particular problems with shapes that
-are presented head on, which tend to resemble rectangles.  This is the primary
+are presented head on, which tend to resemble rectangles.  This was the primary
 motivation for developing a confidence threshold learning mechanism, which
 allows the system to determine which labels are inherently less informative.
 
@@ -461,10 +464,10 @@ allows the system to determine which labels are inherently less informative.
 \section{Future Work}
 \label{sec:future-work}
 This work is a portion of a larger project, The Broad Operational Language
-Translation Program (BOLT), a DARPA-funded research project spanning several
+Translation Program (BOLT), which is a DARPA-funded research project spanning several
 universities and industry research groups. The goal of BOLT is to create an
-agent that learns through interactive instruction to ground objects and
-actions in the real world. Our work focuses on the learning and object
+agent that learns to ground objects and actions in the real world through
+interactive instruction. Our work focuses on the learning and object
 classification components that the BOLT system will need.
 
 The short-term goals of this continued work involve further expansion of the
