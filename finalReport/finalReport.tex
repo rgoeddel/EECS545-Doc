@@ -351,7 +351,6 @@ The system is capable of beginning with no knowledge and, through playing games
 with people and requesting feedback about whether its guesses are correct or
 incorrect, learn to distinguish shapes, colors, and sizes.
 
-\section{Experimental Results}
 
 \subsection{Data Collection and Training}
 We acquired a large variety of children's foam blocks in many shapes, sizes,
@@ -368,7 +367,15 @@ Additionally we collected
 more familiar objects to test our classifier on, demonstrating the ability of
 the system to abstract general shapes to real world objects.
 
-Our system, seen in figure \meh{screenshot}, segments objects found in the
+\begin{figure}[h!]
+\centering
+    \includegraphics[width=.75\textwidth]{figures/screenshot.png}
+    \caption{The main interface for the system. For each object the best labels and associated confidences are displayed.}
+    \label{fig:screenshot}
+\end{figure}
+\section{Experimental Results}
+
+Our system, seen in figure \ref{fig:screenshot}, segments objects found in the
 predefined play area and labels them with the most confident shape, size, and
 color.  Additionally a user can train new shapes, colors, and sizes by simply
 clicking on that image and supplying the relevant label.  This is sufficient
