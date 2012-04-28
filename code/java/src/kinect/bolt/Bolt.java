@@ -160,8 +160,11 @@ public class Bolt extends JFrame implements LCMSubscriber
                 int i = y * kinect_status_t.WIDTH + x;
                 int d = ((kinectData.depth[2 * i + 1] & 0xff) << 8)
                     | (kinectData.depth[2 * i + 0] & 0xff);
-                double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d],
-                                                    kinectData);
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, kinectData);
+
+                // Disabled to switch to registered view
+                // KUtils.getXYZRGB(x, y, KUtils.depthLookup[d],
+                //                                 kinectData);
                 currentPoints.add(pKinect);
             }
         }
