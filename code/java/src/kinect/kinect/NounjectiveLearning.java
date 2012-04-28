@@ -29,7 +29,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
     static int initialColorThresh = 13;
     static double initialUnionThresh = 0.05;
-    static double  initialRansacThresh = .02;
+    static double  initialRansacThresh = .01;
     static double  initialRansacPercent = .1;
 
 
@@ -271,6 +271,7 @@ public class NounjectiveLearning implements LCMSubscriber
             vb.addBack(chain);
         }
 
+        //vb.add(new VzGrid());
         vb.addBack(new VisLighting(false, new VzPoints
                                    (vd, new VzPoints.Style(cd, 1.0))));
         vb.swap();
