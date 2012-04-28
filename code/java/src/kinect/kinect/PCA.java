@@ -109,7 +109,7 @@ public class PCA {
 		
 		boolean inBounds = false;
 		int iters = 0;
-		while(iters < 100000){
+		while(iters++ < 100000){
 			for(int i = 0; i < 2; i++){
 				for(int j = 0; j < 2; j++){
 					int xi = (int)x + i;

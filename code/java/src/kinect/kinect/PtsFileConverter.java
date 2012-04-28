@@ -104,14 +104,13 @@ public class PtsFileConverter
                 
                 boolean hasLabel = false;
                 for(int i = 0; i < labels.size(); i++){
-                	if(validFeatures.contains(labels.get(i).toLowerCase())){
-                		featureString += String.format(" {%s}\n", labels.get(i).toLowerCase());
+                	String featureSymbol = SoarSymbols.getSymbol(type, labels.get(i).toLowerCase());
+                	if(featureSymbol != null){
+                		featureString += String.format(" {%s}\n", featureSymbol);
                 		hasLabel = true;
                 		break;
                 	}
                 }
-                featureString = featureString.replace("triangular", "triangle");
-                featureString = featureString.replace("rectangular", "rectangle");
                 if(hasLabel){
                 	pwout.print(featureString);
                 	pwout.flush();

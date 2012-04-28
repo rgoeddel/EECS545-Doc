@@ -107,13 +107,18 @@ public class KNN {
 	thresholdUpdateSteps = new ArrayList<Integer>();
 	data = new ArrayList<TrainingSample>();
     }
+   
 
     public void add(Point p, String label) {
 	data.add(new TrainingSample(p, label));
 	if (!thresholdLabels.contains(label)) {
 	    System.out.println("New label: " + label);
 	    thresholdLabels.add(label);
-	    thresholdLevels.add(thresholdDefault);
+	    //TODO REMOVE FOR GRAPHICS ONLY
+	    if (label.equals("rectangle"))
+	    	thresholdLevels.add(0.50);
+	    else
+	    	thresholdLevels.add(thresholdDefault);
 	    thresholdUpdateSteps.add(0);
 	}
     }
@@ -123,7 +128,11 @@ public class KNN {
 	if (!thresholdLabels.contains(label)) {
 	    System.out.println("New label: " + label);
 	    thresholdLabels.add(label);
-	    thresholdLevels.add(thresholdDefault);
+	  //TODO REMOVE FOR GRAPHICS ONLY
+	    if (label.equals("rectangle"))
+	    	thresholdLevels.add(0.50);
+	    else
+	    	thresholdLevels.add(thresholdDefault);
 	    thresholdUpdateSteps.add(0);
 	}
     }
@@ -178,8 +187,8 @@ public class KNN {
 	    i++;
 	}
 	if (i != dim) {
-	    System.out.println("ERROR: datainput has only " + i
-			       + " features and K=" + dim);
+	   // System.out.println("ERROR: datainput has only " + i
+		//	       + " features and K=" + dim);
 	    return null;
 	}
 
@@ -241,7 +250,11 @@ public class KNN {
 	if (!thresholdLabels.contains(label)) {
 	    System.out.println("New label: " + label);
 	    thresholdLabels.add(label);
-	    thresholdLevels.add(thresholdDefault);
+	  //TODO REMOVE FOR GRAPHICS ONLY
+	    if (label.equals("rectangle"))
+	    	thresholdLevels.add(0.50);
+	    else
+	    	thresholdLevels.add(thresholdDefault);
 	    thresholdUpdateSteps.add(0);
 	}
 
@@ -253,7 +266,11 @@ public class KNN {
 	if (!thresholdLabels.contains(label)) {
 	    System.out.println("New label: " + label);
 	    thresholdLabels.add(label);
-	    thresholdLevels.add(thresholdDefault);
+	    //TODO REMOVE FOR GRAPHICS ONLY
+	    if (label.equals("rectangle"))
+	    	thresholdLevels.add(0.50);
+	    else
+	    	thresholdLevels.add(thresholdDefault);
 	    thresholdUpdateSteps.add(0);
 	}
     }

@@ -21,10 +21,10 @@ public class KUtils
                                    1.1055834733919326e-04,-3.6043261204609631e-04,1.6539945052733636e+00};
 
     // parameters for IR depth camera
-    public static double Firx = 5.8791759217862204e+02; // focal length
+    public static double Firx = 5.7191759217862204e+02; // focal length
     public static double Firy = 5.8760489958891026e+02; //
-    public static double Cirx = 3.3025048258259540e+02; // larger -> moves right
-    public static double Ciry = 2.3375008449138741e+02; // larger -> moves down
+    public static double Cirx = 3.3125048258259540e+02; // larger -> moves right
+    public static double Ciry = 2.2875008449138741e+02; // larger -> moves down
 //    public static double Cirx = 3.2525048258259540e+02; // camera center in pixels
 //    public static double Ciry = 2.4275008449138741e+02; //
     public static double[] Kir = {-1.8177169518802491e-01,1.1695212447715055e+00,

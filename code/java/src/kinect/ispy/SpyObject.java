@@ -29,6 +29,10 @@ public class SpyObject {
     String bestShape;
     String bestSize;
     
+    //for graph purpose only then remove
+    double rectShapeConfidence;
+    double archShapeConfidence;
+    
     //keep track of thresholds for best labels
     double shapeThreshold;
     double colorThreshold;
@@ -48,7 +52,8 @@ public class SpyObject {
 	this.bestShape = "unknown";
 	this.bestSize = "unknown";
 	
-	
+	double rectShapeConfidence = 0.0;
+    double archShapeConfidence = 0.0;
 	this.sizeThreshold = 0.5;
 	this.shapeThreshold = 0.5;
 	this.colorThreshold = 0.5;
@@ -89,6 +94,8 @@ public class SpyObject {
 	return boxColor;				
     }
 	
+    
+    
     public double updateColorConfidence(
 	ConfidenceLabel cl,
 	ArrayList<ConfidenceLabel> confidenceThresholds)
@@ -207,6 +214,7 @@ public class SpyObject {
 	ArrayList<ConfidenceLabel> confidenceThresholds)
     {
 	shapeConLabels.offer(cl);
+	
 	if (shapeConLabels.size() > 15)
 	    shapeConLabels.remove();
 	double sum = 0;
@@ -216,6 +224,14 @@ public class SpyObject {
 	int max = 0;
 	
 	int index;
+	//todo remove -just for graphic
+	/*
+	int rectcount = 0;
+	int archcount = 0;
+
+	double archConf = 0.0;
+	double rectConf = 0.0;
+	*/
 	for (ConfidenceLabel c : shapeConLabels)
 	{
 	    String label = c.getLabel();
@@ -232,6 +248,19 @@ public class SpyObject {
 		bestS.add(label);
 		bestCount.add(cnt);
 	    }
+	    
+	    /*
+	    if (label.equals("rectangle"))
+	    {
+	    	rectcount++;
+	    	rectConf += c.getConfidence();
+	    }
+	    if (label.equals("arch"))
+	    {
+	    	archcount++;
+	    	archConf += c.getConfidence();
+	    }
+	    */
 	    if (cnt > max)
 	    {
 		max = cnt;
@@ -253,32 +282,48 @@ public class SpyObject {
 		break;
 	    }
 	}
+	/*
+	System.out.println("rect count:" + rectcount + " arch count:" + archcount);
+	rectShapeConfidence = (double)sum/(double)count * (double)rectcount/(double)count;
+	archShapeConfidence = (double)sum/(double)count * (double)archcount/(double)count;
+	*/
 	shapeConfidence = sum/(double)count * (double)max/(double)count; 
 	return shapeConfidence;
     }
     
+
+    public double rectConfidence()
+    {
+    	return rectShapeConfidence;
+    }
+    
+    public double archConfidence()
+    {
+    	return archShapeConfidence;
+    }
+    
     public double shapeConfidenceThresholdDif()
     {
-    	System.out.println(bestShape + " comparing thresh:" + 
-			   this.shapeThreshold + " and conf:" + 
-			   this.shapeConfidence);
+//    	System.out.println(bestShape + " comparing thresh:" + 
+//			   this.shapeThreshold + " and conf:" + 
+//			   this.shapeConfidence);
 	return this.shapeConfidence - this.shapeThreshold;
     }
     
     
     public double colorConfidenceThresholdDif()
     {
-	System.out.println(bestColor + " comparing thresh:" + 
-			   this.colorThreshold + " and conf:" + 
-			   this.colorConfidence);
+//	System.out.println(bestColor + " comparing thresh:" + 
+//			   this.colorThreshold + " and conf:" + 
+//			   this.colorConfidence);
 	return this.colorConfidence - this.colorThreshold;
     }
     
     public double sizeConfidenceThresholdDif()
     {
-	System.out.println(bestSize + " comparing thresh:" + 
-			   this.sizeThreshold + " and conf:" + 
-			   this.sizeConfidence);
+//	System.out.println(bestSize + " comparing thresh:" + 
+//			   this.sizeThreshold + " and conf:" + 
+//			   this.sizeConfidence);
 	return this.sizeConfidence - this.sizeThreshold;
     }
     
