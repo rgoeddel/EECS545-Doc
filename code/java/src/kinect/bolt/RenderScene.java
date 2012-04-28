@@ -89,7 +89,7 @@ public class RenderScene extends VisLayer
 
     	double theta = 0;
     	for(SpyObject obj : objects.values()){
-    		VzImage img = new VzImage(obj.lastObject.getImage());
+    		VzImage img = new VzImage(obj.object.getImage());
     		buffer.addBack(new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT - obj.bbox.getMinY()), LinAlg.scale(1, -1, 1), img));
 
 

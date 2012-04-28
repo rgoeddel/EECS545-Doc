@@ -12,7 +12,7 @@ public class Segment
     final static int COLOR_THRESH = 13;
     final static double UNION_THRESH = 0.5;
     final static double RANSAC_THRESH = .02;
-    final static double RANSAC_PERCENT = .2;
+    final static double RANSAC_PERCENT = .3;
     final static double OBJECT_THRESH = 300;
     final static int MAX_HISTORY = 100;
     int width, height;
@@ -57,6 +57,7 @@ public class Segment
     public void segmentFrame(ArrayList<double[]> currentPoints)
     {
         points = currentPoints;
+        coloredPoints.clear();
         unionFind();
         newFrame();
     }
@@ -124,7 +125,7 @@ public class Segment
                         objects.put(repID, info);
                     }
                     Integer color = map.get(repID);
-                    coloredPoints.add(point);//new double[]{point[0], point[1], point[2], color});
+                    coloredPoints.add(point);
                 }
             }
         }
