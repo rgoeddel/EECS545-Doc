@@ -154,6 +154,8 @@ void *publcm(void *arg)
         }
         timeval time;
         gettimeofday(&time, NULL);
+		got_rgb = 0;
+		got_depth = 0;
         ks.utime = time.tv_sec*1000 + time.tv_usec/1000;
 
         // Copy in arrays

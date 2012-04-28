@@ -41,7 +41,7 @@ public class Bolt extends JFrame implements LCMSubscriber
     private RenderScene sceneRenderer;
     private JMenuItem clearData, reloadData;
     private JCheckBoxMenuItem filterDarkCB;
-    public final static int[] viewBorders = new int[] {0, 150, 640, 440 };
+    public final static int[] viewBorders = new int[] {130, 270, 460, 440 };
     public final static Rectangle viewRegion = new Rectangle(viewBorders[0],
                                                              viewBorders[1],
                                                              viewBorders[2] - viewBorders[0],
@@ -53,6 +53,7 @@ public class Bolt extends JFrame implements LCMSubscriber
     private Map<Integer, SpyObject> objects;
     private boolean filterDark = true;
     private double darkThreshold = .4;
+    
     // LCM
     static LCM lcm = LCM.getSingleton();
     private kinect_status_t kinectData = null;
@@ -137,9 +138,10 @@ public class Bolt extends JFrame implements LCMSubscriber
         lcm.subscribe("ALLDONE", this);
 
         // Prepare for classification
-        colorKNN = new KNN(30, 6, colorDataFile, 0.2);
+        colorKNN = new KNN(1, 6, colorDataFile, 0.2);
         shapeKNN = new KNN(10, 15,shapeDataFile, 1);
         sizeKNN = new KNN(5, 2, sizeDataFile, 1);
+        
         colorKNN.loadData(false);
         shapeKNN.loadData(true);
         sizeKNN.loadData(false);
@@ -282,18 +284,18 @@ public class Bolt extends JFrame implements LCMSubscriber
                     SpyObject obj = objects.get(id);
                     category_t category = tl.cat;
                     switch(category.cat){
-                        case 1:// Color
-                            String newLabel = obj.object.colorFeatures+"{"+label+"}";
+                        case category_t.CAT_COLOR:// Color
+                            String newLabel = obj.lastObject.colorFeatures+" {"+label+"}";
                             colorKNN.add(newLabel, false);
                             System.out.println("Added a new color label.");
                             break;
-                        case 2:// Shape
-                            newLabel = obj.object.shapeFeatures+"{"+label+"}";
+                        case category_t.CAT_SHAPE:// Shape
+                            newLabel = obj.lastObject.shapeFeatures+" {"+label+"}";
                             shapeKNN.add(newLabel, false);
                             System.out.println("Added a new shape label.");
                             break;
-                        case 3:// Size
-                            newLabel = obj.object.sizeFeatures+"{"+label+"}";
+                        case category_t.CAT_SIZE:// Size
+                            newLabel = obj.lastObject.sizeFeatures+" {"+label+"}";
                             sizeKNN.add(newLabel, false);
                             System.out.println("Added a new size label.");
                             break;
@@ -370,6 +372,9 @@ public class Bolt extends JFrame implements LCMSubscriber
             obsList.add(obj_data);
         }
 
+        if(!objects.containsKey(selectedObject)){
+            selectedObject = -1;
+        }
         obs.click_id = selectedObject;
         obs.sensables = sensList.toArray(new String[0]);
         obs.nsens = obs.sensables.length;
@@ -377,7 +382,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         obs.nobs = obs.observations.length;
 
         lcm.publish("OBSERVATIONS",obs);
-        selectedObject = -1;
+        
     }
 
 
