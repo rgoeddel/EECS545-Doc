@@ -137,8 +137,8 @@ public class NounjectiveLearning implements LCMSubscriber
             return;
         }
 
-        da.currentPoints = new ArrayList<double[]>();
-        da.coloredPoints = new ArrayList<double[]>();
+        segment.points = new ArrayList<double[]>();
+        segment.coloredPoints = new ArrayList<double[]>();
 
 //        System.out.println("mat");
 //        for(int i = 0; i < 4; i++){
@@ -150,14 +150,15 @@ public class NounjectiveLearning implements LCMSubscriber
                 int i = y*ks.WIDTH + x;
                 int d = ((ks.depth[2*i+1]&0xff) << 8) |
                         (ks.depth[2*i+0]&0xff);
-                double[] pKinect = KUtils.getXYZRGB(x, y, da.depthLookUp[d], ks);
+                double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], ks);
                 double[] pWorld = KUtils.getWorldCoordinates(new double[]{
                         pKinect[0], pKinect[1], pKinect[2]});
 
                 //da.currentPoints.add(new double[]{pWorld[0], pWorld[1], pWorld[2], pKinect[3]});
-                da.currentPoints.add(pKinect);
+                segment.points.add(pKinect);
             }
         }
+
         HashMap<Integer, String> features = sendMessage();
         draw3DImage(features);
         draw2DImage();
@@ -176,7 +177,7 @@ public class NounjectiveLearning implements LCMSubscriber
         // XXX -Temporary - allow us to check how each object is being labeled
         HashMap<Integer, String> features = new HashMap<Integer, String>();
 
-        Collection c = da.objects.values();
+        Collection c = segment.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
             double[] bb = FeatureExtractor.boundingBox(obj.points);
@@ -243,21 +244,21 @@ public class NounjectiveLearning implements LCMSubscriber
 
     public void draw3DImage(HashMap<Integer, String> features)
     {
-        if(da.currentPoints.size() <= 0 && da.coloredPoints.size() <= 0){
+        if(segment.points.size() <= 0 && segment.coloredPoints.size() <= 0){
             System.out.println("No points found.");
             return;
         }
 
-        segment.segmentFrame();
+        segment.segmentFrame(segment.points);
 
         VisColorData cd = new VisColorData();
         VisVertexData vd = new VisVertexData();
-        for(double[] p: da.coloredPoints){
+        for(double[] p: segment.coloredPoints){
             vd.add(new double[]{p[0], p[1], p[2]});
             cd.add((int) p[3]);
         }
 
-        Collection c = da.objects.values();
+        Collection c = segment.objects.values();
         for(Iterator itr = c.iterator(); itr.hasNext(); ){
             ObjectInfo obj = (ObjectInfo)itr.next();
             VzText text = new VzText(Integer.toString(obj.repID));//+"-"+*/features.get(obj.repID));
@@ -318,7 +319,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
     public void draw2DImage()
     {
-        if(da.currentPoints.size() <= 0 && da.coloredPoints.size() <= 0){
+        if(segment.points.size() <= 0 && segment.coloredPoints.size() <= 0){
             System.out.println("No points found.");
             return;
         }
@@ -331,7 +332,7 @@ public class NounjectiveLearning implements LCMSubscriber
             buf[i+2] = ks.rgb[i];   // R
         }
 
-        for(Map.Entry<Integer, ObjectInfo> entry : da.objects.entrySet()){
+        for(Map.Entry<Integer, ObjectInfo> entry : segment.objects.entrySet()){
         	//im = entry.getValue().getImage();
         }
         //double[] features = PCA.getFeatures(im, 5);            System.err.println("ERR: Opts error - " + opts.getReason());
@@ -408,8 +409,10 @@ public class NounjectiveLearning implements LCMSubscriber
         da.depthLookUp = KUtils.createDepthMap();
         da.WIDTH = (int) NounjectiveLearning.viewRegion.getWidth();
         da.HEIGHT = (int) NounjectiveLearning.viewRegion.getHeight();
-        boolean colorSegments = true;
-        segment = new Segment(da, colorSegments);
+
+
+        segment = new Segment((int)(viewRegion.getMaxX()-viewRegion.getMinX()),
+                              (int)(viewRegion.getMaxY()-viewRegion.getMinY()));
 
         NounjectiveLearning nl = new NounjectiveLearning(opts);
     }

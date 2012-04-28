@@ -19,8 +19,6 @@ public class DataAggregator{
 	public HashMap<Integer, Integer> map;                  //map of object ID to color
 	public HashMap<Integer, Integer> prevMap;              // "                    "   for previous frame
     public ArrayList<HashMap<Integer,ObjectInfo>> history;
-    //public HashMap<Integer, ObjectInfo> history;
-    //public HashMap<Integer, Integer> timeCounts;
 
 	public UnionFindSimple ufs;                            //Union Find class for keeping track of union find algo
 
@@ -33,8 +31,6 @@ public class DataAggregator{
         map = new HashMap<Integer, Integer>();
         prevMap = new HashMap<Integer, Integer>();
         history = new ArrayList<HashMap<Integer,ObjectInfo>>();
-        //history = new HashMap<Integer,ObjectInfo>();
-        //timeCounts = new HashMap<Integer,Integer>();
     }
 
 
@@ -44,8 +40,7 @@ public class DataAggregator{
 
         	boolean foundMatches = false;
         	int step = 2;
-//          	      ArrayList<Integer> noMatch = inOneButNotOther(newObjects, last);
-                	
+
         	// Debugging simplification
         	ArrayList<Integer> noMatch = new ArrayList<Integer>();
         	HashMap<Integer, Integer> alreadyAssigned = new HashMap<Integer,Integer>();
@@ -55,7 +50,7 @@ public class DataAggregator{
         			alreadyAssigned.put(i,i);
         		else noMatch.add(i);
         	}
-                
+
         	//System.out.println("GAINED "+noMatch.size()+" OBJECTS");
         	while(!foundMatches && step < history.size()){
         		HashMap<Integer,ObjectInfo> old = history.get(history.size()-step);
@@ -67,16 +62,6 @@ public class DataAggregator{
         			ObjectInfo oi = objects.get(noMatch.get(i));
         			int mostSim = oi.mostSimilar(old, alreadyAssigned);
 
-        			// Check whether another object has the same ID
-        			/*Collection<ObjectInfo> c = objects.values();
-        			boolean alreadyRepresented = false;
-        			if(mostSim >= 0){
-        				int mostSimID = old.get(mostSim).repID;
-        				for(ObjectInfo obj : c)
-        					if(obj.repID == mostSimID) alreadyRepresented = true;
-        			}*/
-        		
-        		
         			// Give object ID and coloring of most similar object
         			if (mostSim >= 0 && !alreadyAssigned.containsKey(i)){
         				int newID = old.get(mostSim).repID;
@@ -88,8 +73,7 @@ public class DataAggregator{
         					coloredPoints.add(new double[]{p[0], p[1], p[2], oi.color});
         				}
         				matched[i] = true;
-        			
-        			//System.out.println("Found a match "+newID+" for "+i);
+
         			}
         		}
         		// Remove ones that were matched
@@ -99,7 +83,7 @@ public class DataAggregator{
         		step ++;
         	}
         }
-	
+
 	    // Add new frame to history (create new HashMap)
 	    HashMap<Integer, ObjectInfo> forHistory = new HashMap<Integer, ObjectInfo>();
 	    Set<Integer> set = objects.keySet();
@@ -110,29 +94,6 @@ public class DataAggregator{
 	    if(history.size() > MAX_HISTORY){
 	        history.remove(0);
 	    }
-		    
-    }
 
-
-    private ArrayList<Integer> inOneButNotOther(HashMap<Integer, ObjectInfo> larger,
-                                                HashMap<Integer, ObjectInfo> smaller)
-    {
-        //System.out.print("UNMATCHED : ");
-        ArrayList<Integer> unMatched = new ArrayList<Integer>();
-        Set<Integer> small = smaller.keySet();
-        Set<Integer> large = larger.keySet();
-        for(Integer i : large){
-            boolean found = false;
-            for(Integer j : small){
-                if(larger.get(i).repID == smaller.get(j).repID)
-                    found = true;
-            }
-            if(!found) {
-                unMatched.add(i);
-                //System.out.print(larger.get(i).repID+" ");
-            }
-        }
-        //System.out.println();
-        return unMatched;
     }
 }

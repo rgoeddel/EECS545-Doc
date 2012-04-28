@@ -40,13 +40,13 @@ public class ObjectInfo{
     }
 
     /** Create a new object with info about it. Objects begin with a single point.**/
-    public ObjectInfo(int color, int repID, double[] point)
+    public ObjectInfo(int color, int id, double[] point)
     {
         Random r = new Random();
         this.repID = r.nextInt();
         this.numPoints = 1;
         this.color = color;
-        this.ufsID = repID;
+        this.ufsID = id;
         // XXXX - Need to transform everything with respect to the ground
         // plane and the kinect
         this.leftmost = point[0];
@@ -92,7 +92,7 @@ public class ObjectInfo{
         for(int i=0; i<sumPoints.length; i++){
             center[i] = sumPoints[i]/numPoints;
         }
-        
+
         return center;
     }
 
@@ -140,7 +140,7 @@ public class ObjectInfo{
         repID = newID;
         color = newColor;
     }
-    
+
     public static BufferedImage getImage(ArrayList<double[]> points, Rectangle projBBox){
     	BufferedImage image;
 		int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
@@ -170,19 +170,19 @@ public class ObjectInfo{
 		}
     	return image;
     }
-    
+
     public Rectangle getProjectedBBox(){
     	if(projBBox == null){
     		getImage();
-    	} 
+    	}
     	return projBBox;
     }
-    
+
     public BufferedImage getImage(){
     	if(image == null){
     		projBBox = new Rectangle();
     		image = getImage(points, projBBox);
-    	} 
+    	}
     	return image;
     }
 }

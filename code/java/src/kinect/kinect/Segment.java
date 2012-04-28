@@ -9,12 +9,26 @@ import java.util.*;
 
 public class Segment
 {
-    DataAggregator da;
-    Boolean colorSegments;
+    final static int COLOR_THRESH = 13;
+    final static double UNION_THRESH = 0.5;
+    final static double RANSAC_THRESH = .02;
+    final static double RANSAC_PERCENT = .1;
+    final static double OBJECT_THRESH = 250;
+    final static int MAX_HISTORY = 100;
     int width, height;
-    double OBJECT_THRESH = 250;
 
-    static Random rand = new Random(56436337);
+    // Originally in data aggregator
+    public HashMap<Integer, ObjectInfo> objects;           //map of all objects found in current frame to their data
+    public HashMap<Integer, ObjectInfo> prevObjects;       //map of all objects found in previous frame
+    public HashMap<Integer, Integer> map;                  //map of object ID to color
+    public HashMap<Integer, Integer> prevMap;              // "                    "   for previous frame
+    public ArrayList<HashMap<Integer,ObjectInfo>> history;
+    public ArrayList<double[]> coloredPoints;
+    public ArrayList<double[]> points;
+    public UnionFindSimple ufs;
+
+
+    static Random rand = new Random();
     static double[] t = new double[] { -0.0254, -0.00013, -0.01218 }; // Added .01 to t[2] here rather than below
     double[] floorPlane;
     boolean floorFound;
@@ -24,49 +38,27 @@ public class Segment
                                        0xff0099CC, 0xffD1FF47, 0xffC2FF0A, 0xffCC9900,
                                        0xff00CC99, 0xff00CC33, 0xff33CC00, 0xff99CC00};
 
-    public Segment(DataAggregator dataAg, Boolean colorSegments_)
+    public Segment(int w, int h)
     {
-        da = dataAg;
-        colorSegments = colorSegments_;
-        width = da.WIDTH;
-        height = da.HEIGHT;
+        width = w;
+        height = h;
         floorPlane = new double[4];
         floorFound = false;
+        objects = new HashMap<Integer, ObjectInfo>();
+        prevObjects = new HashMap<Integer, ObjectInfo>();
+        map = new HashMap<Integer, Integer>();
+        prevMap = new HashMap<Integer, Integer>();
+        history = new ArrayList<HashMap<Integer,ObjectInfo>>();
+        coloredPoints = new ArrayList<double[]>();
     }
 
     /** First segment the frame into objects and then get the features
      ** for each object. **/
-    public void segmentFrame()
+    public void segmentFrame(ArrayList<double[]> currentPoints)
     {
+        points = currentPoints;
         unionFind();
-        da.newFrame();
-    }
-
-    /** Get the difference in the z-direction of two pixels. **/
-    private double depthDiff(double[] p1, double[] p2)
-    {
-        return Math.abs(p1[2] - p2[2]);
-    }
-
-    /** Get the difference in the z-direction of two pixels. **/
-    private double dist(double[] p1, double[] p2)
-    {
-        double dx = p1[0]-p2[0];
-        double dy = p1[1]-p2[1];
-        double dz = p1[2]-p2[2];
-        return Math.sqrt(dx*dx + dy*dy + dz*dz);
-    }
-
-    /** Find the Euclidean distance between two colors. **/
-    private double colorDiff(double color1, double color2)
-    {
-        Color c1 = new Color((int)color1);
-        Color c2 = new Color((int)color2);
-        int rDiff = c1.getRed() - c2.getRed();
-        int gDiff = c1.getGreen() - c2.getGreen();
-        int bDiff = c1.getBlue() - c2.getBlue();
-        double diff = Math.sqrt(rDiff*rDiff + bDiff*bDiff + gDiff*gDiff);
-        return diff;
+        newFrame();
     }
 
     /** union find- for each pixel, compare with pixels around it and merge if
@@ -74,32 +66,32 @@ public class Segment
     public void unionFind()
     {
         removeFloorPoints();
-        da.ufs = new UnionFindSimple(da.currentPoints.size());
-
+        ufs = new UnionFindSimple(points.size());
         //create unions of pixels that are close together spatially
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
+//                System.out.print("["+x+","+y+"]");
                 int loc1 = y*width + x;
-                double[] p1 = da.currentPoints.get(loc1);
+                double[] p1 = points.get(loc1);
                 // Look at all surrounding pixels
                 if(!Arrays.equals(p1, new double[4])){
                     int loc2 = y*width + x + 1;
                     int loc3 = (y+1)*width + x;
-                    if (loc2>=0 && loc2<width*height){
-                        double[] p2 = da.currentPoints.get(loc2);
+                    if (loc2>=0 && loc2<points.size()){
+                        double[] p2 = points.get(loc2);
                         if(!Arrays.equals(p2, new double[4])
-                           && (dist(p1, p2) < da.unionThresh
-                               || colorDiff(p1[3], p2[3]) < da.colorThresh)){
-                            da.ufs.connectNodes(loc1, loc2);
+                           && (dist(p1, p2) < UNION_THRESH
+                               || colorDiff(p1[3], p2[3]) < COLOR_THRESH)){
+                            ufs.connectNodes(loc1, loc2);
                         }
                     }
 
-                    if (loc3>=0 && loc3<width*height){
-                        double[] p2 = da.currentPoints.get(loc3);
+                    if (loc3>=0 && loc3<points.size()){
+                        double[] p2 = points.get(loc3);
                         if(!Arrays.equals(p2, new double[4])
-                           && (dist(p1, p2) < da.unionThresh
-                               || colorDiff(p1[3], p2[3]) < da.colorThresh)){
-                            da.ufs.connectNodes(loc1, loc3);
+                           && (dist(p1, p2) < UNION_THRESH
+                               || colorDiff(p1[3], p2[3]) < COLOR_THRESH)){
+                            ufs.connectNodes(loc1, loc3);
                         }
                     }
                 }
@@ -108,56 +100,55 @@ public class Segment
 
         //collect data on all the objects segmented by the union find algorithm in the previous step
         ObjectInfo info;
-        da.prevObjects = da.objects;
-        da.prevMap = da.map;
-        da.objects = new HashMap<Integer, ObjectInfo>();
-        da.map = new HashMap<Integer, Integer>();
+        prevObjects = objects;
+        prevMap = map;
+        objects = new HashMap<Integer, ObjectInfo>();
+        map = new HashMap<Integer, Integer>();
 
         // Make new objectInfos
-        for(int i = 0; i < da.currentPoints.size(); i++){
-            double[] point = da.currentPoints.get(i);
-            //if(!Arrays.equals(point, new double[4])){
+        for(int i = 0; i < points.size(); i++){
+            double[] point = points.get(i);
             if(Math.abs(point[0]-0)>.0001 &&Math.abs(point[2]-0)>.0001 && Math.abs(point[2]-0)>.0001){
 
-                if(da.ufs.getSetSize(i) > OBJECT_THRESH){
-                    int repID = da.ufs.getRepresentative(i);
-                    Object repColor = da.map.get(repID);
+                if(ufs.getSetSize(i) > OBJECT_THRESH){
+                    int repID = ufs.getRepresentative(i);
+                    Object repColor = map.get(repID);
                     if(repColor != null){
-                        info = (ObjectInfo)da.objects.get(repID);
+                        info = (ObjectInfo)objects.get(repID);
                         info.update(point);
                     }
                     else{
                         int color = colors[i%colors.length];
-                        da.map.put(repID, color);
+                        map.put(repID, color);
                         info = new ObjectInfo(color, repID, point);
-                        da.objects.put(repID, info);
+                        objects.put(repID, info);
                     }
-                    Integer color = da.map.get(repID);
-                    da.coloredPoints.add(new double[]{point[0], point[1], point[2], color});
+                    Integer color = map.get(repID);
+                    coloredPoints.add(point);//new double[]{point[0], point[1], point[2], color});
                 }
             }
         }
 
         // Pair up objects from this frame with last frame
-        if(da.prevObjects.size() > 0){
-            Collection cNew = da.objects.values();
+        if(prevObjects.size() > 0){
+            Collection cNew = objects.values();
             for(Iterator itr = cNew.iterator(); itr.hasNext(); ){
                 ObjectInfo obj = (ObjectInfo)itr.next();
-                int mostSim = obj.mostSimilar(da.prevObjects, null);
+                int mostSim = obj.mostSimilar(prevObjects, null);
                 if(mostSim != -1){
-                	double[] locOld = da.prevObjects.get(mostSim).getCenter();
+                	double[] locOld = prevObjects.get(mostSim).getCenter();
                 	double[] locNew = obj.getCenter();
                 	double dist = LinAlg.distance(locOld, locNew);
                 	if(dist < .03){
-                		int newID = da.prevObjects.get(mostSim).repID;
-                		int newColor = da.prevObjects.get(mostSim).color;
+                		int newID = prevObjects.get(mostSim).repID;
+                		int newColor = prevObjects.get(mostSim).color;
                 		obj.equateObject(newID,newColor);
                 		obj.matched = true;
-                		da.prevObjects.remove(mostSim);
+                		prevObjects.remove(mostSim);
                 	}
                 }
                 for(double[] p : obj.points){
-                    da.coloredPoints.add(new double[]{p[0], p[1], p[2], obj.color});
+                    coloredPoints.add(new double[]{p[0], p[1], p[2], p[3]});//obj.color});
                 }
             }
         }
@@ -177,25 +168,15 @@ public class Segment
 
         if (Arrays.equals(floorPlane, new double[4])) return false;
 
-        for(int i=0; i<da.currentPoints.size(); i++){
-            double[] point = da.currentPoints.get(i);
+        for(int i=0; i<points.size(); i++){
+            double[] point = points.get(i);
             double[] p = new double[]{point[0], point[1], point[2]};
-            if(pointToPlaneDist(p, floorPlane) < da.ransacThresh)
-                da.currentPoints.set(i, new double[4]);
+            if(pointToPlaneDist(p, floorPlane) < RANSAC_THRESH)
+                points.set(i, new double[4]);
             if(belowPlane(p, floorPlane))
-                da.currentPoints.set(i, new double[4]);
+                points.set(i, new double[4]);
             }
         return true;
-    }
-
-    private boolean almostBlack(int color)
-    {
-        Color c = new Color(color);
-        int distFromZero = c.getRed() + c.getBlue() + c.getGreen();
-
-        if(distFromZero < 30)
-            return true;
-        return false;
     }
 
     /** Check if a given poinjt is on the other side of the ground plane as
@@ -228,6 +209,95 @@ public class Segment
         return Math.abs(ax+ by + cz + coef[3])/ Math.sqrt(a2 + b2 + c2);
     }
 
+    /** Get the difference in the z-direction of two pixels. **/
+    private double depthDiff(double[] p1, double[] p2)
+    {
+        return Math.abs(p1[2] - p2[2]);
+    }
+
+    /** Get the difference in the z-direction of two pixels. **/
+    private double dist(double[] p1, double[] p2)
+    {
+        double dx = p1[0]-p2[0];
+        double dy = p1[1]-p2[1];
+        double dz = p1[2]-p2[2];
+        return Math.sqrt(dx*dx + dy*dy + dz*dz);
+    }
+
+    /** Find the Euclidean distance between two colors. **/
+    private double colorDiff(double color1, double color2)
+    {
+        Color c1 = new Color((int)color1);
+        Color c2 = new Color((int)color2);
+        int rDiff = c1.getRed() - c2.getRed();
+        int gDiff = c1.getGreen() - c2.getGreen();
+        int bDiff = c1.getBlue() - c2.getBlue();
+        double diff = Math.sqrt(rDiff*rDiff + bDiff*bDiff + gDiff*gDiff);
+        return diff;
+    }
+
+
+
+    public void newFrame()
+    {
+        if(history.size() > 0 && objects.size() > prevObjects.size()){
+
+            boolean foundMatches = false;
+            int step = 2;
+
+            // Debugging simplification
+            ArrayList<Integer> noMatch = new ArrayList<Integer>();
+            HashMap<Integer, Integer> alreadyAssigned = new HashMap<Integer,Integer>();
+            Set<Integer> setN = objects.keySet();
+            for(Integer i : setN){
+                if (objects.get(i).matched == true)
+                    alreadyAssigned.put(i,i);
+                else noMatch.add(i);
+            }
+
+            while(!foundMatches && step < history.size()){
+                HashMap<Integer,ObjectInfo> old = history.get(history.size()-step);
+                boolean[] matched = new boolean[noMatch.size()];
+
+                // For each unmatched object, try to find a similar object
+                // from this scene
+                for(int i=0; i<noMatch.size(); i++){
+                    ObjectInfo oi = objects.get(noMatch.get(i));
+                    int mostSim = oi.mostSimilar(old, alreadyAssigned);
+
+                    // Give object ID and coloring of most similar object
+                    if (mostSim >= 0 && !alreadyAssigned.containsKey(i)){
+                        int newID = old.get(mostSim).repID;
+                        int newColor = old.get(mostSim).color;
+                        oi.equateObject(newID, newColor);
+                        oi.matched = true;
+                        alreadyAssigned.put(newID, newID);
+                        for(double[] p : oi.points){
+                            coloredPoints.add(new double[]{p[0], p[1], p[2], oi.color});
+                        }
+                        matched[i] = true;
+                    }
+                }
+                // Remove ones that were matched
+               for(int i=matched.length-1; i>-1; i--)
+                    if(matched[i]) noMatch.remove(i);
+                foundMatches = (noMatch.size() == 0);
+                step ++;
+            }
+        }
+
+        HashMap<Integer, ObjectInfo> forHistory = new HashMap<Integer, ObjectInfo>();
+        Set<Integer> set = objects.keySet();
+        for(Integer i : set)
+            forHistory.put(i, objects.get(i));
+        history.add(forHistory);
+        if(history.size() > MAX_HISTORY){
+            history.remove(0);
+        }
+   }
+
+
+
 
     /** Estimate the floor plane using RANSAC algorithm (assumes that the major
         plane in the image is the "floor").
@@ -236,21 +306,21 @@ public class Segment
     **/
     public double[] estimateFloor(int iterations)
     {
-        if(da.currentPoints.size() == 0)
+        if(points.size() == 0)
             return null;
 
-        int numPoints = da.currentPoints.size();
+        int numPoints = points.size();
         double bestPlane[] = new double[4];  // Parameters of plane equation
         int bestFit = 0;                     // Most points that fit a guess plane
-        int numSamples = (int)Math.floor(numPoints*da.ransacPercent);
+        int numSamples = (int)Math.floor(numPoints*RANSAC_PERCENT);
 
         // Perform specified number of iterations
         for(int i=0; i<iterations; i++){
             int numFit = 0;
             // Choose three random points
-            double[] r1 = da.currentPoints.get(rand.nextInt(numPoints));
-            double[] r2 = da.currentPoints.get(rand.nextInt(numPoints));
-            double[] r3 = da.currentPoints.get(rand.nextInt(numPoints));
+            double[] r1 = points.get(rand.nextInt(numPoints));
+            double[] r2 = points.get(rand.nextInt(numPoints));
+            double[] r3 = points.get(rand.nextInt(numPoints));
 
             double[] p1 = new double[]{r1[0], r1[1], r1[2]};
             double[] p2 = new double[]{r2[0], r2[1], r2[2]};
@@ -265,10 +335,10 @@ public class Segment
 
             // Check whether a sample of points is within a threshold of the plane.
             for(int j = 0; j < numSamples; j++){
-                double[] p = da.currentPoints.get(rand.nextInt(numPoints));
+                double[] p = points.get(rand.nextInt(numPoints));
                 if(Math.abs(p[0]) < t[2])
                     continue;
-                if (pointToPlaneDist(new double[]{p[0], p[1], p[2]}, plane) < da.ransacThresh)
+                if (pointToPlaneDist(new double[]{p[0], p[1], p[2]}, plane) < RANSAC_THRESH)
                     numFit ++;
             }
 
