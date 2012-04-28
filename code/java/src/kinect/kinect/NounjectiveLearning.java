@@ -44,8 +44,8 @@ public class NounjectiveLearning implements LCMSubscriber
     static VisWorld.Buffer vb;
     kinect_status_t ks;
     static LCM lcm = LCM.getSingleton();
-    KNN knnColor = new KNN(30, 6, "color_features.dat");
-    KNN knnShape = new KNN(10, 15, "shape_features.dat");
+    KNN knnColor = new KNN(30, 6, "color_features.dat",1);
+    KNN knnShape = new KNN(10, 15, "shape_features.dat",1);
     //Classifier classColor = new Classifier();
 
     final static int[] viewBorders = new int[]{75, 150, 575, 400};
