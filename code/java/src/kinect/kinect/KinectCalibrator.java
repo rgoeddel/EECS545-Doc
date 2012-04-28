@@ -257,7 +257,7 @@ class KinectCalibrator // implements LCMSubscriber
     	y = KINECT_HEIGHT-y;
 		int index = y*KINECT_WIDTH + x;
 		int depth = ((ks.depth[2*index+1]&0xff) << 8) | (ks.depth[2*index+0]&0xff);
-		double[] xyzrgb = KUtils.getXYZRGB(x, y, depthLookUp[depth], ks);
+		double[] xyzrgb = KUtils.getRegisteredXYZRGB(x, y, ks);
     	//System.out.println("Point: " + x + ", " + y);
     	//System.out.println("Depth: " + depthLookUp[depth]);
     	//System.out.println(String.format("(%f, %f, %f)", xyzrgb[0], xyzrgb[1], xyzrgb[2]));
