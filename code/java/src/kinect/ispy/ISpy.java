@@ -863,8 +863,8 @@ public class ISpy extends JFrame implements LCMSubscriber {
                 int i = y * kinect_status_t.WIDTH + x;
                 int d = ((kinectData.depth[2*i+1] & 0xff) << 8) |
                         (kinectData.depth[2*i+0] & 0xff);
-                double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d],
-                                                    kinectData);
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, kinectData);
+                //KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], kinectData);
                 segmenter.points.add(pKinect);
             }
         }

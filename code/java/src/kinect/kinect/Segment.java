@@ -12,8 +12,8 @@ public class Segment
     final static int COLOR_THRESH = 13;
     final static double UNION_THRESH = 0.5;
     final static double RANSAC_THRESH = .02;
-    final static double RANSAC_PERCENT = .1;
-    final static double OBJECT_THRESH = 250;
+    final static double RANSAC_PERCENT = .2;
+    final static double OBJECT_THRESH = 300;
     final static int MAX_HISTORY = 100;
     int width, height;
 
