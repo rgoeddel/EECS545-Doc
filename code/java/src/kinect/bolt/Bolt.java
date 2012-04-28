@@ -357,6 +357,9 @@ public class Bolt extends JFrame implements LCMSubscriber
             obsList.add(obj_data);
         }
 
+        if(!objects.containsKey(selectedObject)){
+            selectedObject = -1;
+        }
         obs.click_id = selectedObject;
         obs.sensables = sensList.toArray(new String[0]);
         obs.nsens = obs.sensables.length;
@@ -364,7 +367,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         obs.nobs = obs.observations.length;
 
         lcm.publish("OBSERVATIONS",obs);
-        selectedObject = -1;
+        
     }
 
 
