@@ -17,6 +17,8 @@ import java.awt.*;
 import java.util.*;
 import java.awt.image.*;
 
+import abolt.arm.*;
+
 /* To Do:
  *  - Add features for shape recognition to FeatureVec
  */
@@ -119,9 +121,12 @@ public class NounjectiveLearning implements LCMSubscriber
         frame.add(pg, BorderLayout.SOUTH);
         frame.setVisible(true);
 
+        // XXX My life sucks. Love Rob
+        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segment);
+
         //initialize lcm and start receiving data
         LCM myLCM = LCM.getSingleton();
-        myLCM.subscribe("KINECT_STATUS", this);
+        myLCM.subscribe("KINECT_STATUS_2", this);
     }
 
 

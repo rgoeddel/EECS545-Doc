@@ -23,7 +23,7 @@ public class KUtils
     // parameters for IR depth camera
     public static double Firx = 5.7191759217862204e+02; // focal length
     public static double Firy = 5.8760489958891026e+02; //
-    
+
     public static double Cirx = 3.37025048258259540e+02; // larger -> moves right
     public static double Ciry = 2.4675008449138741e+02; // larger -> moves down
 
@@ -46,7 +46,7 @@ public class KUtils
     public static double[][] kinectToWorldXForm;
     static{
     	try{
-    		BufferedReader in = new BufferedReader(new FileReader("/home/bolt/mlbolt/code/java/kinect.calib"));
+    		BufferedReader in = new BufferedReader(new FileReader("/home/rgoeddel/class/EECS545-Doc/code/java/kinect.calib"));
         	kinectToWorldXForm = new double[4][4];
     		for(int i = 0; i < 4; i++){
     			for(int j = 0; j < 4; j++){

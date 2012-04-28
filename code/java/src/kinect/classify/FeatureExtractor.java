@@ -28,6 +28,7 @@ public class FeatureExtractor
 	}
 
 	public static String featuresToString(ArrayList<Double> features){
+        // XXX Null pointer?
 		String s = "[";
 		for (Double d : features) {
 			s += d + " ";

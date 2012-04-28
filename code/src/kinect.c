@@ -158,23 +158,23 @@ void *publcm(void *arg)
         gettimeofday(&time, NULL);
         ks.utime = time.tv_sec*1000 + time.tv_usec/1000;
 
-        // Copy in arrays
-        memcpy(ks.depth, d_buf, depth_bytes);
-        memcpy(ks.rgb, rgb_buf, rgb_bytes);
-
-        // Update accelerometer data
-        ks.dx = x;
-        ks.dy = y;
-        ks.dz = z;
-
         got_rgb = 0;
         got_depth = 0;
-        pthread_mutex_unlock(&frame_lock);
+
+        // Copy in arrays
 		if (numSkip++ >= skip) {
-			kinect_status_t_publish(k_lcm, "KINECT_STATUS", &ks);
-			numSkip = 0;
+            memcpy(ks.depth, d_buf, depth_bytes);
+            memcpy(ks.rgb, rgb_buf, rgb_bytes);
+
+            // Update accelerometer data
+            ks.dx = x;
+            ks.dy = y;
+            ks.dz = z;
+            pthread_mutex_unlock(&frame_lock);
+            kinect_status_t_publish(k_lcm, "KINECT_STATUS_2", &ks);
+            numSkip = 0;
+            pthread_mutex_lock(&frame_lock);
 		}
-        pthread_mutex_lock(&frame_lock);
     }
     pthread_mutex_unlock(&frame_lock);
 }
