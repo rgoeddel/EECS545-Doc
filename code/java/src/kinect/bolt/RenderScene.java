@@ -153,11 +153,13 @@ public class RenderScene extends VisLayer
 	            int i = y*kinect_status_t.WIDTH + x;
 	            int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
 	                    (kinectData.depth[2*i+0]&0xff);
-	            double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], kinectData);
+
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, kinectData);
+	            // double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], kinectData);
 	            double[] pixel = KUtils.getPixel(pKinect);
-	    				Color c =  new Color((int)pKinect[3]);
-	    				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
-	    				background.setRGB((int)pixel[0], (int)pixel[1], rc.getRGB());
+                Color c =  new Color((int)pKinect[3]);
+                Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
+                background.setRGB((int)pixel[0], (int)pixel[1], rc.getRGB());
 	        }
 	    }
         worldBuffer.addBack(new VzImage(background, VzImage.FLIP));
