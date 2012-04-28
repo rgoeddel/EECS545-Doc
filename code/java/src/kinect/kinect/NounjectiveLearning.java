@@ -126,7 +126,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
         //initialize lcm and start receiving data
         LCM myLCM = LCM.getSingleton();
-        myLCM.subscribe("KINECT_STATUS_2", this);
+        myLCM.subscribe("KINECT_STATUS", this);
     }
 
 

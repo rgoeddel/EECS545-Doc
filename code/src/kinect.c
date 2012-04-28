@@ -171,7 +171,7 @@ void *publcm(void *arg)
             ks.dy = y;
             ks.dz = z;
             pthread_mutex_unlock(&frame_lock);
-            kinect_status_t_publish(k_lcm, "KINECT_STATUS_2", &ks);
+            kinect_status_t_publish(k_lcm, "KINECT_STATUS", &ks);
             numSkip = 0;
             pthread_mutex_lock(&frame_lock);
 		}

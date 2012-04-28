@@ -16,7 +16,7 @@ public class PCA {
 	public static boolean isValidPixel(Color c){
 		return c.getRed() > 1 || c.getGreen() > 1 || c.getBlue() > 1;
 	}
-	
+
 	public static double[] getMean(ArrayList<int[]> pixels){
 		// compute the mean
     	int n = pixels.size();
@@ -25,12 +25,12 @@ public class PCA {
     		mean[0] += pixel[0];
     		mean[1] += pixel[1];
     	}
-    	
+
     	mean[0] /= n;
     	mean[1] /= n;
     	return mean;
 	}
-	
+
 	public static double[][] getCov(ArrayList<int[]> pixels, double[] mean){
 		// compute the covariance
     	int n = pixels.size();
@@ -45,18 +45,23 @@ public class PCA {
     	double[][] cov = LinAlg.matrixAB(B, Bt);
     	return LinAlg.scale(cov, 1.0/n);
 	}
-	
+
 	public static double[] getPrincipleEigenvector(double[][] cov){
-		double a = cov[0][0];
-		double b = cov[0][1];
-		double c = cov[1][0];
-		double d = cov[1][1];
+        // This works out because the matrix is symmetric
+		//double a = cov[0][0];
+		//double b = cov[0][1];
+		//double c = cov[1][0];
+		//double d = cov[1][1];
+        double a = cov[0][0];
+        double b = cov[1][0];
+        double c = cov[0][1];
+        double d = cov[1][1];
 		double t = a + d; //trace
 		double det = a*d - b*c; //determinant
-		
+
 		// eigenvalue
 		double lambda = t/2 + Math.sqrt(t*t/4-det);
-		
+
 		// eigenvector
 		double[] v = new double[2];
 		if(c != 0){
@@ -69,11 +74,11 @@ public class PCA {
 			v[0] = 1;
 			v[1] = 0;
 		}
-		
+
 		LinAlg.normalizeEquals(v);
 		return v;
 	}
-	
+
 	public static ArrayList<int[]> getPixels(BufferedImage img){
 		ArrayList<int[]> pixels = new ArrayList<int[]>();
 	    for(int i = 0; i < img.getWidth(); i++){
@@ -86,7 +91,7 @@ public class PCA {
 	    }
 	    return pixels;
 	}
-	
+
 	public static double[] projectOntoVector(ArrayList<int[]> pixels, double[] mean, double[] v){
 		double min = Double.MAX_VALUE;
 		double max = Double.MIN_VALUE;
@@ -95,18 +100,18 @@ public class PCA {
 			min = (proj < min ? proj : min);
 			max = (proj > max ? proj : max);
 		}
-		
+
 		return new double[]{min, max};
 	}
-	
+
 	public static double getFeature(BufferedImage img, double[] start, double[] dir){
 		final double increment = .5;
 		double x = start[0];
 		double y = start[1];
 		double dist = 0;
-		
+
 		Rectangle bounds = new Rectangle(0, 0, img.getWidth(), img.getHeight());
-		
+
 		boolean inBounds = false;
 		int iters = 0;
 		while(iters++ < 100000){
@@ -129,31 +134,31 @@ public class PCA {
 					}
 				}
 			}
-			
+
 			x += dir[0] * increment;
 			y += dir[1] * increment;
 			dist += increment;
 		}
 		return 0;
 	}
-	
+
 	public static ArrayList<Double> getFeatures(BufferedImage img, int numFeatures){
 		// Directions are with right being +v1 and up being +v2
-		
+
 	    ArrayList<int[]> pixels = getPixels(img);
 	    if(pixels.size() == 0){
 	    	return null;
 	    }
 		double[] mean = getMean(pixels);
     	double[][] cov = getCov(pixels, mean);
-    	
+
     	double[] v1 = getPrincipleEigenvector(cov);
 	    double[] v2 = new double[]{-v1[1], v1[0]}; // perpendicular vector
 
 		// project the pixels onto each axis (get OBB limits from mean)
 	    double[] proj1 = projectOntoVector(pixels, mean, v1);
 	    double[] proj2 = projectOntoVector(pixels, mean, v2);
-	    
+
 	    // left center of the OBB
 	    double[] leftCenter = new double[2];
 	    leftCenter[0] = mean[0] + proj1[0]*v1[0];
@@ -165,18 +170,18 @@ public class PCA {
 //	    System.out.println("v2" + v2[0] + ", " + v2[1]);
 //	    System.out.println(proj1[0] + ", " + proj1[1]);
 //	    System.out.println(proj2[0] + ", " + proj2[1]);
-	    
+
 	    ArrayList<Double> features = new ArrayList<Double>();
 	    features.add((proj1[1] - proj1[0])/(proj2[1] - proj2[0]));
 	    for(int i = 0; i < 2; i++){
 	    	// Start at bottom-left or top-left
 	    	double[] start = new double[2];
-	    	start[0] = leftCenter[0] + proj2[i]*v2[0]; 
+	    	start[0] = leftCenter[0] + proj2[i]*v2[0];
 	    	start[1] = leftCenter[1] + proj2[i]*v2[1];
-	    	
+
 	    	// Direction is either up or down
 	    	double[] dir = LinAlg.scale(v2, (i == 0 ? 1 : -1));
-	    	
+
 	    	// Pick points evenly along the line
 	    	for(float perc = .02f; perc <= .98; perc += .95f/(numFeatures-1)){
 	    		double[] pt = new double[2];
@@ -188,12 +193,12 @@ public class PCA {
 
     	return features;
 	}
-	
+
 	public static void main(String args[])
     {
 		BufferedImage img = null;
 		try {
-		    img = ImageIO.read(new File("simple_tri.png"));		    
+		    img = ImageIO.read(new File("simple_tri.png"));
 		    ArrayList<Double> f  = getFeatures(img, 10);
 		    for(int i = 0; i < f.size(); i++){
 		    	System.out.print(f.get(i) + ", ");
@@ -201,7 +206,7 @@ public class PCA {
 		    		System.out.print("\n");
 		    	}
 		    }
-		    
+
 		} catch (IOException e) {
 		}
     }
