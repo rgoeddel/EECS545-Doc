@@ -24,8 +24,8 @@ class ObjectLabeler // implements LCMSubscriber
     static double initialUnionThresh = 0.5;
     static double  initialRansacThresh = .02;
     static double  initialRansacPercent = .1;
-    final int FRAME_WIDTH = 640;
-    final int FRAME_HEIGHT = 480;
+    final static int FRAME_WIDTH = 640;
+    final static int FRAME_HEIGHT = 480;
     final int MIN_POINTS = 250;
 
     VisWorld vw, vw2;
@@ -175,7 +175,7 @@ class ObjectLabeler // implements LCMSubscriber
     public void updateParams()
     {
         // Segment the image and return list of segmented objects
-        segment.segmentFrame();
+        segment.segmentFrame(da.currentPoints);
         objRefs = new int[da.objects.size()];
         Set<Integer> keys = da.objects.keySet();
         Integer[] keysArray = keys.toArray(new Integer[0]);
@@ -215,7 +215,7 @@ class ObjectLabeler // implements LCMSubscriber
             }
 
             // Segment the image and return list of segmented objects
-            segment.segmentFrame();
+            segment.segmentFrame(da.currentPoints);
             objRefs = new int[da.objects.size()];
             Set<Integer> keys = da.objects.keySet();
             Integer[] keysArray = keys.toArray(new Integer[0]);
@@ -267,7 +267,7 @@ class ObjectLabeler // implements LCMSubscriber
         // Get the feature vector
         int id = objRefs[currentObject];
         ArrayList<double[]> points = da.objects.get(id).points;
-        
+
 
         // Write labels and pointclouds to file
         try{
@@ -394,7 +394,7 @@ class ObjectLabeler // implements LCMSubscriber
         da.ransacThresh = initialRansacThresh;
         da.ransacPercent = initialRansacPercent;
         da.depthLookUp = KUtils.createDepthMap();
-        segment = new Segment(da, true);
+        segment = new Segment(FRAME_WIDTH, FRAME_HEIGHT);
 
         ObjectLabeler ol = new ObjectLabeler(opts);
     }

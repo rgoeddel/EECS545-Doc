@@ -83,25 +83,6 @@ public class PtsFileConverter
                 
                 String featureString = FeatureExtractor.getFeatureString(points, type);
                 
-                Set<String> validFeatures = new HashSet<String>();
-                String[] validFeatureList;
-                switch(type){
-                case COLOR:
-                	validFeatureList = "red,orange,yellow,green,blue,purple".split(",");
-                	break;
-                case SHAPE:
-                	validFeatureList = "arch,rectangle,triangular,rectangular,triangle,square,cylinder,t-shaped,l-shaped,half-cylinder".split(",");
-                	break;
-                case SIZE:
-                	validFeatureList = "small,medium,large".split(",");
-                	break;
-                default:
-                	validFeatureList = new String[]{};
-                }
-                for(int i = 0; i < validFeatureList.length; i++){
-                	validFeatures.add(validFeatureList[i]);
-                }
-                
                 boolean hasLabel = false;
                 for(int i = 0; i < labels.size(); i++){
                 	String featureSymbol = SoarSymbols.getSymbol(type, labels.get(i).toLowerCase());
