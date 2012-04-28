@@ -41,7 +41,7 @@ public class Bolt extends JFrame implements LCMSubscriber
     private RenderScene sceneRenderer;
     private JMenuItem clearData, reloadData;
     private JCheckBoxMenuItem filterDarkCB;
-    public final static int[] viewBorders = new int[] {0, 150, 640, 440 };
+    public final static int[] viewBorders = new int[] {130, 270, 460, 440 };
     public final static Rectangle viewRegion = new Rectangle(viewBorders[0],
                                                              viewBorders[1],
                                                              viewBorders[2] - viewBorders[0],
@@ -53,10 +53,12 @@ public class Bolt extends JFrame implements LCMSubscriber
     private Map<Integer, SpyObject> objects;
     private boolean filterDark = true;
     private double darkThreshold = .4;
+    
     // LCM
     static LCM lcm = LCM.getSingleton();
     private kinect_status_t kinectData = null;
     int selectedObject;
+    ArrayList<double[]> currentPoints;
 
     public Bolt(Segment segmenter)
     {
@@ -136,9 +138,10 @@ public class Bolt extends JFrame implements LCMSubscriber
         lcm.subscribe("ALLDONE", this);
 
         // Prepare for classification
-        colorKNN = new KNN(30, 6, colorDataFile);
-        shapeKNN = new KNN(10, 15,shapeDataFile);
-        sizeKNN = new KNN(5, 2, sizeDataFile);
+        colorKNN = new KNN(1, 6, colorDataFile, 0.2);
+        shapeKNN = new KNN(10, 15,shapeDataFile, 1);
+        sizeKNN = new KNN(5, 2, sizeDataFile, 1);
+        
         colorKNN.loadData(false);
         shapeKNN.loadData(true);
         sizeKNN.loadData(false);
@@ -153,15 +156,18 @@ public class Bolt extends JFrame implements LCMSubscriber
         and map it to the frame of the arm. **/
     private ArrayList<double[]> extractPointCloudData()
     {
-        ArrayList<double[]> currentPoints = new ArrayList<double[]>();
+        currentPoints = new ArrayList<double[]>();
 
         for (int y = (int) viewRegion.getMinY(); y < viewRegion.getMaxY(); y++) {
             for (int x = (int) viewRegion.getMinX(); x < viewRegion.getMaxX(); x++) {
                 int i = y * kinect_status_t.WIDTH + x;
                 int d = ((kinectData.depth[2 * i + 1] & 0xff) << 8)
                     | (kinectData.depth[2 * i + 0] & 0xff);
-                double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d],
-                                                    kinectData);
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, kinectData);
+
+                // Disabled to switch to registered view
+                // KUtils.getXYZRGB(x, y, KUtils.depthLookup[d],
+                //                                 kinectData);
                 currentPoints.add(pKinect);
             }
         }
@@ -225,8 +231,9 @@ public class Bolt extends JFrame implements LCMSubscriber
             bObject.updateSizeConfidence(size, sizeThresholds);
             bObject.pos = pos;
             bObject.bbox = projBBox;
-            bObject.bbox3D = FeatureExtractor.boundingBox(obj.points);
-            bObject.lastObject = obj;
+//            bObject.bbox3D = FeatureExtractor.boundingBox(obj.object.points);
+            bObject.lastObject = bObject.object;
+            bObject.object = obj;
         }
 
         for (Integer id : objsToRemove) {
@@ -273,20 +280,26 @@ public class Bolt extends JFrame implements LCMSubscriber
                 for(int i=0; i<training.num_labels; i++){
                     training_label_t tl = training.labels[i];
                     String label = tl.label;
+                    int id = tl.id;
+                    SpyObject obj = objects.get(id);
                     category_t category = tl.cat;
-                    if(category.cat == 1){// Color
-                        colorKNN.add(label, false);
-                        System.out.println("Added a new color label.");
+                    switch(category.cat){
+                        case category_t.CAT_COLOR:// Color
+                            String newLabel = obj.lastObject.colorFeatures+" {"+label+"}";
+                            colorKNN.add(newLabel, false);
+                            System.out.println("Added a new color label.");
+                            break;
+                        case category_t.CAT_SHAPE:// Shape
+                            newLabel = obj.lastObject.shapeFeatures+" {"+label+"}";
+                            shapeKNN.add(newLabel, false);
+                            System.out.println("Added a new shape label.");
+                            break;
+                        case category_t.CAT_SIZE:// Size
+                            newLabel = obj.lastObject.sizeFeatures+" {"+label+"}";
+                            sizeKNN.add(newLabel, false);
+                            System.out.println("Added a new size label.");
+                            break;
                     }
-                    if(category.cat == 2){// Shape
-                        shapeKNN.add(label, false);
-                        System.out.println("Added a new shape label.");
-                    }
-                    if(category.cat == 3){// Size
-                        sizeKNN.add(label, false);
-                        System.out.println("Added a new size label.");
-                    }
-
                 }
 
             }catch (IOException e) {
@@ -310,13 +323,15 @@ public class Bolt extends JFrame implements LCMSubscriber
             SpyObject obj = (SpyObject)itr.next();
 
             // Bounding box and location
-            double[] bb = obj.bbox3D;
-            double[] min = KUtils.getWorldCoordinates(new double[]{bb[0], bb[1], bb[2]});
-            double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});
+            double[] bb = FeatureExtractor.boundingBox(obj.object.points);
+            double[] min = new double[]{bb[0], bb[1], bb[2]};
+            double[] max = new double[]{bb[3], bb[4], bb[5]};
+            double[] center = obj.object.getCenter();
             double[] xyzrpy = new double[]{0, 0, 0, 0, 0, 0};
             for(int i = 0; i < 3; i++){
                 xyzrpy[i] = (min[i] + max[i])/2;
             }
+
 
             // Color for LCM
             categorized_data_t[] data = new categorized_data_t[3];
@@ -357,6 +372,9 @@ public class Bolt extends JFrame implements LCMSubscriber
             obsList.add(obj_data);
         }
 
+        if(!objects.containsKey(selectedObject)){
+            selectedObject = -1;
+        }
         obs.click_id = selectedObject;
         obs.sensables = sensList.toArray(new String[0]);
         obs.nsens = obs.sensables.length;
@@ -364,7 +382,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         obs.nobs = obs.observations.length;
 
         lcm.publish("OBSERVATIONS",obs);
-        selectedObject = -1;
+        
     }
 
 
@@ -374,106 +392,4 @@ public class Bolt extends JFrame implements LCMSubscriber
         Bolt bolt = new Bolt(new Segment((int)(viewRegion.getMaxX()-viewRegion.getMinX()),
                                          (int)(viewRegion.getMaxY()-viewRegion.getMinY())));
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /*
-
-
-
-    public ISpyMode findObject(String desc)
-    {
-        ArrayList<String> labels = new ArrayList<String>();
-        String[] splitDesc = desc.toLowerCase().trim().split(" ");
-        for (int i = 0; i < splitDesc.length; i++) {
-            if (splitDesc[i].trim().equals("")
-                || splitDesc[i].trim().equals("and")) {
-                continue;
-            }
-            labels.add(splitDesc[i]);
-        }
-
-        for (BoltObject obj : objects.values()) {
-            if (obj.matches(labels)) {
-                pointToObject(obj);
-                return ISpyMode.SEARCHING;
-            }
-        }
-        return ISpyMode.NOT_FOUND;
-    }
-
-    public void sweepObject(SpyObject obj)
-    {
-        robot_command_t command = new robot_command_t();
-        command.utime = TimeUtil.utime();
-        command.updateDest = true;
-        command.dest = new double[6];
-        System.out.println("SWEEPING lastobject id " + obj.lastObject.repID);
-        double[] center = KUtils.getWorldCoordinates(obj.lastObject.getCenter());
-        for (int i = 0; i < 3; i++) {
-            command.dest[i] = center[i];
-        }
-        command.action = "SWEEP";
-        lcm.publish("ROBOT_COMMAND", command);
-        return;
-    }
-
-    public void pointToObject(SpyObject obj)
-    {
-        robot_command_t command = new robot_command_t();
-        command.utime = TimeUtil.utime();
-        command.updateDest = true;
-        command.dest = new double[6];
-        double[] center = KUtils.getWorldCoordinates(obj.lastObject.getCenter());
-        for (int i = 0; i < 3; i++) {
-            command.dest[i] = center[i];
-        }
-        command.action = "POINT";
-        lcm.publish("ROBOT_COMMAND", command);
-        return;
-    }
-
-    public void gotoStandbyMode()
-    {
-        if(curMode == ISpyMode.SEARCHING){
-            robot_command_t command = new robot_command_t();
-            command.utime = TimeUtil.utime();
-            command.updateDest = false;
-            command.dest = new double[6];
-            command.action = "RESET";
-            lcm.publish("ROBOT_COMMAND", command);
-
-            curMode = ISpyMode.STANDBY;
-        } else if(curMode == ISpyMode.FEEDBACK || curMode == ISpyMode.GET_COLOR
-                  || curMode == ISpyMode.GET_SHAPE || curMode == ISpyMode.GET_SIZE){
-            // MODIFY: Stuff here to clear information
-        }
-        else if (curMode == ISpyMode.MANIPULATING)
-        {
-            lastReferenced = null;
-            consider.clear();
-        }
-        lastReferenced = null;
-        adjustDown = false;
-        curMode = ISpyMode.STANDBY;
-        ispyLabel.setText("I spy something:");
-    }
-*/
 }

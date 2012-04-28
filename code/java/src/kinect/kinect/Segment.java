@@ -11,9 +11,9 @@ public class Segment
 {
     final static int COLOR_THRESH = 13;
     final static double UNION_THRESH = 0.5;
-    final static double RANSAC_THRESH = .02;
-    final static double RANSAC_PERCENT = .1;
-    final static double OBJECT_THRESH = 250;
+    final static double RANSAC_THRESH = .015;
+    final static double RANSAC_PERCENT = .2;
+    final static double OBJECT_THRESH = 300;
     final static int MAX_HISTORY = 100;
     int width, height;
 
@@ -34,9 +34,9 @@ public class Segment
     boolean floorFound;
     // Set up some "Random" colors to draw the segments
     static int[] colors = new int[]{0xff3300CC, 0xff9900CC, 0xffCC0099, 0xffCC0033,
-                                       0xff0033CC, 0xff470AFF, 0xff7547FF, 0xffCC3300,
-                                       0xff0099CC, 0xffD1FF47, 0xffC2FF0A, 0xffCC9900,
-                                       0xff00CC99, 0xff00CC33, 0xff33CC00, 0xff99CC00};
+                                    0xff0033CC, 0xff470AFF, 0xff7547FF, 0xffCC3300,
+                                    0xff0099CC, 0xffD1FF47, 0xffC2FF0A, 0xffCC9900,
+                                    0xff00CC99, 0xff00CC33, 0xff33CC00, 0xff99CC00};
 
     public Segment(int w, int h)
     {
@@ -57,6 +57,7 @@ public class Segment
     public void segmentFrame(ArrayList<double[]> currentPoints)
     {
         points = currentPoints;
+        coloredPoints.clear();
         unionFind();
         newFrame();
     }
@@ -70,14 +71,13 @@ public class Segment
         //create unions of pixels that are close together spatially
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
-//                System.out.print("["+x+","+y+"]");
                 int loc1 = y*width + x;
                 double[] p1 = points.get(loc1);
                 // Look at all surrounding pixels
                 if(!Arrays.equals(p1, new double[4])){
                     int loc2 = y*width + x + 1;
                     int loc3 = (y+1)*width + x;
-                    if (loc2>=0 && loc2<points.size()){
+                    if (loc2>=0 && loc2<points.size() && (x+1)<width){
                         double[] p2 = points.get(loc2);
                         if(!Arrays.equals(p2, new double[4])
                            && (dist(p1, p2) < UNION_THRESH
@@ -86,7 +86,7 @@ public class Segment
                         }
                     }
 
-                    if (loc3>=0 && loc3<points.size()){
+                    if (loc3>=0 && loc3<points.size() && (y+1)<height){
                         double[] p2 = points.get(loc3);
                         if(!Arrays.equals(p2, new double[4])
                            && (dist(p1, p2) < UNION_THRESH
@@ -110,6 +110,8 @@ public class Segment
             double[] point = points.get(i);
             if(Math.abs(point[0]-0)>.0001 &&Math.abs(point[2]-0)>.0001 && Math.abs(point[2]-0)>.0001){
 
+                //coloredPoints.add(point); // XXXXX
+
                 if(ufs.getSetSize(i) > OBJECT_THRESH){
                     int repID = ufs.getRepresentative(i);
                     Object repColor = map.get(repID);
@@ -124,7 +126,7 @@ public class Segment
                         objects.put(repID, info);
                     }
                     Integer color = map.get(repID);
-                    coloredPoints.add(point);//new double[]{point[0], point[1], point[2], color});
+                        coloredPoints.add(point);
                 }
             }
         }
@@ -162,7 +164,7 @@ public class Segment
     {
         // Only calculate the floor plane once XXX - maybe do multiple times and average?
         if(floorFound == false){
-            floorPlane = estimateFloor(400);
+            floorPlane = estimateFloor(2000);
             floorFound = true;
         }
 
@@ -175,7 +177,7 @@ public class Segment
                 points.set(i, new double[4]);
             if(belowPlane(p, floorPlane))
                 points.set(i, new double[4]);
-            }
+        }
         return true;
     }
 
@@ -338,7 +340,7 @@ public class Segment
                 double[] p = points.get(rand.nextInt(numPoints));
                 if(Math.abs(p[0]) < t[2])
                     continue;
-                if (pointToPlaneDist(new double[]{p[0], p[1], p[2]}, plane) < RANSAC_THRESH)
+                if (pointToPlaneDist(new double[]{p[0], p[1], p[2]}, plane) < .005)
                     numFit ++;
             }
 

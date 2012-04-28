@@ -31,7 +31,7 @@ public class NounjectiveLearning implements LCMSubscriber
 
     static int initialColorThresh = 13;
     static double initialUnionThresh = 0.05;
-    static double  initialRansacThresh = .02;
+    static double  initialRansacThresh = .01;
     static double  initialRansacPercent = .1;
 
 
@@ -46,8 +46,8 @@ public class NounjectiveLearning implements LCMSubscriber
     static VisWorld.Buffer vb;
     kinect_status_t ks;
     static LCM lcm = LCM.getSingleton();
-    KNN knnColor = new KNN(30, 6, "color_features.dat");
-    KNN knnShape = new KNN(10, 15, "shape_features.dat");
+    KNN knnColor = new KNN(30, 6, "color_features.dat",1);
+    KNN knnShape = new KNN(10, 15, "shape_features.dat",1);
     //Classifier classColor = new Classifier();
 
     final static int[] viewBorders = new int[]{75, 150, 575, 400};
@@ -155,7 +155,7 @@ public class NounjectiveLearning implements LCMSubscriber
                 int i = y*ks.WIDTH + x;
                 int d = ((ks.depth[2*i+1]&0xff) << 8) |
                         (ks.depth[2*i+0]&0xff);
-                double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], ks);
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, ks); //KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], ks);
                 double[] pWorld = KUtils.getWorldCoordinates(new double[]{
                         pKinect[0], pKinect[1], pKinect[2]});
 
@@ -276,6 +276,7 @@ public class NounjectiveLearning implements LCMSubscriber
             vb.addBack(chain);
         }
 
+        //vb.add(new VzGrid());
         vb.addBack(new VisLighting(false, new VzPoints
                                    (vd, new VzPoints.Style(cd, 1.0))));
         vb.swap();

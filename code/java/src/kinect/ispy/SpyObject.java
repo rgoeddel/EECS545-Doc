@@ -13,9 +13,9 @@ import kinect.kinect.ObjectInfo;
 public class SpyObject {
     public double[] pos;
     public Rectangle bbox;
-    public double[] bbox3D;
 
     public int id;
+    public ObjectInfo object;
     public ObjectInfo lastObject;
 
     public Queue<ConfidenceLabel> shapeConLabels;
