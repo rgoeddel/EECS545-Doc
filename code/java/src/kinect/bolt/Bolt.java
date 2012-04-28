@@ -273,20 +273,26 @@ public class Bolt extends JFrame implements LCMSubscriber
                 for(int i=0; i<training.num_labels; i++){
                     training_label_t tl = training.labels[i];
                     String label = tl.label;
+                    int id = tl.id;
+                    SpyObject obj = objects.get(id);
                     category_t category = tl.cat;
-                    if(category.cat == 1){// Color
-                        colorKNN.add(label, false);
-                        System.out.println("Added a new color label.");
+                    switch(category.cat){
+                        case 1:// Color
+                            String newLabel = obj.lastObject.colorFeatures+"{"+label+"}";
+                            colorKNN.add(newLabel, false);
+                            System.out.println("Added a new color label.");
+                            break;
+                        case 2:// Shape
+                            newLabel = obj.lastObject.shapeFeatures+"{"+label+"}";
+                            shapeKNN.add(newLabel, false);
+                            System.out.println("Added a new shape label.");
+                            break;
+                        case 3:// Size
+                            newLabel = obj.lastObject.sizeFeatures+"{"+label+"}";
+                            sizeKNN.add(newLabel, false);
+                            System.out.println("Added a new size label.");
+                            break;
                     }
-                    if(category.cat == 2){// Shape
-                        shapeKNN.add(label, false);
-                        System.out.println("Added a new shape label.");
-                    }
-                    if(category.cat == 3){// Size
-                        sizeKNN.add(label, false);
-                        System.out.println("Added a new size label.");
-                    }
-
                 }
 
             }catch (IOException e) {
