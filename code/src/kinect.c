@@ -44,7 +44,6 @@ freenect_device *f_dev;
 
 // LCM
 lcm_t *k_lcm;
-int skip = 0;
 
 void video_cb(freenect_device *dev, void *rgb, uint32_t ts)
 {
@@ -89,7 +88,8 @@ void *process(void *arg)
     freenect_set_video_mode(f_dev, freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_VIDEO_RGB));
     freenect_set_video_buffer(f_dev, rgb_back_buf);
     freenect_set_depth_callback(f_dev, depth_cb);
-    freenect_set_depth_mode(f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_11BIT));
+    freenect_set_depth_mode(f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED));
+    /* freenect_set_depth_mode(f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_11BIT)); */
     freenect_set_depth_buffer(f_dev, d_back_buf);
 
     // Start 'er up
@@ -146,8 +146,6 @@ void *publcm(void *arg)
     ks.rgb;
     ks.depth;
 
-	int numSkip = 0;
-
     // XXX No clean way to quit, yet
     pthread_mutex_lock(&frame_lock);
     while (true) {
@@ -170,10 +168,7 @@ void *publcm(void *arg)
         got_rgb = 0;
         got_depth = 0;
         pthread_mutex_unlock(&frame_lock);
-		if (numSkip++ >= skip) {
-			kinect_status_t_publish(k_lcm, "KINECT_STATUS", &ks);
-			numSkip = 0;
-		}
+        kinect_status_t_publish(k_lcm, "KINECT_STATUS", &ks);
         pthread_mutex_lock(&frame_lock);
     }
     pthread_mutex_unlock(&frame_lock);
@@ -182,14 +177,8 @@ void *publcm(void *arg)
 // ====================================================
 int main(int argc, char **argv)
 {
-	// Take in optional fps argument
-	if (argc == 2)
-		skip = 30/atoi(argv[1]);
-
     // Init LCM
     printf("Initializing LCM...\n");
-
-    //k_lcm = lcm_create("udpm://239.255.76.67:7667?ttl=0");
     k_lcm = lcm_create(NULL);
 
     if (!k_lcm)
@@ -241,7 +230,7 @@ int main(int argc, char **argv)
     if (pthread_create(&accel_thread, NULL, accelup, NULL)) {
         printf("failed to create accelerometer thread\n");
         return 1;
-        }
+    }
 
     // Create LCM thread
     printf("Create LCM processing thread...\n");

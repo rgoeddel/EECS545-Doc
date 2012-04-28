@@ -150,7 +150,7 @@ public class NounjectiveLearning implements LCMSubscriber
                 int i = y*ks.WIDTH + x;
                 int d = ((ks.depth[2*i+1]&0xff) << 8) |
                         (ks.depth[2*i+0]&0xff);
-                double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], ks);
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, ks); //KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], ks);
                 double[] pWorld = KUtils.getWorldCoordinates(new double[]{
                         pKinect[0], pKinect[1], pKinect[2]});
 
