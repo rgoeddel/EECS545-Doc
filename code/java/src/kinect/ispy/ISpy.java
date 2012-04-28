@@ -279,9 +279,9 @@ public class ISpy extends JFrame implements LCMSubscriber {
         lcm.subscribe("KINECT_STATUS", this);
         lcm.subscribe("ALLDONE", this);
 
-        colorKNN = new KNN(30, 6, colorDataFile);
-        shapeKNN = new KNN(10, 15,shapeDataFile);
-        sizeKNN = new KNN(5, 2, sizeDataFile);
+        colorKNN = new KNN(30, 6, colorDataFile, .1);
+        shapeKNN = new KNN(10, 15,shapeDataFile, 1);
+        sizeKNN = new KNN(5, 2, sizeDataFile, 1);
         colorKNN.loadData(false);
         shapeKNN.loadData(true);
         sizeKNN.loadData(false);

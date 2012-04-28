@@ -173,7 +173,7 @@ public class Segment
     {
         // Only calculate the floor plane once XXX - maybe do multiple times and average?
         if(floorFound == false){
-            floorPlane = estimateFloor(5000);
+            floorPlane = estimateFloor(2000);
             floorFound = true;
         }
 

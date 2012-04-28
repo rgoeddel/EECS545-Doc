@@ -313,7 +313,7 @@ public class KNN {
 
         for (TrainingSample ts : data) {
             double dist = ts.distance(p);
-            if (dist < min) {
+            if (dist < min && dist < maxDistance) {
                 min = dist;
                 nearestLabel = ts.getLabel();
             }
@@ -326,12 +326,13 @@ public class KNN {
         List<TrainingSample> nearest = new ArrayList<TrainingSample>();
 
         for (TrainingSample ts : data) {
+            double dist = ts.distance(p);
             if (nearest.size() < k) {
-                nearest.add(ts);
+                if(dist<maxDistance)
+                    nearest.add(ts);
                 continue;
             }
 
-            double dist = ts.distance(p);
             int replace = -1;
 
             // find the farthest point that is father than ts

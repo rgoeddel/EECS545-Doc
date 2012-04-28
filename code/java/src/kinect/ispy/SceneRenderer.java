@@ -89,8 +89,8 @@ public class SceneRenderer extends VisLayer
 
     		double x, y;
     		theta = Math.atan2(obj.bbox.getCenterY() - ISpy.viewRegion.getCenterY(), obj.bbox.getCenterX() - ISpy.viewRegion.getCenterX());
-    		
-    		
+
+
     		double vert = (Math.sin(theta) == 0) ? Double.MAX_VALUE : height / Math.abs(Math.sin(theta));
     		double horiz = (Math.cos(theta) == 0) ? Double.MAX_VALUE : width / Math.abs(Math.cos(theta));
     		if(vert < horiz){
@@ -147,7 +147,8 @@ public class SceneRenderer extends VisLayer
 	            int i = y*kinect_status_t.WIDTH + x;
 	            int d = ((kinectData.depth[2*i+1]&0xff) << 8) |
 	                    (kinectData.depth[2*i+0]&0xff);
-	            double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], kinectData);
+                double[] pKinect = KUtils.getRegisteredXYZRGB(x,y, kinectData);
+//	            double[] pKinect = KUtils.getXYZRGB(x, y, KUtils.depthLookup[d], kinectData);
 	            double[] pixel = KUtils.getPixel(pKinect);
 	    				Color c =  new Color((int)pKinect[3]);
 	    				Color rc = new Color(c.getBlue(), c.getGreen(), c.getRed());
