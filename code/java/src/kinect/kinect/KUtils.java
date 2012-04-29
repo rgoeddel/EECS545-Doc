@@ -5,7 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import kinect.lcmtypes.*;
+
 import april.jmat.*;
+import april.config.*;
 
 public class KUtils
 {
@@ -43,8 +45,8 @@ public class KUtils
     public static float[] depthLookup;          //holds depth conversions so we only have to calculate them once
 
 
-    public static double[][] kinectToWorldXForm;
-    static{
+    public static double[][] kinectToWorldXForm = null;
+    /*static{
     	try{
     		BufferedReader in = new BufferedReader(new FileReader("/home/rgoeddel/class/EECS545-Doc/code/java/kinect.calib"));
         	kinectToWorldXForm = new double[4][4];
@@ -57,6 +59,17 @@ public class KUtils
     	} catch (IOException e){
     		kinectToWorldXForm = new double[][]{{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
     	}
+    }*/
+    public static void loadCalibFromConfig(Config config)
+    {
+        double[] values = config.getDoubles("calibration.xform");
+        assert (values.length == 16);
+        kinectToWorldXForm = new double[4][4];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                kinectToWorldXForm[i][j] = values[4*i + j];
+            }
+        }
     }
 
     /** Converts a point in the kinect coordinate frame to world coordinates **/

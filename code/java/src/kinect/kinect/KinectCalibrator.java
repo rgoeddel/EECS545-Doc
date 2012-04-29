@@ -53,7 +53,7 @@ class KinectCalibrator // implements LCMSubscriber
 
     {
     	// Calibration variables
-        calibFilename = "kinect.calib";
+        calibFilename = "kinect_calib.config";
 
         // Setup Frame
         JFrame frame = new JFrame("Calibrate Kinect");
@@ -229,13 +229,23 @@ class KinectCalibrator // implements LCMSubscriber
     	try{
     		BufferedWriter out = new BufferedWriter(new FileWriter(calibFilename));
     		System.out.println("Writing transformation matrix");
+            out.write("calibration {\n");
+            out.write("\txform = [ ");
     		for(int i = 0; i < 4; i++){
-    			for(int j = 0; j < 4; j++){
-    				out.write(k2wTransform[i][j] + "\n");
+    			for(int j = 0; j < 4; j++) {
+                    if (i == 3 && j == 3) {
+                        out.write(k2wTransform[i][j] + " ];\n");
+                    } else {
+                        out.write(k2wTransform[i][j] + ", ");
+                    }
     			}
-    			System.out.println(String.format("|%5f, %5f, %5f, %5f|", k2wTransform[i][0], k2wTransform[i][1],
-    					k2wTransform[i][2], k2wTransform[i][3]));
+                System.out.println(String.format("|%5f, %5f, %5f, %5f|",
+                                                 k2wTransform[i][0],
+                                                 k2wTransform[i][1],
+                                                 k2wTransform[i][2],
+                                                 k2wTransform[i][3]));
     		}
+            out.write("}\n");
     		out.close();
     	} catch (IOException e){
     		System.out.println("Couldn't write kinect.calib");

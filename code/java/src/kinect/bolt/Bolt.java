@@ -1,5 +1,7 @@
 package kinect.bolt;
 
+import april.config.*;
+import april.util.*;
 import april.util.TimeUtil;
 import april.vis.*;
 import april.jmat.*;
@@ -36,9 +38,9 @@ public class Bolt extends JFrame implements LCMSubscriber
     final static int K_WIDTH = kinect_status_t.WIDTH;
     final static int K_HEIGHT = kinect_status_t.HEIGHT;
     // Location of training data
-    static String colorDataFile = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/color_features.dat";
-    static String shapeDataFile = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/shape_features.dat";
-    static String sizeDataFile = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/size_features.dat";
+    static String colorDataFile;// = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/color_features.dat";
+    static String shapeDataFile;// = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/shape_features.dat";
+    static String sizeDataFile;// = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/size_features.dat";
     // objects for visualization
     private RenderScene sceneRenderer;
     private JMenuItem clearData, reloadData;
@@ -62,11 +64,43 @@ public class Bolt extends JFrame implements LCMSubscriber
     int selectedObject;
     ArrayList<double[]> currentPoints;
 
-    public Bolt(Segment segmenter)
+    // Opts/Config
+    GetOpt opts;
+    Config config;
+
+    public Bolt(GetOpt opts_, Segment segmenter)
     {
         super("BOLT");
         this.setSize(K_WIDTH, K_HEIGHT);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Handle Options
+        opts = opts_;
+        try {
+            config = new ConfigFile(opts.getString("config"));
+        } catch (IOException ioex) {
+            System.err.println("ERR: Could not load configuration from file");
+            ioex.printStackTrace();
+        }
+
+        // Load calibration
+        try {
+            KUtils.loadCalibFromConfig(new ConfigFile(config.requireString("calibration.filepath")));
+        } catch (IOException ioex) {
+            System.err.println("ERR: Could not load calibration from file");
+            ioex.printStackTrace();
+        }
+
+        // Load .dat files
+        try {
+            colorDataFile = config.requireString("training.color_data");
+            shapeDataFile = config.requireString("training.shape_data");
+            sizeDataFile = config.requireString("training.size_data");
+        } catch (Exception ex) {
+            System.err.println("ERR: Could not load all .dat files");
+            ex.printStackTrace();
+        }
+
 
         this.segmenter = segmenter;
         objects = new HashMap<Integer, SpyObject>();
@@ -391,8 +425,25 @@ public class Bolt extends JFrame implements LCMSubscriber
 
     public static void main(String args[])
     {
+        GetOpt opts = new GetOpt();
+
+        opts.addBoolean('h', "help", false, "Show this help screen");
+        opts.addString('c', "config", null, "Configuration");
+
+        if (!opts.parse(args)) {
+            System.err.println("ERR: GetOpt - "+opts.getReason());
+            return;
+        }
+
+        if (opts.getBoolean("help") || opts.getString("config") == null) {
+            System.out.println("Usage: Must specify a configuration file");
+            opts.doHelp();
+            return;
+        }
+
         KUtils.createDepthMap();
-        Bolt bolt = new Bolt(new Segment((int)(viewRegion.getMaxX()-viewRegion.getMinX()),
+        Bolt bolt = new Bolt(opts,
+                             new Segment((int)(viewRegion.getMaxX()-viewRegion.getMinX()),
                                          (int)(viewRegion.getMaxY()-viewRegion.getMinY())));
     }
 }
