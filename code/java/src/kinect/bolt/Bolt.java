@@ -2,7 +2,6 @@ package kinect.bolt;
 
 import april.config.*;
 import april.util.*;
-import april.util.TimeUtil;
 import april.vis.*;
 import april.jmat.*;
 import april.jmat.geom.GRay3D;
@@ -17,12 +16,8 @@ import kinect.classify.FeatureExtractor.FeatureType;
 import java.io.*;
 import javax.swing.*;
 import java.util.*;
+import java.awt.Color;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.*;
 import java.awt.image.*;
 
@@ -45,6 +40,7 @@ public class Bolt extends JFrame implements LCMSubscriber
     private RenderScene sceneRenderer;
     private JMenuItem clearData, reloadData;
     private JCheckBoxMenuItem filterDarkCB;
+    private JCheckBoxMenuItem drawSegmentationCB;
     public final static int[] viewBorders = new int[] {130, 100, 560, 440 };
     public final static Rectangle viewRegion = new Rectangle(viewBorders[0],
                                                              viewBorders[1],
@@ -57,6 +53,7 @@ public class Bolt extends JFrame implements LCMSubscriber
     private Map<Integer, SpyObject> objects;
     private boolean filterDark = true;
     private double darkThreshold = .4;
+    private boolean drawSegmentation = false;
 
     // LCM
     static LCM lcm = LCM.getSingleton();
@@ -119,6 +116,16 @@ public class Bolt extends JFrame implements LCMSubscriber
                 }
             });
         controlMenu.add(filterDarkCB);
+        
+        drawSegmentationCB = new JCheckBoxMenuItem("Draw Segmentation");
+        drawSegmentationCB.setState(false);
+        drawSegmentationCB.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+            	sceneRenderer.setDrawSegmentation(drawSegmentationCB.getState());
+            }
+        });
+        controlMenu.add(drawSegmentationCB);
 
         // Remove all data (no built in info)
         clearData = new JMenuItem("Clear All Data");
@@ -184,7 +191,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         colorThresholds = colorKNN.getThresholds();
         shapeThresholds = shapeKNN.getThresholds();
         sizeThresholds = sizeKNN.getThresholds();
-        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter);
+        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter, true); // XXX
 
         this.setVisible(true);
     }
@@ -287,6 +294,14 @@ public class Bolt extends JFrame implements LCMSubscriber
                 selectedObject = obj.id;
                 break;
             }
+        }
+        // Colors the selected object cyan, all others white
+        for(SpyObject obj : objects.values()){
+        	if(obj.id == selectedObject){
+        		obj.boxColor = Color.yellow;
+        	} else {
+        		obj.boxColor = Color.white;
+        	}
         }
     }
 
