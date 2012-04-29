@@ -184,7 +184,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         colorThresholds = colorKNN.getThresholds();
         shapeThresholds = shapeKNN.getThresholds();
         sizeThresholds = sizeKNN.getThresholds();
-        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter);
+        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter, true); // XXX
 
         this.setVisible(true);
     }
