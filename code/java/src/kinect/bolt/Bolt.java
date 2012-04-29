@@ -24,6 +24,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.*;
 import java.awt.image.*;
 
+import abolt.arm.*;
+
 enum ISpyMode {
     STANDBY, MANIPULATING, ADD_COLOR, ADD_SHAPE, ADD_SIZE, SEARCHING, FEEDBACK, GET_COLOR, GET_SHAPE, GET_SIZE, NOT_FOUND
         }
@@ -34,14 +36,14 @@ public class Bolt extends JFrame implements LCMSubscriber
     final static int K_WIDTH = kinect_status_t.WIDTH;
     final static int K_HEIGHT = kinect_status_t.HEIGHT;
     // Location of training data
-    static String colorDataFile = "/home/bolt/mlbolt/code/java/dat/color_features.dat";
-    static String shapeDataFile = "/home/bolt/mlbolt/code/java/dat/shape_features.dat";
-    static String sizeDataFile = "/home/bolt/mlbolt/code/java/dat/size_features.dat";
+    static String colorDataFile = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/color_features.dat";
+    static String shapeDataFile = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/shape_features.dat";
+    static String sizeDataFile = "/home/rgoeddel/class/EECS545-Doc/code/java/dat/size_features.dat";
     // objects for visualization
     private RenderScene sceneRenderer;
     private JMenuItem clearData, reloadData;
     private JCheckBoxMenuItem filterDarkCB;
-    public final static int[] viewBorders = new int[] {130, 270, 460, 440 };
+    public final static int[] viewBorders = new int[] {130, 100, 560, 440 };
     public final static Rectangle viewRegion = new Rectangle(viewBorders[0],
                                                              viewBorders[1],
                                                              viewBorders[2] - viewBorders[0],
@@ -53,7 +55,7 @@ public class Bolt extends JFrame implements LCMSubscriber
     private Map<Integer, SpyObject> objects;
     private boolean filterDark = true;
     private double darkThreshold = .4;
-    
+
     // LCM
     static LCM lcm = LCM.getSingleton();
     private kinect_status_t kinectData = null;
@@ -141,13 +143,14 @@ public class Bolt extends JFrame implements LCMSubscriber
         colorKNN = new KNN(1, 6, colorDataFile, 0.2);
         shapeKNN = new KNN(10, 15,shapeDataFile, 1);
         sizeKNN = new KNN(5, 2, sizeDataFile, 1);
-        
+
         colorKNN.loadData(false);
         shapeKNN.loadData(true);
         sizeKNN.loadData(false);
         colorThresholds = colorKNN.getThresholds();
         shapeThresholds = shapeKNN.getThresholds();
         sizeThresholds = sizeKNN.getThresholds();
+        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter);
 
         this.setVisible(true);
     }
@@ -324,9 +327,9 @@ public class Bolt extends JFrame implements LCMSubscriber
 
             // Bounding box and location
             double[] bb = FeatureExtractor.boundingBox(obj.object.points);
-            double[] min = new double[]{bb[0], bb[1], bb[2]};
-            double[] max = new double[]{bb[3], bb[4], bb[5]};
-            double[] center = obj.object.getCenter();
+            double[] min = KUtils.getWorldCoordinates(new double[]{bb[0], bb[1], bb[2]});
+            double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});
+            double[] center = KUtils.getWorldCoordinates(obj.object.getCenter());
             double[] xyzrpy = new double[]{0, 0, 0, 0, 0, 0};
             for(int i = 0; i < 3; i++){
                 xyzrpy[i] = (min[i] + max[i])/2;
@@ -382,7 +385,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         obs.nobs = obs.observations.length;
 
         lcm.publish("OBSERVATIONS",obs);
-        
+
     }
 
 
