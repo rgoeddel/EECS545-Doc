@@ -82,14 +82,6 @@ public class SpyObject {
         return shapeConfidence;
     }
 
-    public Color getBoxColor(){
-        // Add 5 to each color channel up to the max of 255
-        boxColor = new Color(boxColor.getRed() < 245 ? boxColor.getRed() + 10 : 255,
-                             boxColor.getGreen() < 245 ? boxColor.getGreen() + 10 : 255,
-                             boxColor.getBlue() < 245 ? boxColor.getBlue() + 10 : 255);
-        return boxColor;
-    }
-
     public double updateColorConfidence(ConfidenceLabel cl,
                                         ArrayList<ConfidenceLabel> confidenceThresholds)
     {

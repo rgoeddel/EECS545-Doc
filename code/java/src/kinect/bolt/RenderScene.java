@@ -31,6 +31,7 @@ public class RenderScene extends VisLayer
 
 	private final Bolt bolt;
 	private VisCanvas canvas;
+	private boolean drawSegmentation = false;
 
 
 	public RenderScene(VisWorld world, Bolt bolt){
@@ -51,6 +52,10 @@ public class RenderScene extends VisLayer
 
 	public VisCanvas getCanvas(){
 		return canvas;
+	}
+	
+	public void setDrawSegmentation(boolean shouldDrawSeg){
+		this.drawSegmentation = shouldDrawSeg;
 	}
 
 	protected class DisplayClickEventHandler extends VisEventAdapter{
@@ -89,11 +94,10 @@ public class RenderScene extends VisLayer
 
     	double theta = 0;
     	for(SpyObject obj : objects.values()){
-    		VzImage img = new VzImage(obj.object.getImage());
-    		buffer.addBack(new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT - obj.bbox.getMinY()), LinAlg.scale(1, -1, 1), img));
-
-
-
+    		if(drawSegmentation){
+        		VzImage img = new VzImage(obj.object.getImage());
+        		buffer.addBack(new VisChain(LinAlg.translate(obj.bbox.getMinX(), K_HEIGHT - obj.bbox.getMinY()), LinAlg.scale(1, -1, 1), img));
+    		}
 
     		double x, y;
     		theta = Math.atan2(obj.bbox.getCenterY() - Bolt.viewRegion.getCenterY(), obj.bbox.getCenterX() - Bolt.viewRegion.getCenterX());
@@ -138,7 +142,7 @@ public class RenderScene extends VisLayer
     		line.add(new double[]{bestX,K_HEIGHT-bestY});
     		buffer.addBack(new VzLines(line, VzLines.LINES,new VzLines.Style(Color.WHITE, 3)));
 
-    		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(Color.WHITE, 3));
+    		VzRectangle rect = new VzRectangle(obj.bbox.getWidth(), obj.bbox.getHeight(), new VzLines.Style(obj.boxColor, 3));
     		buffer.addBack(new VisChain(LinAlg.translate(obj.bbox.getCenterX(), K_HEIGHT - obj.bbox.getCenterY()), rect));
     	}
     }
