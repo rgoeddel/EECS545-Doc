@@ -11,7 +11,7 @@ public class Segment
 {
     final static int COLOR_THRESH = 13;
     final static double UNION_THRESH = 0.5;
-    final static double RANSAC_THRESH = .01;
+    final static double RANSAC_THRESH = .015;
     final static double RANSAC_PERCENT = .2;
     final static double OBJECT_THRESH = 200;
     final static int MAX_HISTORY = 100;
@@ -157,6 +157,19 @@ public class Segment
         }
     }
 
+    private boolean almostBlack(int color)
+    {
+        Color c = new Color(color);
+
+        int rg = Math.abs(c.getRed()-c.getGreen());
+        int rb = Math.abs(c.getRed()-c.getBlue());
+        int gb = Math.abs(c.getGreen()-c.getBlue());
+
+        if(rg+rb+gb < 18 && rg < 60) return true;
+        return false;
+    }
+
+
     /** "Remove" points that are too close to the floor by setting them to
      ** empty arrays.
      ** @return whether a plane was found and points were removed
@@ -177,6 +190,8 @@ public class Segment
             if(pointToPlaneDist(p, floorPlane) < RANSAC_THRESH)
                 points.set(i, new double[4]);
             if(belowPlane(p, floorPlane))
+                points.set(i, new double[4]);
+            else if(almostBlack((int)point[3]))
                 points.set(i, new double[4]);
         }
         return true;

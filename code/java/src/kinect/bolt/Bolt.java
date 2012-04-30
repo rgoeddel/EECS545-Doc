@@ -108,7 +108,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         menuBar.add(controlMenu);
 
         filterDarkCB = new JCheckBoxMenuItem("Filter Dark Objects");
-        filterDarkCB.setState(filterDark);
+        filterDarkCB.setState(true);
         filterDarkCB.addActionListener(new ActionListener(){
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
@@ -191,7 +191,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         colorThresholds = colorKNN.getThresholds();
         shapeThresholds = shapeKNN.getThresholds();
         sizeThresholds = sizeKNN.getThresholds();
-        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter, true); // XXX
+        BoltArmCommandInterpreter interpreter = new BoltArmCommandInterpreter(segmenter, opts.getBoolean("debug"));
 
         this.setVisible(true);
     }
@@ -443,7 +443,8 @@ public class Bolt extends JFrame implements LCMSubscriber
         GetOpt opts = new GetOpt();
 
         opts.addBoolean('h', "help", false, "Show this help screen");
-        opts.addString('c', "config", null, "Configuration");
+        opts.addString('c', "config", null, "Specify the configuration file");
+        opts.addBoolean('d', "debug", false, "Toggle debugging mode");
 
         if (!opts.parse(args)) {
             System.err.println("ERR: GetOpt - "+opts.getReason());
