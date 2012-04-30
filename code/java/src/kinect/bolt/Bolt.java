@@ -375,14 +375,15 @@ public class Bolt extends JFrame implements LCMSubscriber
             SpyObject obj = (SpyObject)itr.next();
 
             // Bounding box and location
-            double[] bb = FeatureExtractor.boundingBox(obj.object.points);
-            double[] min = KUtils.getWorldCoordinates(new double[]{bb[0], bb[1], bb[2]});
-            double[] max = KUtils.getWorldCoordinates(new double[]{bb[3], bb[4], bb[5]});
-            double[] center = KUtils.getWorldCoordinates(obj.object.getCenter());
+            double[] bb = FeatureExtractor.boundingBoxWorld(obj.object.points);
+            double[] min = new double[]{bb[0], bb[1], bb[2]};
+            double[] max = new double[]{bb[3], bb[4], bb[5]};
             double[] xyzrpy = new double[]{0, 0, 0, 0, 0, 0};
             for(int i = 0; i < 3; i++){
                 xyzrpy[i] = (min[i] + max[i])/2;
             }
+            double[] center = new double[]{xyzrpy[0], xyzrpy[1], xyzrpy[2]};
+
             LinAlg.minusEquals(min, center);
             LinAlg.minusEquals(max, center);
 

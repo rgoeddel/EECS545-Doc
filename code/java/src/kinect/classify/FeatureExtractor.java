@@ -7,8 +7,7 @@ import java.util.ArrayList;
 import april.jmat.LinAlg;
 
 import kinect.kinect.ObjectInfo;
-import kinect.kinect.PCA;
-
+import kinect.kinect.*;
 
 public class FeatureExtractor
 {
@@ -250,6 +249,24 @@ public class FeatureExtractor
 		}
 		return new double[] { min[0], min[1], min[2], max[0], max[1], max[2] };
 	}
+
+	public static double[] boundingBoxWorld(ArrayList<double[]> points) {
+		double[] max = new double[] { -1000, -1000, -1000 };
+		double[] min = new double[] { 1000, 1000, 1000 };
+		for (double[] p : points) {
+            p = KUtils.getWorldCoordinates(p);
+			for (int i = 0; i < 3; i++) {
+				if (p[i] < min[i])
+					min[i] = p[i];
+				if (p[i] > max[i])
+					max[i] = p[i];
+			}
+		}
+		return new double[] { min[0], min[1], min[2], max[0], max[1], max[2] };
+	}
+
+
+
 
 	/**
 	 * Get the length, width, and height of the object by first getting the
