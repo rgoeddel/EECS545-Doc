@@ -108,7 +108,7 @@ public class Bolt extends JFrame implements LCMSubscriber
         menuBar.add(controlMenu);
 
         filterDarkCB = new JCheckBoxMenuItem("Filter Dark Objects");
-        filterDarkCB.setState(false);
+        filterDarkCB.setState(true);
         filterDarkCB.addActionListener(new ActionListener(){
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
@@ -116,7 +116,7 @@ public class Bolt extends JFrame implements LCMSubscriber
                 }
             });
         controlMenu.add(filterDarkCB);
-        
+
         drawSegmentationCB = new JCheckBoxMenuItem("Draw Segmentation");
         drawSegmentationCB.setState(false);
         drawSegmentationCB.addActionListener(new ActionListener(){
@@ -383,7 +383,8 @@ public class Bolt extends JFrame implements LCMSubscriber
             for(int i = 0; i < 3; i++){
                 xyzrpy[i] = (min[i] + max[i])/2;
             }
-
+            LinAlg.minusEquals(min, center);
+            LinAlg.minusEquals(max, center);
 
             // Color for LCM
             categorized_data_t[] data = new categorized_data_t[3];

@@ -10,10 +10,10 @@ import java.util.*;
 public class Segment
 {
     final static int COLOR_THRESH = 13;
-    final static double UNION_THRESH = 0.01;
-    final static double RANSAC_THRESH = .01;
+    final static double UNION_THRESH = 0.5;
+    final static double RANSAC_THRESH = .015;
     final static double RANSAC_PERCENT = .2;
-    final static double OBJECT_THRESH = 300;
+    final static double OBJECT_THRESH = 200;
     final static int MAX_HISTORY = 100;
     int width, height;
 
@@ -74,12 +74,13 @@ public class Segment
                 int loc1 = y*width + x;
                 double[] p1 = points.get(loc1);
                 // Look at all surrounding pixels
-                if(!Arrays.equals(p1, new double[4])){
+                //if(!Arrays.equals(p1, new double[4])){
+                if(!almostZero(p1)){
                     int loc2 = y*width + x + 1;
                     int loc3 = (y+1)*width + x;
                     if (loc2>=0 && loc2<points.size() && (x+1)<width){
                         double[] p2 = points.get(loc2);
-                        if(!Arrays.equals(p2, new double[4])
+                        if(!almostZero(p2)//Arrays.equals(p2, new double[4])
                            && (dist(p1, p2) < UNION_THRESH
                                || colorDiff(p1[3], p2[3]) < COLOR_THRESH)){
                             ufs.connectNodes(loc1, loc2);
@@ -88,7 +89,7 @@ public class Segment
 
                     if (loc3>=0 && loc3<points.size() && (y+1)<height){
                         double[] p2 = points.get(loc3);
-                        if(!Arrays.equals(p2, new double[4])
+                        if(!almostZero(p2)//!Arrays.equals(p2, new double[4])
                            && (dist(p1, p2) < UNION_THRESH
                                || colorDiff(p1[3], p2[3]) < COLOR_THRESH)){
                             ufs.connectNodes(loc1, loc3);
@@ -195,6 +196,14 @@ public class Segment
         }
         return true;
     }
+
+    private boolean almostZero(double[] p)
+    {
+        if(p[0] < .0001 && p[1] < .0001 && p[2] < .0001 && p[3] < .0001)
+            return true;
+        return false;
+    }
+
 
     /** Check if a given poinjt is on the other side of the ground plane as
      ** the camera is (this might mean we want to delete them).**/
@@ -312,9 +321,6 @@ public class Segment
             history.remove(0);
         }
    }
-
-
-
 
     /** Estimate the floor plane using RANSAC algorithm (assumes that the major
         plane in the image is the "floor").
